@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Distordia Fantasy Football - On-chain assets meet real football">
+    <title>Distordia Fantasy Football | Nexus Blockchain</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="fantasy.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../dex/index.html">DEX</a></li>
+                <li><a href="index.html" class="active">Fantasy Football</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="fantasy-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>⚽ Fantasy Football</h1>
+                <p class="hero-subtitle">Own Nexus Assets, Earn from Real Football</p>
+                <p class="hero-description">Your on-chain NFT assets score points based on real-world football player performance</p>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-label">Active Players</span>
+                        <span class="stat-value" id="active-players">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Assets</span>
+                        <span class="stat-value" id="total-assets">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Live Matches</span>
+                        <span class="stat-value" id="live-matches">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Weekly Prize Pool</span>
+                        <span class="stat-value" id="prize-pool">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard-section">
+        <div class="container">
+            <div class="dashboard-grid">
+                <!-- My Team Panel -->
+                <div class="panel my-team-panel">
+                    <div class="panel-header">
+                        <h2>🏆 My Team</h2>
+                        <div class="team-score">
+                            <span class="score-label">Total Points:</span>
+                            <span class="score-value" id="team-total-points">0</span>
+                        </div>
+                    </div>
+                    <div class="team-formation">
+                        <div class="pitch">
+                            <div class="formation-row goalkeepers">
+                                <div class="position-slot" data-position="GK">
+                                    <div class="empty-slot">GK</div>
+                                </div>
+                            </div>
+                            <div class="formation-row defenders">
+                                <div class="position-slot" data-position="DEF">
+                                    <div class="empty-slot">DEF</div>
+                                </div>
+                                <div class="position-slot" data-position="DEF">
+                                    <div class="empty-slot">DEF</div>
+                                </div>
+                                <div class="position-slot" data-position="DEF">
+                                    <div class="empty-slot">DEF</div>
+                                </div>
+                                <div class="position-slot" data-position="DEF">
+                                    <div class="empty-slot">DEF</div>
+                                </div>
+                            </div>
+                            <div class="formation-row midfielders">
+                                <div class="position-slot" data-position="MID">
+                                    <div class="empty-slot">MID</div>
+                                </div>
+                                <div class="position-slot" data-position="MID">
+                                    <div class="empty-slot">MID</div>
+                                </div>
+                                <div class="position-slot" data-position="MID">
+                                    <div class="empty-slot">MID</div>
+                                </div>
+                                <div class="position-slot" data-position="MID">
+                                    <div class="empty-slot">MID</div>
+                                </div>
+                            </div>
+                            <div class="formation-row forwards">
+                                <div class="position-slot" data-position="FWD">
+                                    <div class="empty-slot">FWD</div>
+                                </div>
+                                <div class="position-slot" data-position="FWD">
+                                    <div class="empty-slot">FWD</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-actions">
+                        <button class="btn btn-primary" onclick="autoFillTeam()">Auto-Fill Team</button>
+                        <button class="btn btn-secondary" onclick="clearTeam()">Clear Team</button>
+                    </div>
+                </div>
+
+                <!-- My Assets Panel -->
+                <div class="panel my-assets-panel">
+                    <div class="panel-header">
+                        <h2>💎 My Assets</h2>
+                        <button class="btn-refresh" onclick="refreshAssets()">🔄</button>
+                    </div>
+                    <div class="asset-filters">
+                        <input type="text" id="asset-search" placeholder="Search assets...">
+                        <select id="position-filter">
+                            <option value="all">All Positions</option>
+                            <option value="GK">Goalkeeper</option>
+                            <option value="DEF">Defender</option>
+                            <option value="MID">Midfielder</option>
+                            <option value="FWD">Forward</option>
+                        </select>
+                    </div>
+                    <div class="assets-list" id="my-assets-list">
+                        <div class="loading-spinner">Loading your assets...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Matches Section -->
+    <section class="matches-section">
+        <div class="container">
+            <h2 class="section-title">⚡ Live Matches</h2>
+            <div class="matches-grid" id="live-matches-grid">
+                <div class="loading-spinner">Loading live matches...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section class="leaderboard-section">
+        <div class="container">
+            <div class="leaderboard-grid">
+                <!-- Weekly Leaderboard -->
+                <div class="panel leaderboard-panel">
+                    <div class="panel-header">
+                        <h2>📊 Weekly Leaderboard</h2>
+                        <div class="leaderboard-tabs">
+                            <button class="tab-btn active" data-period="week">Week</button>
+                            <button class="tab-btn" data-period="month">Month</button>
+                            <button class="tab-btn" data-period="all">All Time</button>
+                        </div>
+                    </div>
+                    <div class="leaderboard-list" id="leaderboard-list">
+                        <!-- Leaderboard entries will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Top Assets -->
+                <div class="panel top-assets-panel">
+                    <div class="panel-header">
+                        <h2>⭐ Top Performing Assets</h2>
+                    </div>
+                    <div class="top-assets-list" id="top-assets-list">
+                        <!-- Top assets will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Asset Marketplace -->
+    <section class="marketplace-section">
+        <div class="container">
+            <h2 class="section-title">🏪 Asset Marketplace</h2>
+            <div class="marketplace-filters">
+                <div class="filter-group">
+                    <label>League:</label>
+                    <select id="league-filter">
+                        <option value="all">All Leagues</option>
+                        <option value="premier-league">Premier League</option>
+                        <option value="la-liga">La Liga</option>
+                        <option value="bundesliga">Bundesliga</option>
+                        <option value="serie-a">Serie A</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Position:</label>
+                    <select id="marketplace-position-filter">
+                        <option value="all">All Positions</option>
+                        <option value="GK">Goalkeeper</option>
+                        <option value="DEF">Defender</option>
+                        <option value="MID">Midfielder</option>
+                        <option value="FWD">Forward</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By:</label>
+                    <select id="sort-filter">
+                        <option value="points">Highest Points</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="recent">Recently Listed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="marketplace-grid" id="marketplace-grid">
+                <div class="loading-spinner">Loading marketplace...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Own NFT Assets</h3>
+                    <p>Purchase player NFTs on the Nexus blockchain. Each NFT represents a real football player.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Build Your Team</h3>
+                    <p>Select up to 11 players from your assets to form your fantasy team formation.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Earn Points</h3>
+                    <p>Players score points based on real-life performance: goals, assists, clean sheets, and more.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Win Rewards</h3>
+                    <p>Top teams on the leaderboard win NXS tokens and exclusive NFT rewards weekly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scoring Rules Section -->
+    <section class="scoring-rules">
+        <div class="container">
+            <h2 class="section-title">⚽ Scoring Rules</h2>
+            <div class="rules-grid">
+                <div class="rule-category">
+                    <h3>🥅 Goals & Assists</h3>
+                    <ul>
+                        <li>Goal scored (FWD): <strong>+8 pts</strong></li>
+                        <li>Goal scored (MID): <strong>+10 pts</strong></li>
+                        <li>Goal scored (DEF): <strong>+12 pts</strong></li>
+                        <li>Assist: <strong>+6 pts</strong></li>
+                    </ul>
+                </div>
+                <div class="rule-category">
+                    <h3>🛡️ Defense</h3>
+                    <ul>
+                        <li>Clean sheet (GK/DEF): <strong>+8 pts</strong></li>
+                        <li>Clean sheet (MID): <strong>+4 pts</strong></li>
+                        <li>Save (GK): <strong>+2 pts</strong></li>
+                        <li>Penalty saved: <strong>+10 pts</strong></li>
+                    </ul>
+                </div>
+                <div class="rule-category">
+                    <h3>⚠️ Penalties</h3>
+                    <ul>
+                        <li>Yellow card: <strong>-2 pts</strong></li>
+                        <li>Red card: <strong>-6 pts</strong></li>
+                        <li>Own goal: <strong>-4 pts</strong></li>
+                        <li>Penalty missed: <strong>-4 pts</strong></li>
+                    </ul>
+                </div>
+                <div class="rule-category">
+                    <h3>⏱️ Playing Time</h3>
+                    <ul>
+                        <li>60+ minutes played: <strong>+4 pts</strong></li>
+                        <li>30-59 minutes: <strong>+2 pts</strong></li>
+                        <li>Man of the Match: <strong>+6 pts</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
+                    <span class="footer-logo-text">DISTORDIA</span>
+                </div>
+                <p>&copy; 2025 Distordia Crypto Lab. All rights reserved.</p>
+                <p class="disclaimer">Fantasy Football scores based on real-world data. NFT assets stored on Nexus.io blockchain.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="fantasy.js"></script>
+</body>
+</html>

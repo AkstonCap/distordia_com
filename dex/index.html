@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Distordia DEX - Decentralized exchange for Nexus blockchain">
+    <title>Distordia DEX | Nexus Marketplace</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="dex.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#research">Research</a></li>
+                <li><a href="index.html" class="active">DEX</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- DEX Header -->
+    <section class="dex-header">
+        <div class="container">
+            <h1>Distordia DEX</h1>
+            <p class="dex-subtitle">Nexus Blockchain Marketplace</p>
+            <div class="market-stats">
+                <div class="stat-card">
+                    <div class="stat-label">24h Volume</div>
+                    <div class="stat-value" id="volume-24h">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Markets</div>
+                    <div class="stat-value" id="active-markets">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Block Height</div>
+                    <div class="stat-value" id="block-height">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Network Hash</div>
+                    <div class="stat-value" id="network-hash">-</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trading Interface -->
+    <section class="trading-section">
+        <div class="container-fluid">
+            <div class="trading-grid">
+                <!-- Market Pairs List -->
+                <div class="market-pairs-panel">
+                    <div class="panel-header">
+                        <h3>Market Pairs</h3>
+                        <div class="search-box">
+                            <input type="text" id="pair-search" placeholder="Search pairs...">
+                        </div>
+                    </div>
+                    <div class="pairs-tabs">
+                        <button class="tab-btn active" data-filter="all">All</button>
+                        <button class="tab-btn" data-filter="nxs">NXS</button>
+                        <button class="tab-btn" data-filter="btc">BTC</button>
+                        <button class="tab-btn" data-filter="favorites">★</button>
+                    </div>
+                    <div class="pairs-list" id="pairs-list">
+                        <!-- Market pairs will be loaded here -->
+                        <div class="loading-spinner">Loading markets...</div>
+                    </div>
+                </div>
+
+                <!-- Trading Chart -->
+                <div class="chart-panel">
+                    <div class="panel-header">
+                        <div class="current-pair">
+                            <h2 id="current-pair-name">Select a trading pair</h2>
+                            <div class="pair-stats">
+                                <span class="current-price" id="current-price">-</span>
+                                <span class="price-change" id="price-change">-</span>
+                            </div>
+                        </div>
+                        <div class="chart-controls">
+                            <button class="chart-interval active" data-interval="1h">1H</button>
+                            <button class="chart-interval" data-interval="4h">4H</button>
+                            <button class="chart-interval" data-interval="1d">1D</button>
+                            <button class="chart-interval" data-interval="1w">1W</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" id="price-chart">
+                        <div class="chart-placeholder">
+                            <p>Select a trading pair to view chart</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Book -->
+                <div class="orderbook-panel">
+                    <div class="panel-header">
+                        <h3>Order Book</h3>
+                        <div class="orderbook-controls">
+                            <button class="orderbook-view active" data-view="both">
+                                <span class="icon">📊</span>
+                            </button>
+                            <button class="orderbook-view" data-view="asks">
+                                <span class="icon">📈</span>
+                            </button>
+                            <button class="orderbook-view" data-view="bids">
+                                <span class="icon">📉</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="orderbook-content">
+                        <div class="orderbook-header">
+                            <span>Price</span>
+                            <span>Amount</span>
+                            <span>Total</span>
+                        </div>
+                        <div class="orderbook-asks" id="orderbook-asks">
+                            <!-- Asks will be loaded here -->
+                        </div>
+                        <div class="orderbook-spread">
+                            <span class="spread-label">Spread:</span>
+                            <span class="spread-value" id="spread-value">-</span>
+                        </div>
+                        <div class="orderbook-bids" id="orderbook-bids">
+                            <!-- Bids will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Trades -->
+    <section class="trades-section">
+        <div class="container">
+            <div class="panel-header">
+                <h3>Recent Trades</h3>
+                <div class="trade-filters">
+                    <button class="filter-btn active" data-filter="all">All Trades</button>
+                    <button class="filter-btn" data-filter="buys">Buys</button>
+                    <button class="filter-btn" data-filter="sells">Sells</button>
+                </div>
+            </div>
+            <div class="trades-table-container">
+                <table class="trades-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Pair</th>
+                            <th>Type</th>
+                            <th>Price</th>
+                            <th>Amount</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-list">
+                        <tr>
+                            <td colspan="6" class="loading-cell">Loading recent trades...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Overview -->
+    <section class="market-overview">
+        <div class="container">
+            <h2 class="section-title">Market Overview</h2>
+            <div class="markets-grid" id="markets-grid">
+                <!-- Market cards will be loaded here -->
+                <div class="loading-spinner">Loading market data...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Status -->
+    <section class="api-status">
+        <div class="container">
+            <div class="status-card">
+                <div class="status-indicator">
+                    <span class="status-dot" id="api-status-dot"></span>
+                    <span class="status-text" id="api-status-text">Connecting to Nexus.io...</span>
+                </div>
+                <div class="status-details">
+                    <span>Last Update: <span id="last-update">-</span></span>
+                    <span>API Response: <span id="api-response-time">-</span></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
+                    <span class="footer-logo-text">DISTORDIA</span>
+                </div>
+                <p>&copy; 2025 Distordia Crypto Lab. All rights reserved.</p>
+                <p class="disclaimer">This DEX interface displays real-time market data from Nexus.io blockchain. No data is stored on this website.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="dex.js"></script>
+</body>
+</html>
