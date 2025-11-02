@@ -2,8 +2,23 @@
 // Connects on-chain NFT assets with real-world football player performance
 
 // API Configuration
-const NEXUS_API_BASE = 'https://api.nexus.io/v2';
+// Nexus API base URL (no /v2 - not part of actual API)
+const NEXUS_API_BASE = 'https://api.nexus.io:8080';
 const FOOTBALL_API_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
+
+// Nexus API Endpoints according to official documentation
+const NEXUS_ENDPOINTS = {
+    // Assets API - for NFT player cards
+    listAssets: `${NEXUS_API_BASE}/assets/list/asset`,
+    getAsset: `${NEXUS_API_BASE}/assets/get/asset`,
+    listAny: `${NEXUS_API_BASE}/assets/list/any`,
+    
+    // Profiles API - for user profiles
+    getProfile: `${NEXUS_API_BASE}/profiles/get/master`,
+    
+    // System API - for network info
+    systemInfo: `${NEXUS_API_BASE}/system/get/info`
+};
 
 // Global State
 let myAssets = [];
@@ -87,14 +102,43 @@ function setupEventListeners() {
 // Load My Assets from Nexus Blockchain
 async function loadMyAssets() {
     try {
-        // In production, fetch real NFT assets from Nexus blockchain
-        // For now, using demo data
+        // In production, fetch real NFT assets from Nexus blockchain using Assets API
+        // This would require a valid session for user-specific assets
+        
+        // Example API call (requires authentication):
+        // const response = await fetch(NEXUS_ENDPOINTS.listAssets, {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({
+        //         session: userSession,  // Would need user login
+        //         limit: 100
+        //     })
+        // });
+        
+        // For demo purposes, check if we can connect to the API
+        const response = await fetch(NEXUS_ENDPOINTS.systemInfo, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Connected to Nexus blockchain:', data.result?.version || data.version);
+        }
+        
+        // Using demo data until user authentication is implemented
         const demoAssets = generateDemoAssets();
         myAssets = demoAssets;
         renderMyAssets(demoAssets);
+        
     } catch (error) {
         console.error('Error loading assets:', error);
-        showError('my-assets-list', 'Failed to load your assets');
+        
+        // Fallback to demo data
+        const demoAssets = generateDemoAssets();
+        myAssets = demoAssets;
+        renderMyAssets(demoAssets);
     }
 }
 

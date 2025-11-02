@@ -30,26 +30,76 @@ The Distordia DEX provides a modern, real-time trading interface that fetches ma
 
 ### Nexus.io Blockchain API
 
-The DEX connects to the Nexus.io blockchain API endpoints:
+The DEX connects to the Nexus.io blockchain API using the official endpoints as documented in the [Nexus API Documentation](https://nexus.io/docs).
 
 ```javascript
-// Primary API endpoints
-const NEXUS_API_BASE = 'https://api.nexus.io/v2';
-const NEXUS_EXPLORER_API = 'https://nxsorbitalscan.com/api';
+// Nexus API base URL
+const NEXUS_API_BASE = 'https://api.nexus.io:8080';
 ```
 
 ### Endpoints Used
 
-- **Network Info**: `/ledger/get/info` - Block height, network statistics
-- **Mining Info**: `/ledger/get/mininginfo` - Hash rate and mining data
-- **Market Data**: Custom endpoints for trading pairs, order books, and trade history
+According to the official Nexus API documentation, the following endpoints are used:
+
+#### System API
+- **`system/get/info`** - Returns node information including:
+  - `blocks` - Current block height
+  - `connections` - Number of peer connections
+  - `version` - Daemon software version
+  - `timestamp` - Current unified time
+
+#### Ledger API  
+- **`ledger/get/info`** - Returns blockchain ledger information
+- **`ledger/get/metrics`** - Returns blockchain metrics including stake rate
+
+#### Market API (P2P Marketplace)
+- **`market/list/order`** - Lists all market orders for trading pairs
+  - Supports filters: `market`, `limit`
+  - Returns: `market`, `price`, `amount`, `timestamp`
+  
+- **`market/list/bid`** - Lists all buy orders for a specific market
+  - Parameters: `market` (e.g., "NXS/BTC"), `limit`
+  
+- **`market/list/ask`** - Lists all sell orders for a specific market
+  - Parameters: `market` (e.g., "NXS/BTC"), `limit`
+  
+- **`market/list/executed`** - Lists executed (completed) trades
+  - Returns trade history with price, amount, timestamp
+
+### API Request Format
+
+All Nexus API requests use **POST** method with JSON body:
+
+```javascript
+const response = await fetch('https://api.nexus.io:8080/system/get/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+});
+```
+
+### API Response Format
+
+Nexus API returns data in a `result` object:
+
+```json
+{
+    "result": {
+        "blocks": 4555100,
+        "connections": 41,
+        "version": "5.1.0-rc2 Tritium++ CLI [LLD][x64]",
+        ...
+    }
+}
+```
 
 ### Demo Mode
 
 The DEX includes demo/fallback data for development and when the API is unavailable:
-- Simulated trading pairs
-- Generated order books
+- Simulated trading pairs (NXS/BTC, NXS/USD, NXS/ETH, etc.)
+- Generated order books with realistic depth
 - Sample trade history
+- This allows the DEX to function even when the Nexus API is not accessible
 
 ## File Structure
 
@@ -95,11 +145,23 @@ Select different time intervals to view price history:
 
 ### API Endpoints
 
-To use real Nexus.io API data, ensure the endpoints in `dex.js` are correctly configured:
+To use real Nexus.io API data, the endpoints in `dex.js` are configured according to the official Nexus API documentation:
 
 ```javascript
-const NEXUS_API_BASE = 'https://api.nexus.io/v2';
+const NEXUS_API_BASE = 'https://api.nexus.io:8080';
+
+const API_ENDPOINTS = {
+    systemInfo: `${NEXUS_API_BASE}/system/get/info`,
+    ledgerInfo: `${NEXUS_API_BASE}/ledger/get/info`,
+    ledgerMetrics: `${NEXUS_API_BASE}/ledger/get/metrics`,
+    listOrders: `${NEXUS_API_BASE}/market/list/order`,
+    listBids: `${NEXUS_API_BASE}/market/list/bid`,
+    listAsks: `${NEXUS_API_BASE}/market/list/ask`,
+    listExecuted: `${NEXUS_API_BASE}/market/list/executed`
+};
 ```
+
+**Note**: The Nexus API does not use `/v2` in the URL path. All endpoints are accessed directly from the base URL.
 
 ### Update Frequency
 

@@ -67,19 +67,71 @@ Distordia Fantasy Football is an innovative platform where players own NFT asset
 
 ### Blockchain Integration
 
-```javascript
-// Nexus.io API for NFT assets
-const NEXUS_API_BASE = 'https://api.nexus.io/v2';
+The platform integrates with the Nexus.io blockchain using the official API endpoints as documented in the [Nexus API Documentation](https://nexus.io/docs).
 
-// Fetch player NFTs owned by wallet
-async function loadMyAssets() {
-    const response = await fetch(`${NEXUS_API_BASE}/assets/get/owner`, {
-        method: 'POST',
-        body: JSON.stringify({ address: walletAddress })
-    });
-    return await response.json();
-}
+```javascript
+// Nexus API base URL (no /v2 - not part of actual API)
+const NEXUS_API_BASE = 'https://api.nexus.io:8080';
+
+// Nexus API Endpoints
+const NEXUS_ENDPOINTS = {
+    // Assets API - for NFT player cards
+    listAssets: `${NEXUS_API_BASE}/assets/list/asset`,
+    getAsset: `${NEXUS_API_BASE}/assets/get/asset`,
+    listAny: `${NEXUS_API_BASE}/assets/list/any`,
+    
+    // Profiles API - for user profiles  
+    getProfile: `${NEXUS_API_BASE}/profiles/get/master`,
+    
+    // System API - for network info
+    systemInfo: `${NEXUS_API_BASE}/system/get/info`
+};
 ```
+
+#### Assets API
+
+The **Assets API** provides commands for creating and managing NFTs on the Nexus blockchain:
+
+- **`assets/list/asset`** - Lists all assets owned by the logged-in user
+  - Requires: `session` (user login session)
+  - Returns: Array of asset objects with metadata
+  
+- **`assets/get/asset`** - Retrieves details of a specific asset
+  - Parameters: `name` or `address` of the asset
+  - Returns: Asset object with all fields and values
+
+- **`assets/create/asset`** - Creates a new NFT asset (for minting player cards)
+  - Requires: `session`, `pin`, `format` (JSON or basic)
+  - Parameters: Asset fields (playerName, team, position, etc.)
+
+#### User Authentication
+
+To access user-specific assets, the Nexus API requires authentication:
+
+```javascript
+// 1. Create a session (login)
+const loginResponse = await fetch(`${NEXUS_API_BASE}/sessions/create/local`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        username: 'user',
+        password: 'pass',
+        pin: '1234'
+    })
+});
+
+// 2. Use session to list assets
+const assetsResponse = await fetch(`${NEXUS_API_BASE}/assets/list/asset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        session: sessionId,
+        limit: 100
+    })
+});
+```
+
+**Note**: All Nexus API requests use **POST** method with JSON body. Responses contain data in a `result` object.
 
 ### Football Data Integration
 
@@ -189,15 +241,48 @@ const SCORING_RULES = {
 
 ## 🔗 API Endpoints
 
-### Nexus Blockchain
-- Asset ownership: `/assets/get/owner`
-- Asset details: `/assets/get/asset`
-- Marketplace listings: `/market/get/listings`
+### Nexus Blockchain API
 
-### Football Data
-- Live matches: `/fixtures/live`
-- Player stats: `/players/get/statistics`
-- Match results: `/fixtures/get/results`
+According to the official Nexus API documentation, the following endpoints are used:
+
+#### Assets API (NFT Player Cards)
+- **`assets/list/asset`** - List all assets owned by logged-in user
+  - Requires: `session` (user authentication)
+  - Optional: `limit`, `page`, filters
+  
+- **`assets/get/asset`** - Get details of a specific asset
+  - Parameters: `name` or `address`
+  - Returns: Full asset object with metadata
+  
+- **`assets/create/asset`** - Create new NFT asset (admin/minting only)
+  - Requires: `session`, `pin`, `format`
+  - Parameters: Asset schema fields
+
+#### Sessions API (Authentication)
+- **`sessions/create/local`** - Login and create session
+  - Parameters: `username`, `password`, `pin`
+  - Returns: `session` ID and `genesis` hash
+
+#### System API (Network Info)
+- **`system/get/info`** - Get node and network information
+  - Returns: Block height, connections, version, timestamp
+
+### Football Data API
+
+External football data API integration for real-world match data:
+
+- **Live Fixtures**: Real-time match scores and events
+- **Player Statistics**: Goals, assists, cards, minutes played
+- **Team Lineups**: Starting XI and formations
+- **Match Results**: Historical performance data
+
+### Demo Mode
+
+The platform includes demo data for development and when APIs are unavailable:
+- Pre-generated player NFTs with realistic stats
+- Simulated match data and live scores
+- Sample leaderboard rankings
+- This allows the platform to function for demonstration purposes
 
 ## 💡 Future Enhancements
 

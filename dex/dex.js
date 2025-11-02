@@ -1,17 +1,23 @@
 // Nexus.io API Configuration
-const NEXUS_API_BASE = 'https://api.nexus.io:8080/';
-const NEXUS_EXPLORER_API = 'https://api.nexus.io:8080/';
+// Base URL for Nexus API (remove /v2 - not part of the actual API)
+const NEXUS_API_BASE = 'https://api.nexus.io:8080';
 
-// API endpoints - using demo data until actual Nexus API is configured
+// API endpoints according to Nexus API documentation
 const API_ENDPOINTS = {
-    info: `${NEXUS_API_BASE}/system/get/info`,
-    miningInfo: `${NEXUS_API_BASE}/ledger/get/mininginfo`,
-    blockHeight: `${NEXUS_API_BASE}/system/get/info/blocks`,
-    // Market data - will use fallback demo data
-    marketPairs: '/api/markets',
-    orderBook: '/api/orderbook',
-    trades: '/api/trades',
-    ticker: '/api/ticker'
+    // System API - get node and network information
+    systemInfo: `${NEXUS_API_BASE}/system/get/info`,
+    
+    // Ledger API - get blockchain data
+    ledgerInfo: `${NEXUS_API_BASE}/ledger/get/info`,
+    ledgerMetrics: `${NEXUS_API_BASE}/ledger/get/metrics`,
+    getBlock: `${NEXUS_API_BASE}/ledger/get/block`,
+    
+    // Market API - P2P marketplace orders
+    listOrders: `${NEXUS_API_BASE}/market/list/order`,
+    listBids: `${NEXUS_API_BASE}/market/list/bid`,
+    listAsks: `${NEXUS_API_BASE}/market/list/ask`,
+    listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
+    userOrders: `${NEXUS_API_BASE}/market/user/order`
 };
 
 // Global state
@@ -86,8 +92,9 @@ async function fetchNetworkStats() {
     try {
         updateAPIStatus('connecting');
         
-        // Try to fetch real Nexus blockchain data
-        const response = await fetch(`${NEXUS_API_BASE}/ledger/get/info`, {
+        // Fetch real Nexus blockchain data using proper API endpoints
+        // Using POST method as per Nexus API documentation
+        const response = await fetch(API_ENDPOINTS.systemInfo, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})
@@ -95,8 +102,12 @@ async function fetchNetworkStats() {
 
         if (response.ok) {
             const data = await response.json();
-            updateNetworkStats(data);
+            // Nexus API returns data in 'result' object
+            updateNetworkStats(data.result || data);
             updateAPIStatus('connected');
+            
+            // Also fetch ledger metrics for additional stats
+            fetchLedgerMetrics();
         } else {
             throw new Error('API unavailable');
         }
@@ -108,13 +119,49 @@ async function fetchNetworkStats() {
     }
 }
 
+// Fetch Ledger Metrics for additional blockchain stats
+async function fetchLedgerMetrics() {
+    try {
+        const response = await fetch(API_ENDPOINTS.ledgerMetrics, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            updateLedgerMetrics(data.result || data);
+        }
+    } catch (error) {
+        console.error('Error fetching ledger metrics:', error);
+    }
+}
+
+// Update ledger metrics display
+function updateLedgerMetrics(data) {
+    // Update additional stats if available
+    if (data.stakerate) {
+        const stakeRateEl = document.getElementById('stake-rate');
+        if (stakeRateEl) stakeRateEl.textContent = data.stakerate.toFixed(2) + '%';
+    }
+}
+
 // Update network stats display
 function updateNetworkStats(data) {
-    const blockHeight = data.result?.height || data.height || '-';
-    const networkHash = data.result?.hashrate || data.hashrate || '-';
+    // Nexus API returns block height as 'blocks' in system/get/info
+    const blockHeight = data.blocks || data.height || '-';
+    const connections = data.connections || '-';
     
     document.getElementById('block-height').textContent = formatNumber(blockHeight);
-    document.getElementById('network-hash').textContent = networkHash ? formatHashRate(networkHash) : '-';
+    
+    const connectionsEl = document.getElementById('connections');
+    if (connectionsEl) connectionsEl.textContent = connections;
+    
+    // Update network version if available
+    if (data.version) {
+        const versionEl = document.getElementById('network-version');
+        if (versionEl) versionEl.textContent = data.version;
+    }
 }
 
 // Use demo network stats
@@ -135,7 +182,41 @@ function useDemoNetworkStats() {
 // Fetch Market Pairs
 async function fetchMarketPairs() {
     try {
-        // Demo market pairs data
+        // Try to fetch real market orders from Nexus blockchain
+        const response = await fetch(API_ENDPOINTS.listOrders, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                limit: 100,
+                // Can add filters here like: market: "NXS/BTC"
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const orders = data.result || [];
+            
+            if (orders.length > 0) {
+                // Process real market orders into pairs
+                const pairs = processMarketOrders(orders);
+                marketData.pairs = pairs;
+                renderMarketPairs(pairs);
+                renderMarketOverview(pairs);
+                
+                if (pairs.length > 0) {
+                    selectPair(pairs[0]);
+                }
+                return;
+            }
+        }
+        
+        // Fallback to demo data if API unavailable or no orders
+        throw new Error('No market data available');
+        
+    } catch (error) {
+        console.error('Error fetching market pairs:', error);
+        
+        // Demo market pairs data as fallback
         const demoPairs = [
             { pair: 'NXS/BTC', price: 0.00001234, change24h: 5.67, volume24h: 123456.78, base: 'NXS', quote: 'BTC' },
             { pair: 'NXS/USD', price: 0.456, change24h: -2.34, volume24h: 234567.89, base: 'NXS', quote: 'USD' },
@@ -153,10 +234,32 @@ async function fetchMarketPairs() {
         if (demoPairs.length > 0) {
             selectPair(demoPairs[0]);
         }
-    } catch (error) {
-        console.error('Error fetching market pairs:', error);
-        document.getElementById('pairs-list').innerHTML = '<div class="error-message">Failed to load market pairs</div>';
     }
+}
+
+// Process market orders from Nexus API into trading pairs
+function processMarketOrders(orders) {
+    const pairsMap = new Map();
+    
+    orders.forEach(order => {
+        const market = order.market; // e.g., "NXS/BTC"
+        if (!market) return;
+        
+        if (!pairsMap.has(market)) {
+            const [base, quote] = market.split('/');
+            pairsMap.set(market, {
+                pair: market,
+                base: base,
+                quote: quote,
+                price: order.price || 0,
+                change24h: 0, // Would need historical data
+                volume24h: 0, // Would need to calculate from executed orders
+                lastPrice: order.price || 0
+            });
+        }
+    });
+    
+    return Array.from(pairsMap.values());
 }
 
 // Render Market Pairs
@@ -210,14 +313,64 @@ function selectPair(pair) {
 }
 
 // Load Order Book
-function loadOrderBook(pair) {
-    // Demo order book data
-    const demoOrderBook = {
-        asks: generateOrderBookSide('ask', pair.price, 15),
-        bids: generateOrderBookSide('bid', pair.price, 15)
-    };
+async function loadOrderBook(pair) {
+    try {
+        // Fetch bids and asks from Nexus market API
+        const [bidsResponse, asksResponse] = await Promise.all([
+            fetch(API_ENDPOINTS.listBids, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    market: pair.pair,
+                    limit: 15
+                })
+            }),
+            fetch(API_ENDPOINTS.listAsks, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    market: pair.pair,
+                    limit: 15
+                })
+            })
+        ]);
 
-    renderOrderBook(demoOrderBook);
+        if (bidsResponse.ok && asksResponse.ok) {
+            const bidsData = await bidsResponse.json();
+            const asksData = await asksResponse.json();
+            
+            const bids = (bidsData.result || []).map(order => ({
+                price: order.price || 0,
+                amount: order.amount || 0,
+                total: (order.price || 0) * (order.amount || 0)
+            }));
+            
+            const asks = (asksData.result || []).map(order => ({
+                price: order.price || 0,
+                amount: order.amount || 0,
+                total: (order.price || 0) * (order.amount || 0)
+            }));
+            
+            if (bids.length > 0 || asks.length > 0) {
+                renderOrderBook({ bids, asks });
+                return;
+            }
+        }
+        
+        // Fallback to demo data
+        throw new Error('No order book data');
+        
+    } catch (error) {
+        console.error('Error loading order book:', error);
+        
+        // Demo order book data as fallback
+        const demoOrderBook = {
+            asks: generateOrderBookSide('ask', pair.price, 15),
+            bids: generateOrderBookSide('bid', pair.price, 15)
+        };
+
+        renderOrderBook(demoOrderBook);
+    }
 }
 
 // Generate demo order book side
@@ -308,11 +461,44 @@ function loadChart(pair) {
 // Fetch Recent Trades
 async function fetchRecentTrades() {
     try {
-        // Demo trades data
-        const demoTrades = generateDemoTrades(20);
-        renderTrades(demoTrades);
+        // Fetch executed orders from Nexus market API
+        const response = await fetch(API_ENDPOINTS.listExecuted, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                limit: 20,
+                // Can add filters here like: market: currentPair?.pair
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const executedOrders = data.result || [];
+            
+            if (executedOrders.length > 0) {
+                const trades = executedOrders.map(order => ({
+                    time: new Date(order.timestamp * 1000), // Convert Unix timestamp
+                    pair: order.market || 'Unknown',
+                    type: order.type || 'buy', // bid = buy, ask = sell
+                    price: order.price || 0,
+                    amount: order.amount || 0,
+                    total: (order.price || 0) * (order.amount || 0)
+                }));
+                
+                renderTrades(trades);
+                return;
+            }
+        }
+        
+        // Fallback to demo data
+        throw new Error('No trade data');
+        
     } catch (error) {
         console.error('Error fetching trades:', error);
+        
+        // Demo trades data as fallback
+        const demoTrades = generateDemoTrades(20);
+        renderTrades(demoTrades);
     }
 }
 
