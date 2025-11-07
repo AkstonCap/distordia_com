@@ -17,6 +17,7 @@ const API_ENDPOINTS = {
     listBids: `${NEXUS_API_BASE}/market/list/bid`,
     listAsks: `${NEXUS_API_BASE}/market/list/ask`,
     listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
+    listExecutedFiltered: `${NEXUS_API_BASE}/market/list/executed/timestamp,contract.amount,contract.ticker,order.amount,order.ticker`,
     userOrders: `${NEXUS_API_BASE}/market/user/order`
 };
 
@@ -202,8 +203,88 @@ async function fetchMarketPairs() {
         // Fetch market data for each default pair
         const pairPromises = DEFAULT_MARKET_PAIRS.map(async (marketPair) => {
             try {
-                // Fetch orders for this specific market pair
-                const response = await fetch(API_ENDPOINTS.listOrders, {
+                // Fetch last executed order for this market pair to get the current price
+                const executedResponse = await fetch(API_ENDPOINTS.listExecuted, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        market: marketPair,
+                        limit: 1,
+                        sort: 'timestamp',
+                        order: 'desc'
+                    })
+                });
+
+                let lastPrice = 0;
+                let currentTimestamp = 0;
+                if (executedResponse.ok) {
+                    const executedData = await executedResponse.json();
+                    console.log(`Executed data for ${marketPair}:`, executedData);
+                    
+                    const bids = executedData.result?.bids || [];
+                    const asks = executedData.result?.asks || [];
+                    console.log(`  Bids:`, bids);
+                    console.log(`  Asks:`, asks);
+                    
+                    const executedOrders = [...bids, ...asks];
+                    
+                    // Sort by timestamp descending to get the most recent executed order
+                    executedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    
+                    if (executedOrders.length > 0) {
+                        const lastOrder = executedOrders[0];
+                        lastPrice = calculatePriceFromOrder(lastOrder, marketPair);
+                        currentTimestamp = lastOrder.timestamp || 0;
+                        console.log(`Market ${marketPair}: Last price = ${lastPrice} (timestamp: ${lastOrder.timestamp})`);
+                    } else {
+                        console.log(`Market ${marketPair}: No executed orders found`);
+                    }
+                } else {
+                    console.log(`Failed to fetch executed orders for ${marketPair}: ${executedResponse.status}`);
+                }
+                
+                // Fetch executed order from 24 hours ago for 24h change calculation
+                let price24hAgo = 0;
+                if (currentTimestamp > 0) {
+                    const timestamp24hAgo = currentTimestamp - (24 * 60 * 60); // 24 hours in seconds
+                    
+                    const historical24hResponse = await fetch(API_ENDPOINTS.listExecuted, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            market: marketPair,
+                            limit: 1,
+                            where: `timestamp<=${timestamp24hAgo}`,
+                            sort: 'timestamp',
+                            order: 'desc'
+                        })
+                    });
+                    
+                    if (historical24hResponse.ok) {
+                        const historical24hData = await historical24hResponse.json();
+                        const historicalBids = historical24hData.result?.bids || [];
+                        const historicalAsks = historical24hData.result?.asks || [];
+                        const historical24hOrders = [...historicalBids, ...historicalAsks];
+                        
+                        historical24hOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                        
+                        if (historical24hOrders.length > 0) {
+                            const order24hAgo = historical24hOrders[0];
+                            price24hAgo = calculatePriceFromOrder(order24hAgo, marketPair);
+                            console.log(`Market ${marketPair}: Price 24h ago = ${price24hAgo} (timestamp: ${order24hAgo.timestamp})`);
+                        }
+                    }
+                }
+                
+                // Calculate 24h change percentage
+                let change24h = 0;
+                if (lastPrice > 0 && price24hAgo > 0) {
+                    change24h = ((lastPrice - price24hAgo) / price24hAgo) * 100;
+                    console.log(`Market ${marketPair}: 24h change = ${change24h.toFixed(2)}%`);
+                }
+                
+                // Fetch all orders for volume calculation
+                const ordersResponse = await fetch(API_ENDPOINTS.listOrders, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -212,21 +293,26 @@ async function fetchMarketPairs() {
                     })
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    const orders = data.result || [];
+                if (ordersResponse.ok) {
+                    const data = await ordersResponse.json();
+                    console.log(`Order data for ${marketPair}:`, data);
                     
-                    console.log(`Market ${marketPair}: ${orders.length} orders found`);
+                    // The result contains bids and asks arrays
+                    const orderBids = data.result?.bids || [];
+                    const orderAsks = data.result?.asks || [];
+                    const allOrders = [...orderBids, ...orderAsks];
+                    
+                    console.log(`Market ${marketPair}: ${allOrders.length} orders found (${orderBids.length} bids, ${orderAsks.length} asks)`);
                     
                     // Calculate market statistics from orders
-                    return processMarketPairData(marketPair, orders);
+                    return processMarketPairData(marketPair, allOrders, lastPrice, change24h);
                 } else {
-                    console.warn(`Failed to fetch ${marketPair}: ${response.status}`);
-                    return processMarketPairData(marketPair, []); // Return empty pair data
+                    console.warn(`Failed to fetch ${marketPair}: ${ordersResponse.status}`);
+                    return processMarketPairData(marketPair, [], lastPrice, change24h); // Return with last price
                 }
             } catch (err) {
                 console.error(`Error fetching ${marketPair}:`, err);
-                return processMarketPairData(marketPair, []); // Return empty pair data
+                return processMarketPairData(marketPair, [], 0, 0); // Return empty pair data
             }
         });
 
@@ -252,19 +338,64 @@ async function fetchMarketPairs() {
     }
 }
 
+// Calculate price from executed order
+function calculatePriceFromOrder(order, marketPair) {
+    console.log(`Calculating price for ${marketPair}:`, order);
+    
+    const [base, quote] = marketPair.split('/');
+    
+    // Get contract (what's being sold) and order (what's being bought)
+    const contractAmount = parseFloat(order.contract?.amount || 0);
+    const contractTicker = order.contract?.ticker || '';
+    const orderAmount = parseFloat(order.order?.amount || 0);
+    const orderTicker = order.order?.ticker || '';
+    
+    console.log(`  Contract: ${contractAmount} ${contractTicker}`);
+    console.log(`  Order: ${orderAmount} ${orderTicker}`);
+    
+    if (contractAmount === 0 || orderAmount === 0) {
+        console.log(`  Missing amounts - returning 0`);
+        return 0;
+    }
+    
+    // Adjust for NXS divisible units (1 NXS = 1e6 units)
+    const adjustedContractAmount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+    const adjustedOrderAmount = orderTicker === 'NXS' ? orderAmount / 1e6 : orderAmount;
+    
+    console.log(`  Adjusted Contract: ${adjustedContractAmount} ${contractTicker}`);
+    console.log(`  Adjusted Order: ${adjustedOrderAmount} ${orderTicker}`);
+    
+    // Price is how much quote currency per base currency
+    // If contract is base and order is quote: price = orderAmount / contractAmount
+    // If contract is quote and order is base: price = contractAmount / orderAmount
+    
+    if (contractTicker === base && orderTicker === quote) {
+        const price = adjustedOrderAmount / adjustedContractAmount;
+        console.log(`  Price calculation (contract=base): ${adjustedOrderAmount} / ${adjustedContractAmount} = ${price}`);
+        return price;
+    } else if (contractTicker === quote && orderTicker === base) {
+        const price = adjustedContractAmount / adjustedOrderAmount;
+        console.log(`  Price calculation (contract=quote): ${adjustedContractAmount} / ${adjustedOrderAmount} = ${price}`);
+        return price;
+    }
+    
+    console.log(`  No matching ticker combination - returning 0`);
+    return 0;
+}
+
 // Process market pair data from Nexus orders
-function processMarketPairData(marketPair, orders) {
+function processMarketPairData(marketPair, orders, lastPrice = 0, change24h = 0) {
     if (!orders || orders.length === 0) {
-        // Return pair with no data
+        // Return pair with no data but include lastPrice if we have it
         const [base, quote] = marketPair.split('/');
         return {
             pair: marketPair,
             base: base,
             quote: quote,
-            price: 0,
-            change24h: 0,
+            price: lastPrice,
+            change24h: change24h,
             volume24h: 0,
-            lastPrice: 0,
+            lastPrice: lastPrice,
             orders: []
         };
     }
@@ -273,7 +404,7 @@ function processMarketPairData(marketPair, orders) {
     
     // Calculate statistics from orders
     let totalVolume = 0;
-    let lastPrice = 0;
+    let orderLastPrice = 0;
     let highPrice = 0;
     let lowPrice = Infinity;
     
@@ -282,27 +413,27 @@ function processMarketPairData(marketPair, orders) {
         const amount = parseFloat(order.amount || 0);
         
         if (price > 0) {
-            lastPrice = price; // Use most recent order price
+            orderLastPrice = price; // Use most recent order price as fallback
             highPrice = Math.max(highPrice, price);
             lowPrice = Math.min(lowPrice, price);
             totalVolume += amount;
         }
     });
     
-    // For 24h change, we'd need historical data
-    // For now, calculate from high/low spread
-    const change24h = highPrice > 0 && lowPrice < Infinity 
-        ? ((lastPrice - lowPrice) / lowPrice * 100)
-        : 0;
+    // Use executed price if available, otherwise fall back to order price
+    const finalLastPrice = lastPrice || orderLastPrice;
+    
+    // Use the calculated 24h change from historical data
+    // If not provided, it will be 0
     
     return {
         pair: marketPair,
         base: base,
         quote: quote,
-        price: lastPrice,
+        price: finalLastPrice,
         change24h: change24h,
         volume24h: totalVolume,
-        lastPrice: lastPrice,
+        lastPrice: finalLastPrice,
         highPrice: highPrice,
         lowPrice: lowPrice === Infinity ? 0 : lowPrice,
         orders: orders
@@ -391,8 +522,11 @@ async function loadOrderBook(pair) {
             const bidsData = await bidsResponse.json();
             const asksData = await asksResponse.json();
             
-            const bidsResult = bidsData.result || [];
-            const asksResult = asksData.result || [];
+            console.log('Bids data:', bidsData);
+            console.log('Asks data:', asksData);
+            
+            const bidsResult = bidsData.result?.bids || bidsData.result || [];
+            const asksResult = asksData.result?.asks || asksData.result || [];
             
             console.log(`Loaded ${bidsResult.length} bids, ${asksResult.length} asks`);
             
@@ -534,11 +668,18 @@ async function fetchRecentTrades(marketPair = null) {
 
         if (response.ok) {
             const data = await response.json();
-            const executedOrders = data.result || [];
+            console.log('Recent trades data:', data);
             
-            console.log(`Loaded ${executedOrders.length} executed trades`);
+            const bids = data.result?.bids || [];
+            const asks = data.result?.asks || [];
+            const executedOrders = [...bids, ...asks];
+            
+            console.log(`Loaded ${executedOrders.length} executed trades (${bids.length} bids, ${asks.length} asks)`);
             
             if (executedOrders.length > 0) {
+                // Sort by timestamp descending
+                executedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
                 const trades = executedOrders.map(order => ({
                     time: new Date((order.timestamp || 0) * 1000), // Convert Unix timestamp
                     pair: order.market || 'Unknown',
@@ -600,27 +741,36 @@ function renderMarketOverview(pairs) {
     const marketsGrid = document.getElementById('markets-grid');
     if (!marketsGrid) return;
 
-    marketsGrid.innerHTML = pairs.map(pair => `
-        <div class="market-card" onclick="selectPairByName('${pair.pair}')">
-            <div class="market-card-header">
-                <span class="market-pair">${pair.pair}</span>
-                <button class="market-favorite" onclick="event.stopPropagation(); toggleFavorite('${pair.pair}')">
-                    ☆
-                </button>
-            </div>
-            <div class="market-price">${formatPrice(pair.price)}</div>
-            <div class="market-stats-row">
-                <span>24h Change:</span>
-                <span class="${pair.change24h >= 0 ? 'trade-buy' : 'trade-sell'}">
-                    ${pair.change24h >= 0 ? '+' : ''}${pair.change24h.toFixed(2)}%
-                </span>
-            </div>
-            <div class="market-stats-row">
-                <span>24h Volume:</span>
-                <span>${formatNumber(pair.volume24h)}</span>
-            </div>
-        </div>
-    `).join('');
+    marketsGrid.innerHTML = `
+        <table class="market-overview-table">
+            <thead>
+                <tr>
+                    <th>Market Pair</th>
+                    <th>Last Price</th>
+                    <th>24h Change</th>
+                    <th>24h Volume</th>
+                    <th>Favorite</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${pairs.map(pair => `
+                    <tr class="market-row" onclick="selectPairByName('${pair.pair}')">
+                        <td class="market-pair">${pair.pair}</td>
+                        <td class="market-price">${formatPrice(pair.price)}</td>
+                        <td class="${pair.change24h >= 0 ? 'trade-buy' : 'trade-sell'}">
+                            ${pair.change24h >= 0 ? '+' : ''}${pair.change24h.toFixed(2)}%
+                        </td>
+                        <td>${formatNumber(pair.volume24h)}</td>
+                        <td>
+                            <button class="market-favorite" onclick="event.stopPropagation(); toggleFavorite('${pair.pair}')">
+                                ☆
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
 }
 
 // Update API Status
