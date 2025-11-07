@@ -479,6 +479,64 @@
     gap: 1.5rem;
 }
 
+.markets-grid:has(.market-overview-table) {
+    display: block;
+}
+
+.market-overview-table {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-card);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.market-overview-table thead {
+    background: var(--bg-darker);
+}
+
+.market-overview-table th {
+    padding: 1.25rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.market-overview-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.market-overview-table tbody tr:hover {
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.market-overview-table td {
+    padding: 1.25rem 2rem;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.market-overview-table .market-pair {
+    font-weight: bold;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.market-overview-table .market-price {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
 .market-card {
     background: var(--bg-card);
     padding: 1.5rem;
