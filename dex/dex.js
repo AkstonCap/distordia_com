@@ -1,6 +1,6 @@
 // Nexus.io API Configuration
 // Base URL for Nexus API (remove /v2 - not part of the actual API)
-const NEXUS_API_BASE = 'https://api.nexus.io:8080';
+const NEXUS_API_BASE = 'http://api.nexus.io:8080';
 
 // API endpoints according to Nexus API documentation
 const API_ENDPOINTS = {
@@ -20,10 +20,24 @@ const API_ENDPOINTS = {
     userOrders: `${NEXUS_API_BASE}/market/user/order`
 };
 
+console.log('Distordia DEX initialized with Nexus API endpoints:', API_ENDPOINTS);
+
 // Global state
 let currentPair = null;
 let marketData = {};
 let updateInterval = null;
+
+// Default market pairs to track
+const DEFAULT_MARKET_PAIRS = [
+    'USDD/NXS',
+    'DIST/NXS', 
+    'GARAGE/NXS',
+    'HUSTLE/NXS',
+    'NXS/USDD',
+    'DIST/USDD',
+    'GARAGE/USDD',
+    'HUSTLE/USDD'
+];
 
 // Initialize DEX
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,8 +51,8 @@ async function initializeDEX() {
     showLoadingState();
     await Promise.all([
         fetchNetworkStats(),
-        fetchMarketPairs(),
-        fetchRecentTrades()
+        fetchMarketPairs()
+        // fetchRecentTrades will be called when a pair is selected
     ]);
 }
 
@@ -113,9 +127,7 @@ async function fetchNetworkStats() {
         }
     } catch (error) {
         console.error('Error fetching network stats:', error);
-        // Use demo data as fallback
-        useDemoNetworkStats();
-        updateAPIStatus('connected', 'Using demo data');
+        updateAPIStatus('error', 'Failed to connect to Nexus API');
     }
 }
 
@@ -152,7 +164,25 @@ function updateNetworkStats(data) {
     const blockHeight = data.blocks || data.height || '-';
     const connections = data.connections || '-';
     
-    document.getElementById('block-height').textContent = formatNumber(blockHeight);
+    // Update top block height (show full number without abbreviation)
+    const blockHeightEl = document.getElementById('block-height');
+    if (blockHeightEl) {
+        if (blockHeight !== '-') {
+            blockHeightEl.textContent = blockHeight.toLocaleString('en-US');
+        } else {
+            blockHeightEl.textContent = '-';
+        }
+    }
+    
+    // Update status bar block height (show full number without abbreviation)
+    const statusBlockHeightEl = document.getElementById('status-block-height');
+    if (statusBlockHeightEl) {
+        if (blockHeight !== '-') {
+            statusBlockHeightEl.textContent = blockHeight.toLocaleString('en-US');
+        } else {
+            statusBlockHeightEl.textContent = '-';
+        }
+    }
     
     const connectionsEl = document.getElementById('connections');
     if (connectionsEl) connectionsEl.textContent = connections;
@@ -164,102 +194,119 @@ function updateNetworkStats(data) {
     }
 }
 
-// Use demo network stats
-function useDemoNetworkStats() {
-    const demoData = {
-        blockHeight: 4523891,
-        hashRate: 125000000000,
-        volume24h: 1234567.89,
-        activeMarkets: 12
-    };
-
-    document.getElementById('block-height').textContent = formatNumber(demoData.blockHeight);
-    document.getElementById('network-hash').textContent = formatHashRate(demoData.hashRate);
-    document.getElementById('volume-24h').textContent = '$' + formatNumber(demoData.volume24h);
-    document.getElementById('active-markets').textContent = demoData.activeMarkets;
-}
-
 // Fetch Market Pairs
 async function fetchMarketPairs() {
     try {
-        // Try to fetch real market orders from Nexus blockchain
-        const response = await fetch(API_ENDPOINTS.listOrders, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                limit: 100,
-                // Can add filters here like: market: "NXS/BTC"
-            })
+        console.log('Fetching market data from Nexus blockchain...');
+        
+        // Fetch market data for each default pair
+        const pairPromises = DEFAULT_MARKET_PAIRS.map(async (marketPair) => {
+            try {
+                // Fetch orders for this specific market pair
+                const response = await fetch(API_ENDPOINTS.listOrders, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        market: marketPair,
+                        limit: 50
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const orders = data.result || [];
+                    
+                    console.log(`Market ${marketPair}: ${orders.length} orders found`);
+                    
+                    // Calculate market statistics from orders
+                    return processMarketPairData(marketPair, orders);
+                } else {
+                    console.warn(`Failed to fetch ${marketPair}: ${response.status}`);
+                    return processMarketPairData(marketPair, []); // Return empty pair data
+                }
+            } catch (err) {
+                console.error(`Error fetching ${marketPair}:`, err);
+                return processMarketPairData(marketPair, []); // Return empty pair data
+            }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            const orders = data.result || [];
-            
-            if (orders.length > 0) {
-                // Process real market orders into pairs
-                const pairs = processMarketOrders(orders);
-                marketData.pairs = pairs;
-                renderMarketPairs(pairs);
-                renderMarketOverview(pairs);
-                
-                if (pairs.length > 0) {
-                    selectPair(pairs[0]);
-                }
-                return;
-            }
-        }
+        // Wait for all market data
+        const pairResults = await Promise.all(pairPromises);
         
-        // Fallback to demo data if API unavailable or no orders
-        throw new Error('No market data available');
+        console.log(`Loaded ${pairResults.length} market pairs`);
+        marketData.pairs = pairResults;
+        renderMarketPairs(pairResults);
+        renderMarketOverview(pairResults);
+        
+        if (pairResults.length > 0) {
+            selectPair(pairResults[0]);
+        }
         
     } catch (error) {
         console.error('Error fetching market pairs:', error);
-        
-        // Demo market pairs data as fallback
-        const demoPairs = [
-            { pair: 'NXS/BTC', price: 0.00001234, change24h: 5.67, volume24h: 123456.78, base: 'NXS', quote: 'BTC' },
-            { pair: 'NXS/USD', price: 0.456, change24h: -2.34, volume24h: 234567.89, base: 'NXS', quote: 'USD' },
-            { pair: 'NXS/ETH', price: 0.00012, change24h: 3.21, volume24h: 89012.34, base: 'NXS', quote: 'ETH' },
-            { pair: 'BTC/USD', price: 43250.00, change24h: 1.23, volume24h: 9876543.21, base: 'BTC', quote: 'USD' },
-            { pair: 'ETH/USD', price: 2345.67, change24h: -0.89, volume24h: 5432109.87, base: 'ETH', quote: 'USD' },
-            { pair: 'BTC/ETH', price: 18.42, change24h: 2.15, volume24h: 345678.90, base: 'BTC', quote: 'ETH' },
-        ];
-
-        marketData.pairs = demoPairs;
-        renderMarketPairs(demoPairs);
-        renderMarketOverview(demoPairs);
-        
-        // Select first pair by default
-        if (demoPairs.length > 0) {
-            selectPair(demoPairs[0]);
+        // Display error message to user
+        const pairsList = document.getElementById('pairs-list');
+        if (pairsList) {
+            pairsList.innerHTML = '<div class="error-message">Failed to load market data from Nexus blockchain</div>';
         }
     }
 }
 
-// Process market orders from Nexus API into trading pairs
-function processMarketOrders(orders) {
-    const pairsMap = new Map();
+// Process market pair data from Nexus orders
+function processMarketPairData(marketPair, orders) {
+    if (!orders || orders.length === 0) {
+        // Return pair with no data
+        const [base, quote] = marketPair.split('/');
+        return {
+            pair: marketPair,
+            base: base,
+            quote: quote,
+            price: 0,
+            change24h: 0,
+            volume24h: 0,
+            lastPrice: 0,
+            orders: []
+        };
+    }
+    
+    const [base, quote] = marketPair.split('/');
+    
+    // Calculate statistics from orders
+    let totalVolume = 0;
+    let lastPrice = 0;
+    let highPrice = 0;
+    let lowPrice = Infinity;
     
     orders.forEach(order => {
-        const market = order.market; // e.g., "NXS/BTC"
-        if (!market) return;
+        const price = parseFloat(order.price || 0);
+        const amount = parseFloat(order.amount || 0);
         
-        if (!pairsMap.has(market)) {
-            const [base, quote] = market.split('/');
-            pairsMap.set(market, {
-                pair: market,
-                base: base,
-                quote: quote,
-                price: order.price || 0,
-                change24h: 0, // Would need historical data
-                volume24h: 0, // Would need to calculate from executed orders
-                lastPrice: order.price || 0
-            });
+        if (price > 0) {
+            lastPrice = price; // Use most recent order price
+            highPrice = Math.max(highPrice, price);
+            lowPrice = Math.min(lowPrice, price);
+            totalVolume += amount;
         }
     });
     
-    return Array.from(pairsMap.values());
+    // For 24h change, we'd need historical data
+    // For now, calculate from high/low spread
+    const change24h = highPrice > 0 && lowPrice < Infinity 
+        ? ((lastPrice - lowPrice) / lowPrice * 100)
+        : 0;
+    
+    return {
+        pair: marketPair,
+        base: base,
+        quote: quote,
+        price: lastPrice,
+        change24h: change24h,
+        volume24h: totalVolume,
+        lastPrice: lastPrice,
+        highPrice: highPrice,
+        lowPrice: lowPrice === Infinity ? 0 : lowPrice,
+        orders: orders
+    };
 }
 
 // Render Market Pairs
@@ -291,6 +338,8 @@ function selectPairByName(pairName) {
 function selectPair(pair) {
     currentPair = pair;
     
+    console.log(`Selected pair: ${pair.pair}`);
+    
     // Update active state
     document.querySelectorAll('.pair-item').forEach(item => {
         item.classList.remove('active');
@@ -307,14 +356,17 @@ function selectPair(pair) {
     changeEl.textContent = `${pair.change24h >= 0 ? '+' : ''}${pair.change24h.toFixed(2)}%`;
     changeEl.className = `price-change ${pair.change24h >= 0 ? 'positive' : 'negative'}`;
 
-    // Load order book and chart
+    // Load order book, chart, and trades for this pair
     loadOrderBook(pair);
     loadChart(pair);
+    fetchRecentTrades(pair.pair);
 }
 
 // Load Order Book
 async function loadOrderBook(pair) {
     try {
+        console.log(`Loading order book for ${pair.pair}...`);
+        
         // Fetch bids and asks from Nexus market API
         const [bidsResponse, asksResponse] = await Promise.all([
             fetch(API_ENDPOINTS.listBids, {
@@ -339,59 +391,59 @@ async function loadOrderBook(pair) {
             const bidsData = await bidsResponse.json();
             const asksData = await asksResponse.json();
             
-            const bids = (bidsData.result || []).map(order => ({
-                price: order.price || 0,
-                amount: order.amount || 0,
-                total: (order.price || 0) * (order.amount || 0)
-            }));
+            const bidsResult = bidsData.result || [];
+            const asksResult = asksData.result || [];
             
-            const asks = (asksData.result || []).map(order => ({
-                price: order.price || 0,
-                amount: order.amount || 0,
-                total: (order.price || 0) * (order.amount || 0)
-            }));
+            console.log(`Loaded ${bidsResult.length} bids, ${asksResult.length} asks`);
             
-            if (bids.length > 0 || asks.length > 0) {
-                renderOrderBook({ bids, asks });
-                return;
-            }
+            const bids = bidsResult.map(order => ({
+                price: parseFloat(order.price || 0),
+                amount: parseFloat(order.amount || 0),
+                total: parseFloat(order.price || 0) * parseFloat(order.amount || 0),
+                timestamp: order.timestamp || 0,
+                address: order.address || ''
+            })).filter(o => o.price > 0 && o.amount > 0);
+            
+            const asks = asksResult.map(order => ({
+                price: parseFloat(order.price || 0),
+                amount: parseFloat(order.amount || 0),
+                total: parseFloat(order.price || 0) * parseFloat(order.amount || 0),
+                timestamp: order.timestamp || 0,
+                address: order.address || ''
+            })).filter(o => o.price > 0 && o.amount > 0);
+            
+            // Sort bids (highest first) and asks (lowest first)
+            bids.sort((a, b) => b.price - a.price);
+            asks.sort((a, b) => a.price - b.price);
+            
+            renderOrderBook({ bids, asks });
+            updateSpread(bids, asks);
+        } else {
+            console.warn('Failed to fetch order book');
+            renderOrderBook({ bids: [], asks: [] });
         }
-        
-        // Fallback to demo data
-        throw new Error('No order book data');
         
     } catch (error) {
         console.error('Error loading order book:', error);
-        
-        // Demo order book data as fallback
-        const demoOrderBook = {
-            asks: generateOrderBookSide('ask', pair.price, 15),
-            bids: generateOrderBookSide('bid', pair.price, 15)
-        };
-
-        renderOrderBook(demoOrderBook);
+        renderOrderBook({ bids: [], asks: [] });
     }
 }
 
-// Generate demo order book side
-function generateOrderBookSide(type, basePrice, count) {
-    const orders = [];
-    const priceStep = basePrice * 0.001;
-    
-    for (let i = 0; i < count; i++) {
-        const price = type === 'ask' 
-            ? basePrice + (priceStep * (i + 1))
-            : basePrice - (priceStep * (i + 1));
-        
-        const amount = Math.random() * 100 + 10;
-        orders.push({
-            price: price,
-            amount: amount,
-            total: price * amount
-        });
+// Update spread display
+function updateSpread(bids, asks) {
+    if (bids.length > 0 && asks.length > 0) {
+        const spread = asks[0].price - bids[0].price;
+        const spreadPercent = (spread / bids[0].price * 100).toFixed(2);
+        const spreadEl = document.getElementById('spread-value');
+        if (spreadEl) {
+            spreadEl.textContent = `${formatPrice(spread)} (${spreadPercent}%)`;
+        }
+    } else {
+        const spreadEl = document.getElementById('spread-value');
+        if (spreadEl) {
+            spreadEl.textContent = '-';
+        }
     }
-    
-    return orders;
 }
 
 // Render Order Book
@@ -402,33 +454,34 @@ function renderOrderBook(orderBook) {
     if (!asksContainer || !bidsContainer) return;
 
     // Calculate max total for depth visualization
-    const maxTotal = Math.max(
+    const allTotals = [
         ...orderBook.asks.map(o => o.total),
         ...orderBook.bids.map(o => o.total)
-    );
+    ].filter(t => t > 0);
+    
+    const maxTotal = allTotals.length > 0 ? Math.max(...allTotals) : 1;
 
-    // Render asks (reverse order for display)
-    asksContainer.innerHTML = orderBook.asks.slice().reverse().map(order => `
-        <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
-            <span>${formatPrice(order.price)}</span>
-            <span>${order.amount.toFixed(4)}</span>
-            <span>${order.total.toFixed(4)}</span>
-        </div>
-    `).join('');
+    // Render asks (reverse order for display - lowest price at bottom)
+    asksContainer.innerHTML = orderBook.asks.length > 0 
+        ? orderBook.asks.slice().reverse().map(order => `
+            <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
+                <span>${formatPrice(order.price)}</span>
+                <span>${order.amount.toFixed(4)}</span>
+                <span>${order.total.toFixed(4)}</span>
+            </div>
+        `).join('')
+        : '<div class="empty-orderbook">No sell orders</div>';
 
-    // Render bids
-    bidsContainer.innerHTML = orderBook.bids.map(order => `
-        <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
-            <span>${formatPrice(order.price)}</span>
-            <span>${order.amount.toFixed(4)}</span>
-            <span>${order.total.toFixed(4)}</span>
-        </div>
-    `).join('');
-
-    // Update spread
-    const spread = orderBook.asks[0].price - orderBook.bids[0].price;
-    const spreadPercent = (spread / orderBook.bids[0].price * 100).toFixed(2);
-    document.getElementById('spread-value').textContent = `${formatPrice(spread)} (${spreadPercent}%)`;
+    // Render bids (highest price at top)
+    bidsContainer.innerHTML = orderBook.bids.length > 0
+        ? orderBook.bids.map(order => `
+            <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
+                <span>${formatPrice(order.price)}</span>
+                <span>${order.amount.toFixed(4)}</span>
+                <span>${order.total.toFixed(4)}</span>
+            </div>
+        `).join('')
+        : '<div class="empty-orderbook">No buy orders</div>';
 }
 
 // Load Chart
@@ -459,78 +512,76 @@ function loadChart(pair) {
 }
 
 // Fetch Recent Trades
-async function fetchRecentTrades() {
+async function fetchRecentTrades(marketPair = null) {
     try {
+        console.log(`Fetching recent trades${marketPair ? ` for ${marketPair}` : ''}...`);
+        
         // Fetch executed orders from Nexus market API
+        const requestBody = {
+            limit: 20
+        };
+        
+        // If a specific market pair is provided, filter by it
+        if (marketPair) {
+            requestBody.market = marketPair;
+        }
+        
         const response = await fetch(API_ENDPOINTS.listExecuted, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                limit: 20,
-                // Can add filters here like: market: currentPair?.pair
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (response.ok) {
             const data = await response.json();
             const executedOrders = data.result || [];
             
+            console.log(`Loaded ${executedOrders.length} executed trades`);
+            
             if (executedOrders.length > 0) {
                 const trades = executedOrders.map(order => ({
-                    time: new Date(order.timestamp * 1000), // Convert Unix timestamp
+                    time: new Date((order.timestamp || 0) * 1000), // Convert Unix timestamp
                     pair: order.market || 'Unknown',
-                    type: order.type || 'buy', // bid = buy, ask = sell
-                    price: order.price || 0,
-                    amount: order.amount || 0,
-                    total: (order.price || 0) * (order.amount || 0)
-                }));
+                    type: determineTradeType(order),
+                    price: parseFloat(order.price || 0),
+                    amount: parseFloat(order.amount || 0),
+                    total: parseFloat(order.price || 0) * parseFloat(order.amount || 0)
+                })).filter(t => t.price > 0 && t.amount > 0);
                 
                 renderTrades(trades);
-                return;
+            } else {
+                renderTrades([]);
             }
+        } else {
+            console.warn('Failed to fetch trades');
+            renderTrades([]);
         }
-        
-        // Fallback to demo data
-        throw new Error('No trade data');
         
     } catch (error) {
         console.error('Error fetching trades:', error);
-        
-        // Demo trades data as fallback
-        const demoTrades = generateDemoTrades(20);
-        renderTrades(demoTrades);
+        renderTrades([]);
     }
 }
 
-// Generate demo trades
-function generateDemoTrades(count) {
-    const trades = [];
-    const now = Date.now();
-    const pairs = marketData.pairs || [];
-    
-    for (let i = 0; i < count; i++) {
-        const pair = pairs[Math.floor(Math.random() * pairs.length)] || { pair: 'NXS/BTC', price: 0.00001234 };
-        const type = Math.random() > 0.5 ? 'buy' : 'sell';
-        const amount = Math.random() * 10 + 0.1;
-        const price = pair.price * (1 + (Math.random() - 0.5) * 0.01);
-        
-        trades.push({
-            time: new Date(now - i * 30000),
-            pair: pair.pair,
-            type: type,
-            price: price,
-            amount: amount,
-            total: price * amount
-        });
+// Determine trade type from order (bid = buy, ask = sell)
+function determineTradeType(order) {
+    // If the order has a type field, use it
+    if (order.type) {
+        return order.type === 'bid' ? 'buy' : 'sell';
     }
-    
-    return trades;
+    // Default to buy
+    return 'buy';
 }
 
 // Render Trades
 function renderTrades(trades) {
     const tradesList = document.getElementById('trades-list');
     if (!tradesList) return;
+
+    if (trades.length === 0) {
+        tradesList.innerHTML = '<tr><td colspan="6" class="empty-message">No recent trades</td></tr>';
+        return;
+    }
 
     tradesList.innerHTML = trades.map(trade => `
         <tr>
@@ -598,14 +649,14 @@ function updateAPIStatus(status, message = '') {
 
 // Start periodic data updates
 function startDataUpdates() {
-    // Update every 10 seconds
+    // Update every 50 seconds
     updateInterval = setInterval(() => {
         fetchNetworkStats();
         if (currentPair) {
             loadOrderBook(currentPair);
+            fetchRecentTrades(currentPair.pair);
         }
-        fetchRecentTrades();
-    }, 10000);
+    }, 50000);
 }
 
 // Filter functions
@@ -631,8 +682,9 @@ function filterPairsByTab(filter) {
             // Implement favorites logic
             pair.style.display = 'none';
         } else {
-            const base = pairName.split('/')[1].toLowerCase();
-            pair.style.display = base === filter ? 'block' : 'none';
+            // Filter checks the quote currency (second part after /)
+            const quote = pairName.split('/')[1].toLowerCase();
+            pair.style.display = quote === filter ? 'block' : 'none';
         }
     });
 }

@@ -12,7 +12,7 @@ The Distordia DEX provides a modern, real-time trading interface that fetches ma
 - **Real-time Price Updates**: Live market prices updated every 10 seconds
 - **24h Volume & Statistics**: Comprehensive market statistics
 - **Block Height & Network Hash**: Live blockchain network information
-- **Multiple Trading Pairs**: Support for NXS/BTC, NXS/USD, NXS/ETH, and more
+- **Multiple Trading Pairs**: Support for token pairs on Nexus blockchain (USDD/NXS, DIST/NXS, GARAGE/NXS, HUSTLE/NXS)
 
 ### 📈 Trading Interface
 - **Order Book Display**: Real-time bid/ask orders with depth visualization
@@ -58,10 +58,10 @@ According to the official Nexus API documentation, the following endpoints are u
   - Returns: `market`, `price`, `amount`, `timestamp`
   
 - **`market/list/bid`** - Lists all buy orders for a specific market
-  - Parameters: `market` (e.g., "NXS/BTC"), `limit`
+  - Parameters: `market` (e.g., "USDD/NXS"), `limit`
   
 - **`market/list/ask`** - Lists all sell orders for a specific market
-  - Parameters: `market` (e.g., "NXS/BTC"), `limit`
+  - Parameters: `market` (e.g., "DIST/NXS"), `limit`
   
 - **`market/list/executed`** - Lists executed (completed) trades
   - Returns trade history with price, amount, timestamp
@@ -93,13 +93,15 @@ Nexus API returns data in a `result` object:
 }
 ```
 
-### Demo Mode
+### Error Handling
 
-The DEX includes demo/fallback data for development and when the API is unavailable:
-- Simulated trading pairs (NXS/BTC, NXS/USD, NXS/ETH, etc.)
-- Generated order books with realistic depth
-- Sample trade history
-- This allows the DEX to function even when the Nexus API is not accessible
+The DEX displays appropriate error messages when:
+- Nexus API is unavailable
+- No market data exists for a trading pair
+- Order book is empty
+- No recent trades available
+
+All errors are logged to the browser console for debugging.
 
 ## File Structure
 
@@ -123,7 +125,7 @@ Navigate to `/dex/` from the main Distordia website, or directly access:
 
 1. Browse available pairs in the left panel
 2. Use search to filter pairs
-3. Filter by base currency (All, NXS, BTC, Favorites)
+3. Filter by quote currency (All, NXS, Favorites)
 4. Click any pair to view detailed trading information
 
 ### Order Book
@@ -202,15 +204,14 @@ Override DEX-specific colors in `dex.css` if needed.
 
 **New Trading Pair:**
 ```javascript
-// In dex.js, add to demoPairs array:
-{ 
-    pair: 'NXS/USDT', 
-    price: 0.456, 
-    change24h: 2.5, 
-    volume24h: 123456, 
-    base: 'NXS', 
-    quote: 'USDT' 
-}
+// In dex.js, add to DEFAULT_MARKET_PAIRS array:
+const DEFAULT_MARKET_PAIRS = [
+    'USDD/NXS',
+    'DIST/NXS', 
+    'GARAGE/NXS',
+    'HUSTLE/NXS',
+    'YOUR_TOKEN/NXS'  // Add new pair here
+];
 ```
 
 **Custom API Endpoint:**
@@ -253,7 +254,7 @@ The DEX is a pure frontend application:
 1. **Display Only**: This interface displays market data but does not execute trades
 2. **No Wallet Integration**: No private keys or wallet connections
 3. **Read-Only API**: Only fetches data, does not submit transactions
-4. **Demo Data**: Uses fallback demo data when API is unavailable
+4. **Live Data**: All data is fetched directly from Nexus blockchain API
 
 ## Future Enhancements
 
