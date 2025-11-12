@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="On-chain Material Master Data Register - Decentralized B2B material reference system">
+    <title>Material Registry | Distordia</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="materials.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                <a href="../index.html" class="logo-text">DISTORDIA</a>
+            </div>
+            <div class="nav-title">
+                <h1>Material Master Data Registry</h1>
+            </div>
+            <button class="connect-wallet-btn" id="connectWallet">
+                <span class="wallet-icon">🔗</span>
+                Connect Wallet
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>On-Chain Material Master Data</h2>
+                <p class="subtitle">Decentralized registry of materials and products as NFT assets for B2B reference</p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalMaterials">0</div>
+                        <div class="stat-label">Registered Materials</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCategories">0</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalBusinesses">0</div>
+                        <div class="stat-label">Businesses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search and Filter Section -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-controls">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search by material name, SKU, or description...">
+                    <button class="search-btn" id="searchBtn">
+                        <span class="search-icon">🔍</span>
+                        Search
+                    </button>
+                </div>
+                <div class="filter-controls">
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="raw-materials">Raw Materials</option>
+                        <option value="components">Components</option>
+                        <option value="finished-goods">Finished Goods</option>
+                        <option value="consumables">Consumables</option>
+                        <option value="services">Services</option>
+                    </select>
+                    <select id="sortBy" class="filter-select">
+                        <option value="recent">Most Recent</option>
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                    <button class="filter-btn" id="registerBtn">
+                        <span class="icon">+</span>
+                        Register Material
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Materials Grid -->
+    <section class="materials-section">
+        <div class="container">
+            <div class="section-header">
+                <h3>Material Registry</h3>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid">
+                        <span>⊞</span> Grid
+                    </button>
+                    <button class="view-btn" data-view="list">
+                        <span>☰</span> List
+                    </button>
+                </div>
+            </div>
+            
+            <div id="materialsGrid" class="materials-grid">
+                <!-- Materials will be dynamically loaded here -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading materials from blockchain...</p>
+                </div>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <h3>No Materials Found</h3>
+                <p>Be the first to register a material in the on-chain registry</p>
+                <button class="btn-primary" id="registerFirstBtn">Register First Material</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Modal -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Register New Material</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form id="registrationForm" class="registration-form">
+                <div class="form-group">
+                    <label for="materialName">Material Name *</label>
+                    <input type="text" id="materialName" required placeholder="e.g., Steel Plate A36">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="materialSKU">SKU / Article Number *</label>
+                        <input type="text" id="materialSKU" required placeholder="e.g., STL-A36-1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="materialCategory">Category *</label>
+                        <select id="materialCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="raw-materials">Raw Materials</option>
+                            <option value="components">Components</option>
+                            <option value="finished-goods">Finished Goods</option>
+                            <option value="consumables">Consumables</option>
+                            <option value="services">Services</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="materialDescription">Description *</label>
+                    <textarea id="materialDescription" required rows="3" placeholder="Detailed description of the material..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="materialUnit">Unit of Measure *</label>
+                        <input type="text" id="materialUnit" required placeholder="e.g., kg, pcs, m²">
+                    </div>
+                    <div class="form-group">
+                        <label for="materialManufacturer">Manufacturer</label>
+                        <input type="text" id="materialManufacturer" placeholder="Optional">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="materialSpecs">Technical Specifications</label>
+                    <textarea id="materialSpecs" rows="3" placeholder="Technical specs, certifications, standards..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="materialImage">Image URL</label>
+                    <input type="url" id="materialImage" placeholder="https://...">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        <span class="icon">⛓️</span>
+                        Register On-Chain
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Material Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="detailTitle">Material Details</h2>
+                <button class="close-btn" id="closeDetailModal">&times;</button>
+            </div>
+            <div id="detailContent" class="detail-content">
+                <!-- Material details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>About Material Registry</h4>
+                    <p>Decentralized master data for global B2B supply chains. Each material is an immutable NFT asset that businesses can reference in their internal systems.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li>Immutable product records</li>
+                        <li>Universal B2B reference</li>
+                        <li>ERP/MRP integration ready</li>
+                        <li>Open registration system</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Integration</h4>
+                    <p>Use asset addresses as unique identifiers in your ERP, MRP, or procurement systems for cross-organizational material references.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Distordia Labs. Material Registry on Nexus Blockchain.</p>
+                <a href="../index.html" class="back-link">← Back to Main Site</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="materials.js"></script>
+</body>
+</html>
