@@ -90,7 +90,7 @@ function renderTrades(trades) {
         <tr>
             <td>${formatTime(trade.time)}</td>
             <td>${trade.pair}</td>
-            <td><span class="trade-${trade.type}">${trade.type.toUpperCase()}</span></td>
+            <td><span class="trade-${trade.type.toLowerCase()}">${trade.type.toUpperCase()}</span></td>
             <td>${formatPrice(trade.price)}</td>
             <td>${trade.amount.toFixed(4)}</td>
             <td>${trade.total.toFixed(4)}</td>
