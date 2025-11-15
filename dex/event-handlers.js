@@ -42,10 +42,8 @@ function setupEventListeners() {
 
     // Chart interval selector
     const intervalButtons = document.querySelectorAll('[data-interval]');
-    console.log(`Found ${intervalButtons.length} chart interval buttons`);
     intervalButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            console.log('Chart interval button clicked:', btn.dataset.interval);
             intervalButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             updateChart(btn.dataset.interval);
@@ -131,12 +129,8 @@ function toggleFavorite(pairName) {
 
 // Update chart interval
 function updateChart(interval) {
-    console.log('updateChart called with interval:', interval);
     // Use the chart module's updateChartInterval function
     if (typeof updateChartInterval === 'function') {
-        console.log('Calling updateChartInterval');
         updateChartInterval(interval);
-    } else {
-        console.error('updateChartInterval function not found');
     }
 }

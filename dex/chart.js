@@ -397,8 +397,13 @@ function showChartPlaceholder(pair) {
 
 // Update chart interval
 function updateChartInterval(interval) {
-    console.log('updateChartInterval called, changing from', chartInterval, 'to', interval);
+    console.log('[updateChartInterval] Called with:', interval);
+    console.log('[updateChartInterval] Current chartInterval:', chartInterval);
+    console.log('[updateChartInterval] Current pair:', currentPair);
+    
     chartInterval = interval;
+    
+    console.log('[updateChartInterval] Updated chartInterval to:', chartInterval);
     
     // Update active button state
     document.querySelectorAll('.chart-interval').forEach(btn => {
@@ -410,10 +415,10 @@ function updateChartInterval(interval) {
     
     // Reload chart with new interval
     if (currentPair) {
-        console.log('Reloading chart for pair:', currentPair.pair);
+        console.log('[updateChartInterval] Calling loadChart with:', currentPair.pair);
         loadChart(currentPair);
     } else {
-        console.warn('No current pair selected, cannot reload chart');
+        console.warn('[updateChartInterval] No currentPair, cannot reload');
     }
 }
 
