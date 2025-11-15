@@ -155,16 +155,15 @@ async function loadChart(pair) {
         
         console.log(`Fetching orders from ${new Date(startTimestamp * 1000).toLocaleString()} to now`);
         
-        // Fetch historical executed orders for the chart with timestamp filter
+        // Fetch historical executed orders for the chart
         const response = await fetch(API_ENDPOINTS.listExecuted, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 market: pair.pair,
-                where: `timestamp>=${startTimestamp}`,
-                limit: 1000, // Get more data points to cover the time range
+                limit: 1000,
                 sort: 'timestamp',
-                order: 'asc'
+                order: 'desc'
             })
         });
 
@@ -172,9 +171,16 @@ async function loadChart(pair) {
             const data = await response.json();
             const bids = data.result?.bids || [];
             const asks = data.result?.asks || [];
-            const executedOrders = [...bids, ...asks];
+            let executedOrders = [...bids, ...asks];
             
-            console.log(`Loaded ${executedOrders.length} historical orders for chart`);
+            console.log(`Loaded ${executedOrders.length} total executed orders`);
+            
+            // Filter by timestamp in JavaScript
+            executedOrders = executedOrders.filter(order => {
+                return (order.timestamp || 0) >= startTimestamp;
+            });
+            
+            console.log(`${executedOrders.length} orders within ${chartInterval} time range`);
             
             if (executedOrders.length > 0) {
                 // Sort by timestamp
