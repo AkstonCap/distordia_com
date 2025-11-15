@@ -148,13 +148,21 @@ async function loadChart(pair) {
     console.log(`Loading chart for ${pair.pair} with interval ${chartInterval}`);
     
     try {
-        // Fetch historical executed orders for the chart
+        // Calculate timestamp for lookback period
+        const now = Math.floor(Date.now() / 1000); // Current time in seconds
+        const lookbackSeconds = getLookbackSeconds(chartInterval);
+        const startTimestamp = now - lookbackSeconds;
+        
+        console.log(`Fetching orders from ${new Date(startTimestamp * 1000).toLocaleString()} to now`);
+        
+        // Fetch historical executed orders for the chart with timestamp filter
         const response = await fetch(API_ENDPOINTS.listExecuted, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 market: pair.pair,
-                limit: 100, // Get more data points for chart
+                where: `timestamp>=${startTimestamp}`,
+                limit: 1000, // Get more data points to cover the time range
                 sort: 'timestamp',
                 order: 'asc'
             })
@@ -173,7 +181,7 @@ async function loadChart(pair) {
                 executedOrders.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                 
                 // Process data based on selected interval
-                const processedData = processChartData(executedOrders, pair.pair, chartInterval);
+                const processedData = processChartData(executedOrders, pair.pair, chartInterval, startTimestamp, now);
                 
                 // Update chart
                 updateChart(processedData, pair);
@@ -192,9 +200,10 @@ async function loadChart(pair) {
 }
 
 // Process raw order data into chart intervals
-function processChartData(orders, marketPair, interval) {
+function processChartData(orders, marketPair, interval, startTimestamp, endTimestamp) {
     if (orders.length === 0) {
-        return { labels: [], prices: [], volumes: [] };
+        // Still create empty time slots for the full range
+        return createEmptyTimeRange(startTimestamp, endTimestamp, interval);
     }
     
     // Determine interval duration in seconds
@@ -227,34 +236,79 @@ function processChartData(orders, marketPair, interval) {
         }
     });
     
-    // Convert to arrays and calculate OHLC (using close price for simplicity)
-    const timestamps = Object.keys(grouped).sort((a, b) => a - b);
+    // Create complete time range including empty intervals
     const labels = [];
     const prices = [];
     const volumes = [];
     
-    timestamps.forEach(ts => {
+    // Start from the beginning of the first interval that contains startTimestamp
+    const firstIntervalStart = Math.floor(startTimestamp / intervalSeconds) * intervalSeconds;
+    const lastIntervalStart = Math.floor(endTimestamp / intervalSeconds) * intervalSeconds;
+    
+    let lastKnownPrice = null;
+    
+    for (let ts = firstIntervalStart; ts <= lastIntervalStart; ts += intervalSeconds) {
         const interval = grouped[ts];
-        const avgPrice = interval.prices.reduce((sum, p) => sum + p, 0) / interval.prices.length;
-        const totalVolume = interval.volumes.reduce((sum, v) => sum + v, 0);
         
-        labels.push(formatChartTime(parseInt(ts), chartInterval));
-        prices.push(avgPrice);
-        volumes.push(totalVolume);
-    });
+        labels.push(formatChartTime(ts, chartInterval));
+        
+        if (interval && interval.prices.length > 0) {
+            // Calculate average price for this interval
+            const avgPrice = interval.prices.reduce((sum, p) => sum + p, 0) / interval.prices.length;
+            const totalVolume = interval.volumes.reduce((sum, v) => sum + v, 0);
+            
+            lastKnownPrice = avgPrice;
+            prices.push(avgPrice);
+            volumes.push(totalVolume);
+        } else {
+            // No data for this interval, use last known price or null
+            prices.push(lastKnownPrice);
+            volumes.push(0);
+        }
+    }
     
     return { labels, prices, volumes };
+}
+
+// Create empty time range for when no orders exist
+function createEmptyTimeRange(startTimestamp, endTimestamp, interval) {
+    const intervalSeconds = getIntervalSeconds(interval);
+    const labels = [];
+    const prices = [];
+    const volumes = [];
+    
+    const firstIntervalStart = Math.floor(startTimestamp / intervalSeconds) * intervalSeconds;
+    const lastIntervalStart = Math.floor(endTimestamp / intervalSeconds) * intervalSeconds;
+    
+    for (let ts = firstIntervalStart; ts <= lastIntervalStart; ts += intervalSeconds) {
+        labels.push(formatChartTime(ts, chartInterval));
+        prices.push(null);
+        volumes.push(0);
+    }
+    
+    return { labels, prices, volumes };
+}
+
+// Get lookback period in seconds (how far back to fetch data)
+function getLookbackSeconds(interval) {
+    const lookbacks = {
+        '1d': 86400,      // 24 hours
+        '1w': 604800,     // 7 days
+        '1m': 2592000,    // 30 days
+        '1y': 31536000    // 365 days
+    };
+    return lookbacks[interval] || 86400;
 }
 
 // Get interval duration in seconds
 function getIntervalSeconds(interval) {
     const intervals = {
-        '1d': 86400,
-        '1w': 604800,
-        '1m': 2592000, // 30 days
-        '1y': 31536000 // 365 days
+        '1d': 3600,      // 1 hour intervals for 24h view
+        '1w': 21600,     // 6 hour intervals for 7d view
+        '1m': 86400,     // 1 day intervals for 30d view
+        '1y': 604800     // 1 week intervals for 365d view
     };
-    return intervals[interval] || 86400;
+    return intervals[interval] || 3600;
 }
 
 // Format time for chart labels based on interval
@@ -263,12 +317,16 @@ function formatChartTime(timestamp, interval) {
     const date = new Date(timestamp * 1000);
     
     if (interval === '1d') {
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        // Show hours for 24h view
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else if (interval === '1w') {
+        // Show day and time for 7d view
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } else if (interval === '1m') {
+        // Show date for 30d view
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } else if (interval === '1y') {
+        // Show month for 365d view
         return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
     }
     return date.toLocaleString();
