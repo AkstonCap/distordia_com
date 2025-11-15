@@ -6,7 +6,7 @@ let chartData = {
     prices: [],
     volumes: []
 };
-let chartInterval = '1h'; // Default interval
+let chartInterval = '1d'; // Default interval
 
 // Initialize chart
 function initializeChart() {
@@ -249,30 +249,27 @@ function processChartData(orders, marketPair, interval) {
 // Get interval duration in seconds
 function getIntervalSeconds(interval) {
     const intervals = {
-        '1m': 60,
-        '5m': 300,
-        '15m': 900,
-        '30m': 1800,
-        '1h': 3600,
-        '4h': 14400,
         '1d': 86400,
-        '1w': 604800
+        '1w': 604800,
+        '1m': 2592000, // 30 days
+        '1y': 31536000 // 365 days
     };
-    return intervals[interval] || 3600;
+    return intervals[interval] || 86400;
 }
 
 // Format time for chart labels based on interval
 function formatChartTime(timestamp, interval) {
+    // Nexus timestamps are in seconds, convert to milliseconds for JavaScript Date
     const date = new Date(timestamp * 1000);
     
-    if (interval === '1m' || interval === '5m' || interval === '15m' || interval === '30m') {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (interval === '1h' || interval === '4h') {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (interval === '1d') {
+    if (interval === '1d') {
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } else if (interval === '1w') {
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } else if (interval === '1m') {
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } else if (interval === '1y') {
+        return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
     }
     return date.toLocaleString();
 }
