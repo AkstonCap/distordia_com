@@ -190,7 +190,7 @@ async function loadChart(pair) {
                 const processedData = processChartData(executedOrders, pair.pair, chartInterval, startTimestamp, now);
                 
                 // Update chart
-                updateChart(processedData, pair);
+                updateChartData(processedData, pair);
             } else {
                 // Show placeholder if no data
                 showChartPlaceholder(pair);
@@ -339,7 +339,7 @@ function formatChartTime(timestamp, interval) {
 }
 
 // Update chart with new data
-function updateChart(data, pair) {
+function updateChartData(data, pair) {
     if (!priceChart) {
         initializeChart();
     }
