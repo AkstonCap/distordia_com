@@ -28,18 +28,6 @@ let currentPair = null;
 let marketData = {};
 let updateInterval = null;
 
-// Default market pairs to track
-const DEFAULT_MARKET_PAIRS = [
-    'USDD/NXS',
-    'DIST/NXS', 
-    'GARAGE/NXS',
-    'HUSTLE/NXS',
-    'NXS/USDD',
-    'DIST/USDD',
-    'GARAGE/USDD',
-    'HUSTLE/USDD'
-];
-
 // Initialize DEX
 document.addEventListener('DOMContentLoaded', () => {
     initializeDEX();
@@ -530,21 +518,43 @@ async function loadOrderBook(pair) {
             
             console.log(`Loaded ${bidsResult.length} bids, ${asksResult.length} asks`);
             
-            const bids = bidsResult.map(order => ({
-                price: parseFloat(order.price || 0),
-                amount: parseFloat(order.amount || 0),
-                total: parseFloat(order.price || 0) * parseFloat(order.amount || 0),
-                timestamp: order.timestamp || 0,
-                address: order.address || ''
-            })).filter(o => o.price > 0 && o.amount > 0);
+            const [base, quote] = pair.pair.split('/');
             
-            const asks = asksResult.map(order => ({
-                price: parseFloat(order.price || 0),
-                amount: parseFloat(order.amount || 0),
-                total: parseFloat(order.price || 0) * parseFloat(order.amount || 0),
-                timestamp: order.timestamp || 0,
-                address: order.address || ''
-            })).filter(o => o.price > 0 && o.amount > 0);
+            const bids = bidsResult.map(order => {
+                // Calculate price from contract and order amounts
+                const price = calculatePriceFromOrder(order, pair.pair);
+                const amount = parseFloat(order.amount || order.contract?.amount || 0);
+                
+                // Adjust for NXS divisible units if needed
+                const adjustedAmount = order.contract?.ticker === 'NXS' ? amount / 1e6 : amount;
+                
+                return {
+                    price: price,
+                    amount: adjustedAmount,
+                    total: price * adjustedAmount,
+                    timestamp: order.timestamp || 0,
+                    address: order.owner || order.address || ''
+                };
+            }).filter(o => o.price > 0 && o.amount > 0);
+            
+            const asks = asksResult.map(order => {
+                // Calculate price from contract and order amounts
+                const price = calculatePriceFromOrder(order, pair.pair);
+                const amount = parseFloat(order.amount || order.contract?.amount || 0);
+                
+                // Adjust for NXS divisible units if needed
+                const adjustedAmount = order.contract?.ticker === 'NXS' ? amount / 1e6 : amount;
+                
+                return {
+                    price: price,
+                    amount: adjustedAmount,
+                    total: price * adjustedAmount,
+                    timestamp: order.timestamp || 0,
+                    address: order.owner || order.address || ''
+                };
+            }).filter(o => o.price > 0 && o.amount > 0);
+            
+            console.log(`Processed ${bids.length} valid bids, ${asks.length} valid asks`);
             
             // Sort bids (highest first) and asks (lowest first)
             bids.sort((a, b) => b.price - a.price);
