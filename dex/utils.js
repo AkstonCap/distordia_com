@@ -104,10 +104,14 @@ function calculatePriceFromOrder(order, marketPair) {
 
 // Determine trade type from order
 function determineTradeType(order) {
-    // If the order has a type field, use it
-    if (order.type) {
-        return order.type === 'bid' || order.type === 'buy' ? 'BUY' : 'SELL';
+    // In Nexus blockchain:
+    // - Executed ASK = someone bought (filled a sell order) = BUY
+    // - Executed BID = someone sold (filled a buy order) = SELL
+    if (order.executedType === 'ask') {
+        return 'buy';  // lowercase for CSS class
+    } else if (order.executedType === 'bid') {
+        return 'sell'; // lowercase for CSS class
     }
-    // Default to BUY for now
-    return 'BUY';
+    // Fallback
+    return 'buy';
 }
