@@ -21,22 +21,22 @@ function setupEventListeners() {
     });
 
     // Trade filters
-    const tradeFilters = document.querySelectorAll('[data-trade-filter]');
+    const tradeFilters = document.querySelectorAll('.trade-filters .filter-btn');
     tradeFilters.forEach(filter => {
         filter.addEventListener('click', () => {
             tradeFilters.forEach(f => f.classList.remove('active'));
             filter.classList.add('active');
-            filterTrades(filter.dataset.tradeFilter);
+            filterTrades(filter.dataset.filter);
         });
     });
 
     // Order book view toggle
-    const viewButtons = document.querySelectorAll('[data-orderbook-view]');
+    const viewButtons = document.querySelectorAll('.orderbook-view');
     viewButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             viewButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            updateOrderBookView(btn.dataset.orderbookView);
+            updateOrderBookView(btn.dataset.view);
         });
     });
 
