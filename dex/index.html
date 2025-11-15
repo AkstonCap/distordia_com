@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="dex.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -83,10 +84,8 @@
                             <button class="chart-interval" data-interval="1w">1W</button>
                         </div>
                     </div>
-                    <div class="chart-container" id="price-chart">
-                        <div class="chart-placeholder">
-                            <p>Select a trading pair to view chart</p>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="price-chart"></canvas>
                     </div>
                 </div>
 
@@ -203,7 +202,15 @@
     </footer>
 
     <script src="../script.js"></script>
+    <!-- Load DEX modules in dependency order -->
+    <script src="api-config.js"></script>
     <script src="market-pairs.js"></script>
+    <script src="utils.js"></script>
+    <script src="state.js"></script>
+    <script src="api.js"></script>
+    <script src="renderers.js"></script>
+    <script src="event-handlers.js"></script>
+    <script src="chart.js"></script>
     <script src="dex.js"></script>
 </body>
 </html>

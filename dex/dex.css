@@ -260,17 +260,24 @@
     padding: 1rem;
     position: relative;
     min-height: 400px;
+    height: 100%;
 }
 
 .chart-placeholder {
-    display: flex;
+    display: none; /* Hidden by default, shown when no data */
     align-items: center;
     justify-content: center;
     height: 100%;
     color: var(--text-secondary);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-darker);
+    border-radius: 10px;
 }
 
-#price-chart canvas {
+#price-chart {
     width: 100% !important;
     height: 100% !important;
 }

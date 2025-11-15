@@ -1,0 +1,111 @@
+// Utility functions for DEX
+
+// Format price with appropriate decimal places
+function formatPrice(price) {
+    if (price === 0 || !price) return '0.00';
+    
+    if (price < 0.000001) {
+        return price.toExponential(4);
+    } else if (price < 0.01) {
+        return price.toFixed(8);
+    } else if (price < 1) {
+        return price.toFixed(6);
+    } else if (price < 100) {
+        return price.toFixed(4);
+    } else {
+        return price.toFixed(2);
+    }
+}
+
+// Format large numbers with abbreviations
+function formatNumber(num) {
+    if (num === 0 || !num) return '0';
+    
+    if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(2) + 'B';
+    } else if (num >= 1000000) {
+        return (num / 1000000).toFixed(2) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(2) + 'K';
+    }
+    return num.toFixed(2);
+}
+
+// Format hash rate
+function formatHashRate(hashrate) {
+    if (!hashrate) return '0 H/s';
+    
+    if (hashrate >= 1000000000000) {
+        return (hashrate / 1000000000000).toFixed(2) + ' TH/s';
+    } else if (hashrate >= 1000000000) {
+        return (hashrate / 1000000000).toFixed(2) + ' GH/s';
+    } else if (hashrate >= 1000000) {
+        return (hashrate / 1000000).toFixed(2) + ' MH/s';
+    } else if (hashrate >= 1000) {
+        return (hashrate / 1000).toFixed(2) + ' KH/s';
+    }
+    return hashrate.toFixed(2) + ' H/s';
+}
+
+// Format time
+function formatTime(date) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+// Calculate price from Nexus order data
+function calculatePriceFromOrder(order, marketPair) {
+    console.log(`Calculating price for ${marketPair}:`, order);
+    
+    const [base, quote] = marketPair.split('/');
+    
+    // Get contract (what's being sold) and order (what's being bought)
+    const contractAmount = parseFloat(order.contract?.amount || 0);
+    const contractTicker = order.contract?.ticker || '';
+    const orderAmount = parseFloat(order.order?.amount || 0);
+    const orderTicker = order.order?.ticker || '';
+    
+    console.log(`  Contract: ${contractAmount} ${contractTicker}`);
+    console.log(`  Order: ${orderAmount} ${orderTicker}`);
+    
+    if (contractAmount === 0 || orderAmount === 0) {
+        console.log(`  Missing amounts - returning 0`);
+        return 0;
+    }
+    
+    // Adjust for NXS divisible units (1 NXS = 1e6 units)
+    const adjustedContractAmount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+    const adjustedOrderAmount = orderTicker === 'NXS' ? orderAmount / 1e6 : orderAmount;
+    
+    console.log(`  Adjusted Contract: ${adjustedContractAmount} ${contractTicker}`);
+    console.log(`  Adjusted Order: ${adjustedOrderAmount} ${orderTicker}`);
+    
+    // Price is how much quote currency per base currency
+    // If contract is base and order is quote: price = orderAmount / contractAmount
+    // If contract is quote and order is base: price = contractAmount / orderAmount
+    
+    if (contractTicker === base && orderTicker === quote) {
+        const price = adjustedOrderAmount / adjustedContractAmount;
+        console.log(`  Price calculation (contract=base): ${adjustedOrderAmount} / ${adjustedContractAmount} = ${price}`);
+        return price;
+    } else if (contractTicker === quote && orderTicker === base) {
+        const price = adjustedContractAmount / adjustedOrderAmount;
+        console.log(`  Price calculation (contract=quote): ${adjustedContractAmount} / ${adjustedOrderAmount} = ${price}`);
+        return price;
+    }
+    
+    console.log(`  No matching ticker combination - returning 0`);
+    return 0;
+}
+
+// Determine trade type from order
+function determineTradeType(order) {
+    // If the order has a type field, use it
+    if (order.type) {
+        return order.type === 'bid' || order.type === 'buy' ? 'BUY' : 'SELL';
+    }
+    // Default to BUY for now
+    return 'BUY';
+}
