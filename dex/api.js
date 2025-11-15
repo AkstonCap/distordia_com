@@ -308,7 +308,11 @@ async function fetchRecentTrades(marketPair = null) {
             
             const bids = data.result?.bids || [];
             const asks = data.result?.asks || [];
-            const executedOrders = [...bids, ...asks];
+            
+            // Mark each order with its type for proper classification
+            const markedBids = bids.map(order => ({ ...order, executedType: 'bid' }));
+            const markedAsks = asks.map(order => ({ ...order, executedType: 'ask' }));
+            const executedOrders = [...markedBids, ...markedAsks];
             
             console.log(`Loaded ${executedOrders.length} executed trades (${bids.length} bids, ${asks.length} asks)`);
             
