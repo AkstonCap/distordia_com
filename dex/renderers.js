@@ -83,7 +83,10 @@ function renderTrades(trades) {
         return;
     }
 
-    tradesList.innerHTML = trades.map(trade => `
+    // Only show the last 10 trades
+    const recentTrades = trades.slice(0, 10);
+
+    tradesList.innerHTML = recentTrades.map(trade => `
         <tr>
             <td>${formatTime(trade.time)}</td>
             <td>${trade.pair}</td>
