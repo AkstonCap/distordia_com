@@ -690,15 +690,27 @@ async function fetchRecentTrades(marketPair = null) {
                 // Sort by timestamp descending
                 executedOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 
-                const trades = executedOrders.map(order => ({
-                    time: new Date((order.timestamp || 0) * 1000), // Convert Unix timestamp
-                    pair: order.market || 'Unknown',
-                    type: determineTradeType(order),
-                    price: parseFloat(order.price || 0),
-                    amount: parseFloat(order.amount || 0),
-                    total: parseFloat(order.price || 0) * parseFloat(order.amount || 0)
-                })).filter(t => t.price > 0 && t.amount > 0);
+                const trades = executedOrders.map(order => {
+                    // Calculate price from contract and order amounts
+                    const price = calculatePriceFromOrder(order, order.market || marketPair);
+                    const contractAmount = parseFloat(order.contract?.amount || 0);
+                    const orderAmount = parseFloat(order.order?.amount || 0);
+                    
+                    // Determine which amount to display (the asset being traded)
+                    const contractTicker = order.contract?.ticker || '';
+                    const amount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+                    
+                    return {
+                        time: new Date((order.timestamp || 0) * 1000), // Convert Unix timestamp
+                        pair: order.market || marketPair || 'Unknown',
+                        type: determineTradeType(order),
+                        price: price,
+                        amount: amount,
+                        total: price * amount
+                    };
+                }).filter(t => t.price > 0 && t.amount > 0);
                 
+                console.log(`Processed ${trades.length} valid trades`);
                 renderTrades(trades);
             } else {
                 renderTrades([]);
