@@ -3,7 +3,7 @@
 
 // API Configuration
 // Nexus API base URL (no /v2 - not part of actual API)
-const NEXUS_API_BASE = 'https://api.nexus.io:8080';
+const NEXUS_API_BASE = 'https://api.distordia.com';
 const FOOTBALL_API_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
 
 // Nexus API Endpoints according to official documentation
