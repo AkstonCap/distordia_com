@@ -397,6 +397,7 @@ function showChartPlaceholder(pair) {
 
 // Update chart interval
 function updateChartInterval(interval) {
+    console.log('updateChartInterval called, changing from', chartInterval, 'to', interval);
     chartInterval = interval;
     
     // Update active button state
@@ -409,7 +410,10 @@ function updateChartInterval(interval) {
     
     // Reload chart with new interval
     if (currentPair) {
+        console.log('Reloading chart for pair:', currentPair.pair);
         loadChart(currentPair);
+    } else {
+        console.warn('No current pair selected, cannot reload chart');
     }
 }
 
