@@ -1,5 +1,5 @@
 // Nexus.io API Configuration
-// Base URL for Nexus API (remove /v2 - not part of the actual API)
+// Base URL for Nexus API node
 const NEXUS_API_BASE = 'https://api.distordia.com';
 
 // API endpoints according to Nexus API documentation
