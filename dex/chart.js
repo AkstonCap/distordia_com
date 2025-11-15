@@ -207,6 +207,14 @@ async function loadChart(pair) {
 
 // Process raw order data into chart intervals
 function processChartData(orders, marketPair, interval, startTimestamp, endTimestamp) {
+    console.log('📈 [processChartData] Processing data:', {
+        ordersCount: orders.length,
+        marketPair,
+        interval,
+        startTimestamp: new Date(startTimestamp * 1000).toLocaleString(),
+        endTimestamp: new Date(endTimestamp * 1000).toLocaleString()
+    });
+    
     if (orders.length === 0) {
         // Still create empty time slots for the full range
         return createEmptyTimeRange(startTimestamp, endTimestamp, interval);
@@ -242,6 +250,8 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
         }
     });
     
+    console.log('📈 [processChartData] Grouped into intervals:', Object.keys(grouped).length);
+    
     // Create complete time range including empty intervals
     const labels = [];
     const prices = [];
@@ -272,6 +282,13 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
             volumes.push(0);
         }
     }
+    
+    console.log('📈 [processChartData] Generated data points:', {
+        labels: labels.length,
+        prices: prices.length,
+        volumes: volumes.length,
+        priceRange: [Math.min(...prices.filter(p => p !== null)), Math.max(...prices.filter(p => p !== null))]
+    });
     
     return { labels, prices, volumes };
 }
@@ -340,15 +357,37 @@ function formatChartTime(timestamp, interval) {
 
 // Update chart with new data
 function updateChartData(data, pair) {
+    console.log('📊 [updateChartData] Updating chart with:', {
+        labels: data.labels.length,
+        prices: data.prices.length,
+        volumes: data.volumes.length,
+        pair: pair.pair,
+        interval: chartInterval
+    });
+    
     if (!priceChart) {
+        console.log('📊 [updateChartData] Chart not initialized, initializing now...');
         initializeChart();
     }
     
     if (priceChart) {
+        // Make sure canvas is visible
+        const canvas = document.getElementById('price-chart');
+        if (canvas) {
+            canvas.style.display = 'block';
+        }
+        
+        // Hide any placeholder
+        const chartContainer = canvas?.parentElement;
+        const placeholder = chartContainer?.querySelector('.chart-placeholder');
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+        
         // Update chart title
         priceChart.options.plugins.title = {
             display: true,
-            text: `${pair.pair} - ${chartInterval}`,
+            text: `${pair.pair} - ${chartInterval.toUpperCase()}`,
             color: '#e5e7eb',
             font: {
                 size: 14,
@@ -361,8 +400,12 @@ function updateChartData(data, pair) {
         priceChart.data.datasets[0].data = data.prices;
         priceChart.data.datasets[1].data = data.volumes;
         
-        // Update chart
-        priceChart.update('none'); // 'none' for no animation on update
+        console.log('📊 [updateChartData] Chart updated successfully');
+        
+        // Update chart with animation
+        priceChart.update();
+    } else {
+        console.error('❌ [updateChartData] Failed to initialize chart');
     }
 }
 
