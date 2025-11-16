@@ -3,6 +3,7 @@
 // Fetch network statistics
 async function fetchNetworkStats() {
     try {
+        console.log('🔍 Fetching network stats...');
         // Fetch real Nexus blockchain data using proper API endpoints
         // Using POST method as per Nexus API documentation
         const response = await fetch(API_ENDPOINTS.systemInfo, {
@@ -11,8 +12,11 @@ async function fetchNetworkStats() {
             body: JSON.stringify({})
         });
 
+        console.log('📡 Network stats response status:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('✅ Network stats received:', data);
             // Nexus API returns data in 'result' object
             updateNetworkStats(data.result || data);
             updateAPIStatus('connected');
@@ -20,6 +24,7 @@ async function fetchNetworkStats() {
             // Also fetch ledger metrics for additional stats
             fetchLedgerMetrics();
         } else {
+            console.error('❌ Network stats request failed:', response.status);
             throw new Error('API unavailable');
         }
     } catch (error) {
