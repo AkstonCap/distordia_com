@@ -151,7 +151,7 @@ function renderMarketOverview(pairs) {
 // Update Network Stats display
 function updateNetworkStats(data) {
     // Block Height - already working properly with toLocaleString
-    const blockHeightEl = document.getElementById('block-height');
+    const blockHeightEl = document.getElementById('status-block-height');
     if (blockHeightEl && data.height) {
         blockHeightEl.textContent = data.height.toLocaleString();
     }
