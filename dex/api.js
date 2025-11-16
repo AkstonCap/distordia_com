@@ -231,10 +231,13 @@ async function loadOrderBook(pair) {
             const bids = bidsResult.map(order => {
                 // Calculate price from contract and order amounts
                 const price = calculatePriceFromOrder(order, pair.pair);
-                const amount = parseFloat(order.amount || order.contract?.amount || 0);
+                
+                // For bids: order is what they're offering (base currency amount we want)
+                const baseAmount = parseFloat(order.order?.amount || 0);
+                const baseTicker = order.order?.ticker || '';
                 
                 // Adjust for NXS divisible units if needed
-                const adjustedAmount = order.contract?.ticker === 'NXS' ? amount / 1e6 : amount;
+                const adjustedAmount = baseTicker === 'NXS' ? baseAmount / 1e6 : baseAmount;
                 
                 return {
                     price: price,
@@ -248,10 +251,13 @@ async function loadOrderBook(pair) {
             const asks = asksResult.map(order => {
                 // Calculate price from contract and order amounts
                 const price = calculatePriceFromOrder(order, pair.pair);
-                const amount = parseFloat(order.amount || order.contract?.amount || 0);
+                
+                // For asks: contract is what they're offering (base currency amount we want)
+                const baseAmount = parseFloat(order.contract?.amount || 0);
+                const baseTicker = order.contract?.ticker || '';
                 
                 // Adjust for NXS divisible units if needed
-                const adjustedAmount = order.contract?.ticker === 'NXS' ? amount / 1e6 : amount;
+                const adjustedAmount = baseTicker === 'NXS' ? baseAmount / 1e6 : baseAmount;
                 
                 return {
                     price: price,
@@ -268,7 +274,7 @@ async function loadOrderBook(pair) {
             bids.sort((a, b) => b.price - a.price);
             asks.sort((a, b) => a.price - b.price);
             
-            renderOrderBook({ bids, asks });
+            renderOrderBook({ bids, asks }, pair.pair);
             updateSpread(bids, asks);
         } else {
             console.warn('Failed to fetch order book');
