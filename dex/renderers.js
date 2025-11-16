@@ -150,10 +150,16 @@ function renderMarketOverview(pairs) {
 
 // Update Network Stats display
 function updateNetworkStats(data) {
+    console.log('Network stats data:', data);
+    
     // Block Height - already working properly with toLocaleString
     const blockHeightEl = document.getElementById('status-block-height');
+    console.log('Block height element:', blockHeightEl);
+    console.log('Height value:', data.height);
+    
     if (blockHeightEl && data.height) {
         blockHeightEl.textContent = data.height.toLocaleString();
+        console.log('Updated block height to:', data.height.toLocaleString());
     }
 
     // Network Hash Rate
