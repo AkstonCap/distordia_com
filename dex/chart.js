@@ -6,7 +6,7 @@ let chartData = {
     prices: [],
     volumes: []
 };
-let chartInterval = '1d'; // Default interval
+let chartInterval = '1y'; // Default interval
 
 // Initialize chart
 function initializeChart() {
