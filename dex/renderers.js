@@ -19,11 +19,22 @@ function renderMarketPairs(pairs) {
 }
 
 // Render Order Book
-function renderOrderBook(orderBook) {
+function renderOrderBook(orderBook, pair = null) {
     const asksContainer = document.getElementById('orderbook-asks');
     const bidsContainer = document.getElementById('orderbook-bids');
+    const headerContainer = document.querySelector('.orderbook-header');
     
     if (!asksContainer || !bidsContainer) return;
+
+    // Update column headers with currency info
+    if (headerContainer && pair) {
+        const [base, quote] = pair.split('/');
+        headerContainer.innerHTML = `
+            <span>Price (${quote})</span>
+            <span>Amount (${base})</span>
+            <span>Total (${quote})</span>
+        `;
+    }
 
     // Calculate max total for depth visualization
     const allTotals = [
