@@ -2,21 +2,33 @@
 // Connects on-chain NFT assets with real-world football player performance
 
 // API Configuration
-// Nexus API base URL (no /v2 - not part of actual API)
 const NEXUS_API_BASE = 'https://api.distordia.com';
 const FOOTBALL_API_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
 
-// Nexus API Endpoints according to official documentation
+// Asset naming standard
+const ASSET_NAMESPACE = 'distordia';
+const ASSET_PREFIX = 'player';  // Local name format: player.{league}.{team}.{playerid}
+const ASSET_STANDARD = 'distordia.player.v1';
+
+// Nexus API Endpoints
 const NEXUS_ENDPOINTS = {
-    // Assets API - for NFT player cards
-    listAssets: `${NEXUS_API_BASE}/assets/list/asset`,
-    getAsset: `${NEXUS_API_BASE}/assets/get/asset`,
-    listAny: `${NEXUS_API_BASE}/assets/list/any`,
+    // Register API - for listing all player assets (public access)
+    listNames: `${NEXUS_API_BASE}/register/list/names`,
+    listAssets: `${NEXUS_API_BASE}/register/list/assets`,
     
-    // Profiles API - for user profiles
+    // Assets API - for asset details
+    getAsset: `${NEXUS_API_BASE}/assets/get/asset`,
+    
+    // Market API - for trading players
+    createOrder: `${NEXUS_API_BASE}/market/create/order`,
+    executeOrder: `${NEXUS_API_BASE}/market/execute/order`,
+    listOrders: `${NEXUS_API_BASE}/market/list/order`,
+    listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
+    
+    // Profiles API
     getProfile: `${NEXUS_API_BASE}/profiles/get/master`,
     
-    // System API - for network info
+    // System API
     systemInfo: `${NEXUS_API_BASE}/system/get/info`
 };
 
@@ -102,35 +114,20 @@ function setupEventListeners() {
 // Load My Assets from Nexus Blockchain
 async function loadMyAssets() {
     try {
-        // In production, fetch real NFT assets from Nexus blockchain using Assets API
-        // This would require a valid session for user-specific assets
+        // Fetch all player assets from the distordia namespace
+        const players = await fetchPlayerAssets();
         
-        // Example API call (requires authentication):
-        // const response = await fetch(NEXUS_ENDPOINTS.listAssets, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({
-        //         session: userSession,  // Would need user login
-        //         limit: 100
-        //     })
-        // });
-        
-        // For demo purposes, check if we can connect to the API
-        const response = await fetch(NEXUS_ENDPOINTS.systemInfo, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Connected to Nexus blockchain:', data.result?.version || data.version);
+        if (players.length > 0) {
+            console.log(`Loaded ${players.length} player assets from Nexus blockchain`);
+            myAssets = players;
+            renderMyAssets(players);
+        } else {
+            // Fallback to demo data if no players found
+            console.log('No player assets found, using demo data');
+            const demoAssets = generateDemoAssets();
+            myAssets = demoAssets;
+            renderMyAssets(demoAssets);
         }
-        
-        // Using demo data until user authentication is implemented
-        const demoAssets = generateDemoAssets();
-        myAssets = demoAssets;
-        renderMyAssets(demoAssets);
         
     } catch (error) {
         console.error('Error loading assets:', error);
@@ -140,6 +137,138 @@ async function loadMyAssets() {
         myAssets = demoAssets;
         renderMyAssets(demoAssets);
     }
+}
+
+// Fetch player assets from Nexus register API (public access)
+async function fetchPlayerAssets() {
+    try {
+        console.log('Fetching player assets from Nexus blockchain...');
+        
+        // Fetch all names in the distordia namespace starting with 'player.'
+        const response = await fetch(NEXUS_ENDPOINTS.listNames, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE '${ASSET_PREFIX}.%'`,
+                limit: 1000
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Register API response:', data);
+        
+        if (!data.result || !Array.isArray(data.result)) {
+            console.log('No results in response');
+            return [];
+        }
+        
+        // Parse and transform namespaced assets to player objects
+        const players = data.result
+            .filter(name => name.namespace === ASSET_NAMESPACE && name.name.startsWith(`${ASSET_PREFIX}.`))
+            .map(name => parsePlayerAsset(name))
+            .filter(player => player !== null);
+        
+        console.log(`Parsed ${players.length} valid player assets`);
+        return players;
+        
+    } catch (error) {
+        console.error('Error fetching player assets:', error);
+        return [];
+    }
+}
+
+// Parse player asset from blockchain name data
+function parsePlayerAsset(nameData) {
+    try {
+        // Parse metadata from asset data field
+        let metadata = {};
+        if (nameData.data) {
+            try {
+                metadata = typeof nameData.data === 'string' ? JSON.parse(nameData.data) : nameData.data;
+            } catch (e) {
+                console.warn('Failed to parse asset metadata:', nameData.name);
+            }
+        }
+        
+        // Extract player info from local name: player.{league}.{team}.{playerid}
+        const nameParts = nameData.name.split('.');
+        if (nameParts.length < 4 || nameParts[0] !== ASSET_PREFIX) {
+            console.warn('Invalid asset name format:', nameData.name);
+            return null;
+        }
+        
+        const [prefix, league, team, playerId] = nameParts;
+        
+        // Validate standard
+        if (metadata.standard !== ASSET_STANDARD) {
+            console.warn('Asset does not match standard:', nameData.name);
+        }
+        
+        // Full namespaced name: distordia:player.{league}.{team}.{playerid}
+        const fullName = `${nameData.namespace}:${nameData.name}`;
+        
+        return {
+            id: nameData.address || fullName,
+            tokenId: nameData.address || fullName,
+            assetName: fullName,  // Full namespaced name
+            localName: nameData.name,  // Local name only
+            playerName: metadata.player?.name || playerId.replace(/_/g, ' '),
+            realWorldId: metadata.player?.realWorldId,
+            team: metadata.team?.name || team,
+            teamId: team,
+            league: league,
+            leagueName: metadata.team?.leagueName || league.toUpperCase(),
+            position: metadata.position || 'MID',
+            nationality: metadata.player?.nationality,
+            attributes: metadata.attributes || {},
+            rarity: metadata.rarity || 'common',
+            season: metadata.season || '2024-2025',
+            points: metadata.stats?.totalPoints || 0,
+            weekPoints: metadata.stats?.weekPoints || 0,
+            goals: metadata.stats?.goals || 0,
+            assists: metadata.stats?.assists || 0,
+            cleanSheets: metadata.stats?.cleanSheets || 0,
+            appearances: metadata.stats?.appearances || 0,
+            value: calculatePlayerValue(metadata),
+            inTeam: false,
+            metadata: metadata
+        };
+        
+    } catch (error) {
+        console.error('Error parsing player asset:', error);
+        return null;
+    }
+}
+
+// Calculate player value based on stats and rarity
+function calculatePlayerValue(metadata) {
+    let baseValue = 10;
+    
+    // Rarity multiplier
+    const rarityMultipliers = {
+        'common': 1,
+        'rare': 2,
+        'epic': 5,
+        'legendary': 10
+    };
+    
+    baseValue *= rarityMultipliers[metadata.rarity] || 1;
+    
+    // Overall rating bonus
+    if (metadata.attributes?.overall) {
+        baseValue += metadata.attributes.overall / 10;
+    }
+    
+    // Performance bonus
+    if (metadata.stats?.totalPoints) {
+        baseValue += metadata.stats.totalPoints / 10;
+    }
+    
+    return Math.round(baseValue);
 }
 
 // Generate Demo Assets (NFTs representing football players)
@@ -567,15 +696,198 @@ function renderMarketplace(players) {
 
 // Buy asset
 function buyAsset(playerId) {
-    alert('Purchase functionality will integrate with Nexus wallet for on-chain transactions');
-    // In production: Connect to Nexus wallet and execute NFT purchase transaction
+    alert('Purchase functionality requires Nexus wallet connection.\n\nTo buy this player:\n1. Connect your Nexus wallet\n2. Confirm transaction\n3. Player NFT will be transferred to your account');
+    // In production: Connect to Nexus wallet and execute market order
+    // See buyPlayerFromMarket() function below for implementation
 }
 
 // View asset details
 function viewAssetDetails(playerId) {
     const player = allPlayers.find(p => p.id === playerId);
     if (player) {
-        alert(`Player Details:\n${player.name}\nTeam: ${player.team}\nPosition: ${player.position}\nPoints: ${player.points}`);
+        const details = `
+Player: ${player.name}
+Team: ${player.team}
+Position: ${player.position}
+League: ${player.league}
+Price: ${player.price} NXS
+
+Season Stats:
+- Points: ${player.points}
+- Goals: ${player.goals}
+- Assists: ${player.assists}
+
+Asset: ${player.assetName || 'N/A'}
+        `.trim();
+        alert(details);
+    }
+}
+
+// ====================
+// MARKET API INTEGRATION
+// ====================
+
+// Fetch market orders for player NFTs
+async function fetchPlayerMarketOrders() {
+    try {
+        console.log('Fetching player market orders...');
+        
+        const response = await fetch(NEXUS_ENDPOINTS.listOrders, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.market = 'PLAYER/NXS'`,
+                limit: 100
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Market API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Market orders response:', data);
+        
+        if (!data.result || !Array.isArray(data.result)) {
+            return [];
+        }
+        
+        // Transform market orders to player listings
+        return data.result.map(order => ({
+            orderId: order.txid,
+            assetAddress: order.address,  // Asset address
+            price: order.price / 1000000, // Convert from satoshis to NXS
+            amount: order.amount,
+            seller: order.owner,
+            timestamp: order.timestamp,
+            market: order.market
+        }));
+        
+    } catch (error) {
+        console.error('Error fetching market orders:', error);
+        return [];
+    }
+}
+
+// Buy player from market (execute order)
+async function buyPlayerFromMarket(orderId, pin, session) {
+    try {
+        console.log('Executing market order:', orderId);
+        
+        const response = await fetch(NEXUS_ENDPOINTS.executeOrder, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pin: pin,
+                session: session,
+                txid: orderId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Execute order failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Order executed:', data);
+        
+        return {
+            success: true,
+            txid: data.result?.txid || data.txid,
+            message: 'Player purchased successfully!'
+        };
+        
+    } catch (error) {
+        console.error('Error buying player:', error);
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// List player for sale on market
+async function listPlayerForSale(localName, price, pin, session) {
+    try {
+        console.log('Listing player for sale:', localName, 'at', price, 'NXS');
+        
+        // Price in satoshis (1 NXS = 1,000,000 satoshis)
+        const priceInSatoshis = Math.floor(price * 1000000);
+        
+        const response = await fetch(NEXUS_ENDPOINTS.createOrder, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pin: pin,
+                session: session,
+                name_from: ASSET_NAMESPACE,
+                name_to: localName,  // e.g., "player.epl.mancity.haaland"
+                price: priceInSatoshis,
+                amount: 1,
+                market: 'PLAYER/NXS'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Create order failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Order created:', data);
+        
+        return {
+            success: true,
+            orderId: data.result?.txid || data.txid,
+            message: 'Player listed for sale successfully!'
+        };
+        
+    } catch (error) {
+        console.error('Error listing player:', error);
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+}
+
+// Fetch executed trades history
+async function fetchTradeHistory() {
+    try {
+        console.log('Fetching trade history...');
+        
+        const response = await fetch(NEXUS_ENDPOINTS.listExecuted, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.market LIKE 'PLAYER/NXS'`,
+                limit: 100,
+                order: 'desc'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Trade history API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Trade history:', data);
+        
+        if (!data.result || !Array.isArray(data.result)) {
+            return [];
+        }
+        
+        return data.result.map(trade => ({
+            txid: trade.txid,
+            assetName: trade.asset,
+            price: trade.price / 1000000,
+            buyer: trade.buyer,
+            seller: trade.seller,
+            timestamp: trade.timestamp
+        }));
+        
+    } catch (error) {
+        console.error('Error fetching trade history:', error);
+        return [];
     }
 }
 
