@@ -105,6 +105,7 @@ function initializeChart() {
                     type: chartScaleType,
                     display: true,
                     position: 'left',
+                    grace: '5%',
                     grid: {
                         color: 'rgba(55, 65, 81, 0.3)',
                         drawBorder: false
@@ -485,6 +486,34 @@ function toggleChartScale() {
     // Update chart scale
     if (priceChart && priceChart.options.scales.y) {
         priceChart.options.scales.y.type = chartScaleType;
+        
+        // For logarithmic scale, add buffer by calculating min/max with padding
+        if (chartScaleType === 'logarithmic') {
+            const priceData = priceChart.data.datasets[0].data.filter(p => p !== null && p > 0);
+            
+            if (priceData.length > 0) {
+                const minPrice = Math.min(...priceData);
+                const maxPrice = Math.max(...priceData);
+                
+                // Add ~10% buffer on log scale by adjusting the range
+                const logMin = Math.log10(minPrice);
+                const logMax = Math.log10(maxPrice);
+                const logRange = logMax - logMin;
+                const buffer = logRange * 0.1; // 10% buffer
+                
+                // Calculate buffered min/max
+                const bufferedMin = Math.pow(10, logMin - buffer);
+                const bufferedMax = Math.pow(10, logMax + buffer);
+                
+                priceChart.options.scales.y.min = bufferedMin;
+                priceChart.options.scales.y.max = bufferedMax;
+            }
+        } else {
+            // For linear scale, use grace percentage or remove explicit min/max
+            delete priceChart.options.scales.y.min;
+            delete priceChart.options.scales.y.max;
+        }
+        
         priceChart.update();
     }
 }
