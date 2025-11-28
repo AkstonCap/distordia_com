@@ -27,6 +27,11 @@
                 <li><a href="index.html" class="active">DEX</a></li>
                 <li><a href="../index.html#contact">Contact</a></li>
             </ul>
+            <div class="auth-controls">
+                <span id="user-info" class="user-info" style="display: none;"></span>
+                <button id="login-btn" class="auth-btn login-btn">Login</button>
+                <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">Logout</button>
+            </div>
             <div class="menu-toggle">
                 <span></span>
                 <span></span>
@@ -203,12 +208,43 @@
         </div>
     </footer>
 
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login to Nexus</h2>
+                <button id="close-modal" class="close-modal">&times;</button>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label for="pin">PIN</label>
+                    <input type="password" id="pin" name="pin" required autocomplete="off" inputmode="numeric">
+                </div>
+                <div id="login-error" class="login-error" style="display: none;"></div>
+                <button type="submit" class="login-submit-btn">Login</button>
+            </form>
+            <div class="login-info">
+                <p><small>Your session will automatically expire after 3 minutes of inactivity.</small></p>
+                <p><small>Credentials are sent directly to the Nexus node and not stored.</small></p>
+            </div>
+        </div>
+    </div>
+
     <script src="../script.js"></script>
     <!-- Load DEX modules in dependency order -->
     <script src="api-config.js?v=4"></script>
     <script src="market-pairs.js?v=4"></script>
     <script src="utils.js?v=4"></script>
     <script src="state.js?v=4"></script>
+    <script src="auth.js?v=4"></script>
     <script src="api.js?v=4"></script>
     <script src="renderers.js?v=4"></script>
     <script src="event-handlers.js?v=4"></script>
