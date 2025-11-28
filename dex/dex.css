@@ -236,9 +236,18 @@
 .chart-controls {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 
-.chart-interval {
+.chart-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 0.25rem;
+}
+
+.chart-interval,
+.chart-scale-toggle {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
@@ -253,6 +262,16 @@
     background: var(--primary-color);
     color: var(--bg-dark);
     border-color: var(--primary-color);
+}
+
+.chart-scale-toggle {
+    min-width: 60px;
+}
+
+.chart-scale-toggle:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .chart-container {

@@ -139,28 +139,34 @@ async function fetchMarketPairs() {
                     console.log(`Market ${marketPair}: 24h change = ${change24h.toFixed(2)}%`);
                 }
                 
-                // Fetch all orders for volume calculation
-                const ordersResponse = await fetch(API_ENDPOINTS.listOrders, {
+                // Fetch executed orders from last 24 hours for volume calculation
+                const timestamp24hAgo = currentTimestamp > 0 ? currentTimestamp - (24 * 60 * 60) : Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+                const ordersResponse = await fetch(API_ENDPOINTS.listExecuted, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         market: marketPair,
-                        limit: 50
+                        limit: 1000,
+                        sort: 'timestamp',
+                        order: 'desc'
                     })
                 });
 
                 if (ordersResponse.ok) {
                     const data = await ordersResponse.json();
-                    console.log(`Order data for ${marketPair}:`, data);
+                    console.log(`Executed order data for ${marketPair}:`, data);
                     
                     // The result contains bids and asks arrays
                     const orderBids = data.result?.bids || [];
                     const orderAsks = data.result?.asks || [];
-                    const allOrders = [...orderBids, ...orderAsks];
+                    let allOrders = [...orderBids, ...orderAsks];
                     
-                    console.log(`Market ${marketPair}: ${allOrders.length} orders found (${orderBids.length} bids, ${orderAsks.length} asks)`);
+                    // Filter to only orders in the last 24 hours
+                    allOrders = allOrders.filter(order => (order.timestamp || 0) >= timestamp24hAgo);
                     
-                    // Calculate market statistics from orders
+                    console.log(`Market ${marketPair}: ${allOrders.length} executed orders in last 24h (${orderBids.length} bids, ${orderAsks.length} asks)`);
+                    
+                    // Calculate market statistics from executed orders
                     return processMarketPairData(marketPair, allOrders, lastPrice, change24h);
                 } else {
                     console.warn(`Failed to fetch ${marketPair}: ${ordersResponse.status}`);

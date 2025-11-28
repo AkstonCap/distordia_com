@@ -62,21 +62,28 @@ function processMarketPairData(marketPair, orders, lastPrice = 0, change24h = 0)
     
     const [base, quote] = marketPair.split('/');
     
-    // Calculate statistics from orders
+    // Calculate statistics from executed orders
     let totalVolume = 0;
     let orderLastPrice = 0;
     let highPrice = 0;
     let lowPrice = Infinity;
     
     orders.forEach(order => {
-        const price = parseFloat(order.price || 0);
-        const amount = parseFloat(order.amount || 0);
+        // Calculate price from Nexus order structure
+        const price = calculatePriceFromOrder(order, marketPair);
         
-        if (price > 0) {
+        // Calculate volume from contract amount (what was actually traded)
+        const contractAmount = parseFloat(order.contract?.amount || 0);
+        const contractTicker = order.contract?.ticker || '';
+        
+        // Adjust for NXS divisible units if needed
+        const volume = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+        
+        if (price > 0 && volume > 0) {
             orderLastPrice = price; // Use most recent order price as fallback
             highPrice = Math.max(highPrice, price);
             lowPrice = Math.min(lowPrice, price);
-            totalVolume += amount;
+            totalVolume += volume;
         }
     });
     

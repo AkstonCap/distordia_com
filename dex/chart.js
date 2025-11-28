@@ -7,6 +7,7 @@ let chartData = {
     volumes: []
 };
 let chartInterval = '1y'; // Default interval
+let chartScaleType = 'linear'; // Default scale type
 
 // Initialize chart
 function initializeChart() {
@@ -101,7 +102,7 @@ function initializeChart() {
                     }
                 },
                 y: {
-                    type: 'linear',
+                    type: chartScaleType,
                     display: true,
                     position: 'left',
                     grid: {
@@ -471,10 +472,33 @@ function updateChartInterval(interval) {
     }
 }
 
+// Toggle chart scale between logarithmic and linear
+function toggleChartScale() {
+    chartScaleType = chartScaleType === 'linear' ? 'logarithmic' : 'linear';
+    
+    // Update button text
+    const toggleBtn = document.getElementById('scale-toggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = chartScaleType === 'linear' ? 'Log' : 'Linear';
+    }
+    
+    // Update chart scale
+    if (priceChart && priceChart.options.scales.y) {
+        priceChart.options.scales.y.type = chartScaleType;
+        priceChart.update();
+    }
+}
+
 // Initialize chart when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     // Wait a bit for other modules to load
     setTimeout(() => {
         initializeChart();
+        
+        // Setup scale toggle button
+        const scaleToggle = document.getElementById('scale-toggle');
+        if (scaleToggle) {
+            scaleToggle.addEventListener('click', toggleChartScale);
+        }
     }, 100);
 });
