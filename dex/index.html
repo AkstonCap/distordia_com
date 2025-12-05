@@ -28,9 +28,11 @@
                 <li><a href="../index.html#contact">Contact</a></li>
             </ul>
             <div class="auth-controls">
-                <span id="user-info" class="user-info" style="display: none;"></span>
-                <button id="login-btn" class="auth-btn login-btn">Login</button>
-                <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">Logout</button>
+                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <div id="walletInfo" class="wallet-info" style="display: none;">
+                    <span id="walletAddress" class="wallet-address"></span>
+                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+                </div>
             </div>
             <div class="menu-toggle">
                 <span></span>

@@ -44,6 +44,12 @@ let allPlayers = [];
 let liveMatches = [];
 let leaderboard = [];
 
+// Wallet State
+let walletConnected = false;
+let userAddress = null;
+let userSession = null;
+let userPin = null;
+
 // Scoring Rules
 const SCORING_RULES = {
     goal: { FWD: 8, MID: 10, DEF: 12, GK: 12 },
@@ -61,10 +67,149 @@ const SCORING_RULES = {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    initializeWallet();
     initializeFantasyFootball();
     setupEventListeners();
     startLiveUpdates();
 });
+
+// ====================
+// WALLET CONNECTION
+// ====================
+
+// Initialize wallet connection
+async function initializeWallet() {
+    // 1. Check if Q-Wallet is installed
+    if (typeof window.nexus === 'undefined') {
+        console.warn('Q-Wallet not detected');
+        showWalletInstallPrompt();
+        return;
+    }
+
+    console.log('Q-Wallet detected!');
+
+    // 2. Check if already connected
+    try {
+        const accounts = await window.nexus.getAccounts();
+        if (accounts.length > 0) {
+            console.log('Already connected to wallet:', accounts[0]);
+            userAddress = accounts[0];
+            walletConnected = true;
+            updateWalletUI();
+            return;
+        }
+    } catch (error) {
+        console.log('Not connected to wallet yet');
+    }
+
+    // 3. Setup connect button event listener
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', async () => {
+            console.log('Connect button clicked');
+            console.log('window.nexus exists:', typeof window.nexus !== 'undefined');
+            try {
+                console.log('Calling window.nexus.connect()...');
+                const accounts = await window.nexus.connect();
+                console.log('connect() returned:', accounts);
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0];
+                    walletConnected = true;
+                    console.log('Connected to wallet:', userAddress);
+                    updateWalletUI();
+                    await loadMyAssets();
+                } else {
+                    console.warn('No accounts returned');
+                    alert('No accounts found. Please make sure Q-Wallet is unlocked.');
+                }
+            } catch (error) {
+                console.error('Failed to connect wallet. Error type:', typeof error);
+                console.error('Error:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                
+                if (error.message && error.message.includes('denied')) {
+                    alert('Connection denied. Please approve the connection in your Q-Wallet.');
+                } else if (error.message && error.message.includes('not connected')) {
+                    alert('Please open Q-Wallet extension and log in first.\n\n1. Click the Q-Wallet icon in your browser toolbar\n2. Enter your password to unlock the wallet\n3. Then try connecting again');
+                } else {
+                    alert('Failed to connect to wallet.\n\nError: ' + error.message + '\n\nPlease make sure Q-Wallet is installed and unlocked.');
+                }
+            }
+        });
+    }
+
+    // Setup disconnect button
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', disconnectWallet);
+    }
+}
+
+// Disconnect wallet
+function disconnectWallet() {
+    userAddress = null;
+    userSession = null;
+    userPin = null;
+    walletConnected = false;
+    
+    updateWalletUI();
+    console.log('Wallet disconnected');
+}
+
+// Update wallet UI
+function updateWalletUI() {
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const walletInfo = document.getElementById('walletInfo');
+    const walletAddressEl = document.getElementById('walletAddress');
+
+    if (walletConnected && userAddress) {
+        // Show wallet info, hide connect button
+        if (connectBtn) connectBtn.style.display = 'none';
+        if (walletInfo) walletInfo.style.display = 'flex';
+        
+        // Display shortened address
+        if (walletAddressEl) {
+            const shortAddress = userAddress.length > 16 
+                ? userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 6)
+                : userAddress;
+            walletAddressEl.textContent = shortAddress;
+            walletAddressEl.title = userAddress; // Show full address on hover
+        }
+    } else {
+        // Show connect button, hide wallet info
+        if (connectBtn) connectBtn.style.display = 'block';
+        if (walletInfo) walletInfo.style.display = 'none';
+    }
+}
+
+// Show wallet install prompt
+function showWalletInstallPrompt() {
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+        connectBtn.textContent = 'Install Q-Wallet';
+        connectBtn.addEventListener('click', () => {
+            window.open('https://github.com/AkstonCap/q-wallet', '_blank');
+        });
+    }
+}
+
+// Get wallet balance
+async function getWalletBalance() {
+    if (!walletConnected) {
+        console.warn('Wallet not connected');
+        return null;
+    }
+
+    try {
+        const balance = await window.nexus.getBalance('default');
+        console.log('Wallet balance:', balance, 'NXS');
+        return balance;
+    } catch (error) {
+        console.error('Failed to get balance:', error);
+        return null;
+    }
+}
 
 // Initialize Fantasy Football
 async function initializeFantasyFootball() {
@@ -696,9 +841,15 @@ function renderMarketplace(players) {
 
 // Buy asset
 function buyAsset(playerId) {
-    alert('Purchase functionality requires Nexus wallet connection.\n\nTo buy this player:\n1. Connect your Nexus wallet\n2. Confirm transaction\n3. Player NFT will be transferred to your account');
-    // In production: Connect to Nexus wallet and execute market order
-    // See buyPlayerFromMarket() function below for implementation
+    if (!walletConnected) {
+        alert('Please connect your Q-Wallet to buy players');
+        return;
+    }
+    
+    alert('Purchase functionality will use your connected Q-Wallet.\n\nTo complete purchase:\n1. Wallet will request transaction approval\n2. Enter your PIN to confirm\n3. Player NFT will be transferred to your account');
+    
+    // TODO: Implement actual market order execution with wallet
+    // See buyPlayerFromMarket() function for implementation
 }
 
 // View asset details
@@ -770,82 +921,95 @@ async function fetchPlayerMarketOrders() {
 }
 
 // Buy player from market (execute order)
-async function buyPlayerFromMarket(orderId, pin, session) {
+async function buyPlayerFromMarket(orderId) {
+    if (!walletConnected) {
+        alert('Please connect your Q-Wallet first');
+        return { success: false, message: 'Wallet not connected' };
+    }
+
     try {
-        console.log('Executing market order:', orderId);
+        console.log('Executing market order via Q-Wallet:', orderId);
         
-        const response = await fetch(NEXUS_ENDPOINTS.executeOrder, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                pin: pin,
-                session: session,
+        // Request transaction through Q-Wallet
+        // The wallet will show a popup asking user to confirm and enter PIN
+        const result = await window.nexus.sendTransaction({
+            api: 'market/execute/order',
+            params: {
                 txid: orderId
-            })
+            }
         });
         
-        if (!response.ok) {
-            throw new Error(`Execute order failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Order executed:', data);
+        console.log('Order executed:', result);
         
         return {
             success: true,
-            txid: data.result?.txid || data.txid,
+            txid: result.txid,
             message: 'Player purchased successfully!'
         };
         
     } catch (error) {
         console.error('Error buying player:', error);
+        
+        if (error.message && error.message.includes('denied')) {
+            return {
+                success: false,
+                message: 'Transaction cancelled by user'
+            };
+        }
+        
         return {
             success: false,
-            message: error.message
+            message: error.message || 'Purchase failed'
         };
     }
 }
 
 // List player for sale on market
-async function listPlayerForSale(localName, price, pin, session) {
+async function listPlayerForSale(localName, price) {
+    if (!walletConnected) {
+        alert('Please connect your Q-Wallet first');
+        return { success: false, message: 'Wallet not connected' };
+    }
+
     try {
-        console.log('Listing player for sale:', localName, 'at', price, 'NXS');
+        console.log('Listing player for sale via Q-Wallet:', localName, 'at', price, 'NXS');
         
         // Price in satoshis (1 NXS = 1,000,000 satoshis)
         const priceInSatoshis = Math.floor(price * 1000000);
         
-        const response = await fetch(NEXUS_ENDPOINTS.createOrder, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                pin: pin,
-                session: session,
+        // Request transaction through Q-Wallet
+        const result = await window.nexus.sendTransaction({
+            api: 'market/create/order',
+            params: {
                 name_from: ASSET_NAMESPACE,
-                name_to: localName,  // e.g., "player.epl.mancity.haaland"
+                name_to: localName,
                 price: priceInSatoshis,
                 amount: 1,
                 market: 'PLAYER/NXS'
-            })
+            }
         });
         
-        if (!response.ok) {
-            throw new Error(`Create order failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Order created:', data);
+        console.log('Order created:', result);
         
         return {
             success: true,
-            orderId: data.result?.txid || data.txid,
+            orderId: result.txid,
             message: 'Player listed for sale successfully!'
         };
         
     } catch (error) {
         console.error('Error listing player:', error);
+        
+        if (error.message && error.message.includes('denied')) {
+            return {
+                success: false,
+                message: 'Transaction cancelled by user'
+            };
+        }
+        
         return {
             success: false,
-            message: error.message
+            message: error.message || 'Failed to list player'
         };
     }
 }
