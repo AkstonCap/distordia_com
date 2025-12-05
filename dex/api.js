@@ -99,69 +99,63 @@ async function fetchMarketPairs() {
                     console.log(`Failed to fetch executed orders for ${marketPair}: ${executedResponse.status}`);
                 }
                 
-                // Fetch executed order from 24 hours ago for 24h change calculation
-                let price24hAgo = 0;
-                if (currentTimestamp > 0) {
-                    const timestamp24hAgo = currentTimestamp - (24 * 60 * 60); // 24 hours in seconds
-                    
-                    const historical24hResponse = await fetch(API_ENDPOINTS.listExecuted, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            market: marketPair,
-                            limit: 1,
-                            where: `timestamp<=${timestamp24hAgo}`,
-                            sort: 'timestamp',
-                            order: 'desc'
-                        })
-                    });
-                    
-                    if (historical24hResponse.ok) {
-                        const historical24hData = await historical24hResponse.json();
-                        const historicalBids = historical24hData.result?.bids || [];
-                        const historicalAsks = historical24hData.result?.asks || [];
-                        const historical24hOrders = [...historicalBids, ...historicalAsks];
-                        
-                        historical24hOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                        
-                        if (historical24hOrders.length > 0) {
-                            const order24hAgo = historical24hOrders[0];
-                            price24hAgo = calculatePriceFromOrder(order24hAgo, marketPair);
-                            console.log(`Market ${marketPair}: Price 24h ago = ${price24hAgo} (timestamp: ${order24hAgo.timestamp})`);
-                        }
-                    }
-                }
+                // Calculate timestamp for 24 hours ago (use current time if no recent orders)
+                const now = Math.floor(Date.now() / 1000);
+                const timestamp24hAgo = currentTimestamp > 0 ? currentTimestamp - (24 * 60 * 60) : now - (24 * 60 * 60);
                 
-                // Calculate 24h change percentage
-                let change24h = 0;
-                if (lastPrice > 0 && price24hAgo > 0) {
-                    change24h = ((lastPrice - price24hAgo) / price24hAgo) * 100;
-                    console.log(`Market ${marketPair}: 24h change = ${change24h.toFixed(2)}%`);
-                }
-                
-                // Fetch all orders for volume calculation
-                const ordersResponse = await fetch(API_ENDPOINTS.listOrders, {
+                // Fetch all executed orders (we'll filter in JavaScript since where clause may not work)
+                const ordersResponse = await fetch(API_ENDPOINTS.listExecuted, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         market: marketPair,
-                        limit: 50
+                        limit: 1000,
+                        sort: 'timestamp',
+                        order: 'desc'
                     })
                 });
 
+                let change24h = 0;
+                let allOrders24h = [];
+                
                 if (ordersResponse.ok) {
                     const data = await ordersResponse.json();
-                    console.log(`Order data for ${marketPair}:`, data);
                     
                     // The result contains bids and asks arrays
                     const orderBids = data.result?.bids || [];
                     const orderAsks = data.result?.asks || [];
-                    const allOrders = [...orderBids, ...orderAsks];
+                    let allOrders = [...orderBids, ...orderAsks];
                     
-                    console.log(`Market ${marketPair}: ${allOrders.length} orders found (${orderBids.length} bids, ${orderAsks.length} asks)`);
+                    // Sort all orders by timestamp descending
+                    allOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                     
-                    // Calculate market statistics from orders
-                    return processMarketPairData(marketPair, allOrders, lastPrice, change24h);
+                    console.log(`Market ${marketPair}: Fetched ${allOrders.length} total executed orders`);
+                    
+                    // Filter to only orders in the last 24 hours for volume
+                    allOrders24h = allOrders.filter(order => (order.timestamp || 0) >= timestamp24hAgo);
+                    
+                    console.log(`Market ${marketPair}: ${allOrders24h.length} executed orders in last 24h`);
+                    
+                    // Find the oldest order within 24h window for price comparison
+                    // (closest to 24h ago, but still within the window)
+                    const oldestOrder24h = allOrders24h.length > 0 ? allOrders24h[allOrders24h.length - 1] : null;
+                    
+                    if (lastPrice > 0 && oldestOrder24h) {
+                        const price24hAgo = calculatePriceFromOrder(oldestOrder24h, marketPair);
+                        console.log(`Market ${marketPair}: Price 24h ago = ${price24hAgo} (timestamp: ${new Date(oldestOrder24h.timestamp * 1000).toLocaleString()})`);
+                        
+                        if (price24hAgo > 0) {
+                            change24h = ((lastPrice - price24hAgo) / price24hAgo) * 100;
+                            console.log(`Market ${marketPair}: Current price = ${lastPrice}, 24h change = ${change24h.toFixed(2)}%`);
+                        } else {
+                            console.log(`Market ${marketPair}: Could not calculate price 24h ago`);
+                        }
+                    } else {
+                        console.log(`Market ${marketPair}: Insufficient data for 24h change calculation`);
+                    }
+                    
+                    // Calculate market statistics from executed orders in last 24h
+                    return processMarketPairData(marketPair, allOrders24h, lastPrice, change24h);
                 } else {
                     console.warn(`Failed to fetch ${marketPair}: ${ordersResponse.status}`);
                     return processMarketPairData(marketPair, [], lastPrice, change24h); // Return with last price

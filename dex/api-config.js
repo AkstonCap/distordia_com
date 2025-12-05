@@ -18,5 +18,9 @@ const API_ENDPOINTS = {
     listAsks: `${NEXUS_API_BASE}/market/list/ask`,
     listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
     listExecutedFiltered: `${NEXUS_API_BASE}/market/list/executed/timestamp,contract.amount,contract.ticker,order.amount,order.ticker`,
-    userOrders: `${NEXUS_API_BASE}/market/user/order`
+    userOrders: `${NEXUS_API_BASE}/market/user/order`,
+    
+    // Sessions API - authentication
+    sessionCreate: `${NEXUS_API_BASE}/sessions/create/local`,
+    sessionTerminate: `${NEXUS_API_BASE}/sessions/terminate/local`
 };
