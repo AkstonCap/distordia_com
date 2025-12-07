@@ -1,5 +1,28 @@
 // API functions for fetching data from Nexus blockchain
 
+// Helper function to aggregate orders by price level
+function aggregateOrdersByPrice(orders) {
+    const priceMap = new Map();
+    
+    orders.forEach(order => {
+        const priceKey = order.price.toFixed(8); // Use 8 decimals for price precision
+        
+        if (priceMap.has(priceKey)) {
+            const existing = priceMap.get(priceKey);
+            existing.amount += order.amount;
+            existing.total += order.total;
+        } else {
+            priceMap.set(priceKey, {
+                price: order.price,
+                amount: order.amount,
+                total: order.total
+            });
+        }
+    });
+    
+    return Array.from(priceMap.values());
+}
+
 // Fetch network statistics
 async function fetchNetworkStats() {
     try {
@@ -273,8 +296,14 @@ async function loadOrderBook(pair) {
             bids.sort((a, b) => b.price - a.price);
             asks.sort((a, b) => a.price - b.price);
             
-            renderOrderBook({ bids, asks }, pair.pair);
-            updateSpread(bids, asks);
+            // Aggregate orders by price level
+            const aggregatedBids = aggregateOrdersByPrice(bids);
+            const aggregatedAsks = aggregateOrdersByPrice(asks);
+            
+            console.log(`Aggregated to ${aggregatedBids.length} bid levels, ${aggregatedAsks.length} ask levels`);
+            
+            renderOrderBook({ bids: aggregatedBids, asks: aggregatedAsks }, pair.pair);
+            updateSpread(aggregatedBids, aggregatedAsks);
         } else {
             console.warn('Failed to fetch order book');
             renderOrderBook({ bids: [], asks: [] });
