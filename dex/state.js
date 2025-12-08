@@ -41,6 +41,11 @@ function selectPair(pair) {
     loadOrderBook(pair);
     loadChart(pair);
     fetchRecentTrades(pair.pair);
+    
+    // Update trade button visibility (from trade.js)
+    if (typeof onPairSelected === 'function') {
+        onPairSelected();
+    }
 }
 
 // Process market pair data from Nexus orders

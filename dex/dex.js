@@ -112,10 +112,16 @@ function updateWalletUI() {
             walletAddressEl.textContent = shortAddress;
             walletAddressEl.title = userAddress; // Show full address on hover
         }
+        
+        // Update trade button visibility
+        updateTradeButtonVisibility();
     } else {
         // Show connect button, hide wallet info
         if (connectBtn) connectBtn.style.display = 'block';
         if (walletInfo) walletInfo.style.display = 'none';
+        
+        // Update trade button visibility
+        updateTradeButtonVisibility();
     }
 }
 
@@ -155,6 +161,9 @@ async function initializeDEX() {
         fetchMarketPairs()
         // fetchRecentTrades will be called when a pair is selected
     ]);
+    
+    // Initialize trade functionality
+    initializeTrade();
 }
 
 // Show loading indicators

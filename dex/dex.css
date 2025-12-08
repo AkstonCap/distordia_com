@@ -1106,3 +1106,309 @@
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
+
+/* Trade Button Styles */
+.trade-btn {
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 1rem;
+}
+
+.trade-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.trade-icon {
+    font-size: 1.1rem;
+}
+
+/* Trade Modal Styles */
+.trade-form-container {
+    padding: 1.5rem;
+}
+
+.trade-type-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.trade-type-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.trade-type-btn.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.trade-type-btn:hover:not(.active) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.trade-pair-info {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.trade-pair-info h3 {
+    color: var(--primary-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+}
+
+.trade-pair-price {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.trade-pair-price .label {
+    font-size: 0.9rem;
+}
+
+.trade-pair-price span:last-child {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.trade-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.trade-form .form-group label {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.trade-form input[type="number"] {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.trade-form input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.input-help {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.use-market-price-btn {
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.use-market-price-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.trade-total {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.trade-total .label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.trade-total span:nth-child(2) {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.2rem;
+    flex: 1;
+}
+
+.trade-fee-notice {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.trade-fee-notice .fee-icon {
+    font-size: 1.2rem;
+}
+
+.trade-fee-notice strong {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.available-orders-section {
+    margin-bottom: 1.5rem;
+}
+
+.available-orders-section h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.available-orders-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.loading-orders {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 1rem;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.order-item:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.order-item.selected {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.order-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.order-price {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.order-amount {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.trade-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #EF4444;
+    color: #EF4444;
+    padding: 0.8rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.trade-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.cancel-trade-btn,
+.execute-trade-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-trade-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.cancel-trade-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.execute-trade-btn {
+    background: var(--gradient-1);
+    border: none;
+    color: white;
+}
+
+.execute-trade-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.execute-trade-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+

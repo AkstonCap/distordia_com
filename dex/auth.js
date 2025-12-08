@@ -198,6 +198,10 @@ function updateAuthUI() {
         }
         if (loginModal) loginModal.style.display = 'none';
         
+        // Update trade button visibility
+        if (typeof updateTradeButtonVisibility === 'function') {
+            updateTradeButtonVisibility();
+        }
         // Enable authenticated features
         document.body.classList.add('authenticated');
     } else {
@@ -205,6 +209,11 @@ function updateAuthUI() {
         if (loginBtn) loginBtn.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (userInfo) userInfo.style.display = 'none';
+        
+        // Update trade button visibility
+        if (typeof updateTradeButtonVisibility === 'function') {
+            updateTradeButtonVisibility();
+        }
         
         // Disable authenticated features
         document.body.classList.remove('authenticated');

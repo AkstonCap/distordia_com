@@ -19,8 +19,20 @@ const API_ENDPOINTS = {
     listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
     listExecutedFiltered: `${NEXUS_API_BASE}/market/list/executed/timestamp,contract.amount,contract.ticker,order.amount,order.ticker`,
     userOrders: `${NEXUS_API_BASE}/market/user/order`,
+    executeOrder: `${NEXUS_API_BASE}/market/execute/order`,
+    
+    // Finance API - token transfers
+    debitToken: `${NEXUS_API_BASE}/finance/debit/token`,
+    debitAccount: `${NEXUS_API_BASE}/finance/debit/account`,
     
     // Sessions API - authentication
     sessionCreate: `${NEXUS_API_BASE}/sessions/create/local`,
     sessionTerminate: `${NEXUS_API_BASE}/sessions/terminate/local`
+};
+
+// Trading fee configuration
+const TRADE_FEE = {
+    amount: 1.0,           // 1 DIST token per trade
+    token: 'DIST',         // DIST token
+    recipient: 'DIST'      // Account name to receive fees
 };
