@@ -91,8 +91,17 @@ function updateTradeButtonVisibility() {
     // Also check if a pair is selected
     const hasPairSelected = currentPair !== null;
     
-    if (isWalletConnected && hasPairSelected) {
+    // Always show button if pair is selected
+    if (hasPairSelected) {
         tradeBtn.style.display = 'flex';
+        
+        // Update button text based on connection status
+        const tradeBtnText = tradeBtn.querySelector('.trade-btn-text') || tradeBtn;
+        if (isWalletConnected) {
+            tradeBtnText.innerHTML = '<span class="trade-icon">💱</span> Trade';
+        } else {
+            tradeBtnText.innerHTML = '<span class="trade-icon">🔒</span> Connect wallet to trade';
+        }
     } else {
         tradeBtn.style.display = 'none';
     }
@@ -102,6 +111,21 @@ function updateTradeButtonVisibility() {
 function openTradeModal() {
     if (!currentPair) {
         showNotification('Please select a trading pair first', 'warning');
+        return;
+    }
+    
+    // Check if wallet is connected
+    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnected) || (typeof isLoggedIn === 'function' && isLoggedIn());
+    
+    if (!isWalletConnected) {
+        // Prompt user to connect wallet
+        showNotification('Please connect your wallet or login to trade', 'warning');
+        
+        // Try to trigger wallet connection
+        const connectBtn = document.getElementById('connectWalletBtn');
+        if (connectBtn) {
+            connectBtn.click();
+        }
         return;
     }
     
