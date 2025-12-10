@@ -1312,6 +1312,32 @@
     padding: 0.5rem;
 }
 
+.matched-orders-summary {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 5px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.summary-line:last-child {
+    margin-bottom: 0;
+}
+
+.summary-line strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
 .loading-orders {
     text-align: center;
     color: var(--text-secondary);

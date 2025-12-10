@@ -266,17 +266,20 @@
 
                 <form id="trade-form" class="trade-form">
                     <div class="form-group">
-                        <label for="trade-amount">Amount (<span id="trade-base-currency">-</span>)</label>
+                        <label for="trade-amount">Max Amount (<span id="trade-base-currency">-</span>)</label>
                         <input type="number" id="trade-amount" name="amount" step="0.000001" min="0" required>
                         <div class="input-help">
-                            <span id="trade-amount-help"></span>
+                            <span id="trade-amount-help">Maximum amount you want to trade</span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="trade-price">Price (<span id="trade-quote-currency">-</span>)</label>
+                        <label for="trade-price"><span id="trade-price-label">Max Price</span> (<span id="trade-quote-currency">-</span>)</label>
                         <input type="number" id="trade-price" name="price" step="0.00000001" min="0" required>
                         <button type="button" class="use-market-price-btn" id="use-market-price">Use Market Price</button>
+                        <div class="input-help">
+                            <span id="trade-price-help">Maximum price for buy orders</span>
+                        </div>
                     </div>
 
                     <div class="trade-total">
