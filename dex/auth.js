@@ -13,6 +13,21 @@ let sessionData = {
     activityCheckId: null
 };
 
+// Detect if running on mobile browser
+function isMobileBrowser() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // Check for mobile devices
+    const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i;
+    const isMobile = mobileRegex.test(userAgent.toLowerCase());
+    
+    // Also check for touch-only devices with small screens
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isSmallScreen = window.innerWidth <= 768;
+    
+    return isMobile || (isTouchDevice && isSmallScreen);
+}
+
 // Check if user is logged in
 function isLoggedIn() {
     return sessionData.genesis !== null && sessionData.session !== null;
@@ -368,6 +383,13 @@ function initializeAuth() {
     setupLoginModal();
     setupActivityTracking();
     updateAuthUI();
+    
+    // Hide wallet connect button on mobile browsers
+    const connectWalletBtn = document.getElementById('connectWalletBtn');
+    if (connectWalletBtn && isMobileBrowser()) {
+        connectWalletBtn.style.display = 'none';
+        console.log('[Auth] Wallet connect button hidden on mobile browser');
+    }
     
     // Handle window close/refresh - terminate session
     window.addEventListener('beforeunload', (e) => {

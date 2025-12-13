@@ -58,7 +58,22 @@ function initializeTrade() {
     if (useMarketPriceBtn) {
         useMarketPriceBtn.addEventListener('click', () => {
             if (currentPair) {
-                priceInput.value = currentPair.price;
+                let bestPrice;
+                
+                // For buy orders: use lowest ask (best available sell price)
+                // For sell orders: use highest bid (best available buy price)
+                if (tradeState.type === 'buy') {
+                    bestPrice = getLowestAsk();
+                } else {
+                    bestPrice = getHighestBid();
+                }
+                
+                // Fall back to last price if no orders available
+                if (!bestPrice) {
+                    bestPrice = currentPair.price;
+                }
+                
+                priceInput.value = bestPrice;
                 calculateTotal();
             }
         });
@@ -76,13 +91,57 @@ function initializeTrade() {
         });
     }
     
-    // Handle form submission
+    // Handle form submission - find orders
     if (tradeForm) {
         tradeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            await findAndDisplayOrders();
+        });
+    }
+    
+    // Back to form button
+    const backToFormBtn = document.getElementById('back-to-form');
+    if (backToFormBtn) {
+        backToFormBtn.addEventListener('click', () => {
+            showTradeForm();
+        });
+    }
+    
+    // Execute trade from review
+    const executeTradeBtn = document.getElementById('execute-trade');
+    if (executeTradeBtn) {
+        executeTradeBtn.addEventListener('click', async () => {
             await executeTrade();
         });
     }
+}
+
+// Get lowest ask price from current order book
+function getLowestAsk() {
+    const asksContainer = document.getElementById('orderbook-asks');
+    if (!asksContainer) return null;
+    
+    const rows = asksContainer.querySelectorAll('.orderbook-row');
+    if (rows.length === 0) return null;
+    
+    // Last row is the lowest ask (closest to spread) after scrolling
+    const lastRow = rows[rows.length - 1];
+    const priceText = lastRow.querySelector('span:first-child')?.textContent;
+    return priceText ? parseFloat(priceText.replace(/,/g, '')) : null;
+}
+
+// Get highest bid price from current order book
+function getHighestBid() {
+    const bidsContainer = document.getElementById('orderbook-bids');
+    if (!bidsContainer) return null;
+    
+    const rows = bidsContainer.querySelectorAll('.orderbook-row');
+    if (rows.length === 0) return null;
+    
+    // First row is the highest bid (closest to spread)
+    const firstRow = rows[0];
+    const priceText = firstRow.querySelector('span:first-child')?.textContent;
+    return priceText ? parseFloat(priceText.replace(/,/g, '')) : null;
 }
 
 // Update trade button visibility based on wallet connection
@@ -137,7 +196,7 @@ function openTradeModal() {
     const modal = document.getElementById('trade-modal');
     const pairName = document.getElementById('trade-pair-name');
     const currentPrice = document.getElementById('trade-current-price');
-    const baseCurrency = document.getElementById('trade-base-currency');
+    const amountCurrency = document.getElementById('trade-amount-currency');
     const quoteCurrency = document.getElementById('trade-quote-currency');
     const totalCurrency = document.getElementById('trade-total-currency');
     const priceInput = document.getElementById('trade-price');
@@ -145,7 +204,9 @@ function openTradeModal() {
     // Set pair information
     if (pairName) pairName.textContent = currentPair.pair;
     if (currentPrice) currentPrice.textContent = formatPrice(currentPair.price);
-    if (baseCurrency) baseCurrency.textContent = currentPair.base;
+    
+    // Set amount currency to quote (payment token for buy orders by default)
+    if (amountCurrency) amountCurrency.textContent = currentPair.quote;
     if (quoteCurrency) quoteCurrency.textContent = currentPair.quote;
     if (totalCurrency) totalCurrency.textContent = currentPair.quote;
     
@@ -184,6 +245,22 @@ function updateTradeType(type) {
     const executeBtn = document.getElementById('execute-trade-type');
     if (executeBtn) {
         executeBtn.textContent = type === 'buy' ? 'Buy' : 'Sell';
+    }
+    
+    // Update amount currency label (payment token)
+    const amountCurrency = document.getElementById('trade-amount-currency');
+    const amountHelp = document.getElementById('trade-amount-help');
+    
+    if (amountCurrency && currentPair) {
+        // For buy: you spend quote currency
+        // For sell: you spend base currency
+        amountCurrency.textContent = type === 'buy' ? currentPair.quote : currentPair.base;
+    }
+    
+    if (amountHelp) {
+        amountHelp.textContent = type === 'buy' 
+            ? 'Maximum amount you want to spend'
+            : 'Maximum amount you want to spend (sell)';
     }
 }
 
@@ -247,12 +324,39 @@ function findMatchingOrders() {
     
     for (const order of matchingOrders) {
         const orderPrice = calculatePriceFromOrder(order, currentPair.pair);
-        let orderAmount = parseFloat(order.amount || 0);
+        
+        // Extract amount from order structure
+        // For bids: order.order is what they're offering (base currency)
+        // For asks: order.contract is what they're selling (base currency)
+        let orderAmount = 0;
+        let amountTicker = '';
+        
+        if (tradeState.type === 'buy') {
+            // Buying: we want asks, so contract is the base currency being sold
+            orderAmount = parseFloat(order.contract?.amount || 0);
+            amountTicker = order.contract?.ticker || '';
+        } else {
+            // Selling: we want bids, so order is the base currency they want
+            orderAmount = parseFloat(order.order?.amount || 0);
+            amountTicker = order.order?.ticker || '';
+        }
         
         // Adjust for NXS divisible units if needed
-        const ticker = order.contract?.ticker || order.order?.ticker || '';
-        if (ticker === 'NXS') {
+        if (amountTicker === 'NXS') {
             orderAmount = orderAmount / 1e6;
+        }
+        
+        console.log(`[Match] Order:`, {
+            type: tradeState.type,
+            price: orderPrice,
+            rawAmount: tradeState.type === 'buy' ? order.contract?.amount : order.order?.amount,
+            ticker: amountTicker,
+            adjustedAmount: orderAmount
+        });
+        
+        if (orderAmount <= 0) {
+            console.warn('[Match] Skipping order with zero amount');
+            continue;
         }
         
         if (accumulatedAmount >= maxAmount) {
@@ -276,8 +380,26 @@ function findMatchingOrders() {
     // Store selected orders
     tradeState.selectedOrders = selectedOrders;
     
-    // Update display
-    document.getElementById('trade-total-value').textContent = accumulatedTotal.toFixed(8);
+    // Update display - show estimated received
+    const totalCurrency = document.getElementById('trade-total-currency');
+    let estimatedReceived = 0;
+    let receiveCurrency = '';
+    
+    if (tradeState.type === 'buy') {
+        // Buying: receiving base currency
+        estimatedReceived = accumulatedAmount;
+        receiveCurrency = currentPair.base;
+    } else {
+        // Selling: receiving quote currency
+        estimatedReceived = accumulatedTotal;
+        receiveCurrency = currentPair.quote;
+    }
+    
+    if (totalCurrency) {
+        totalCurrency.textContent = receiveCurrency;
+    }
+    
+    document.getElementById('trade-total-value').textContent = estimatedReceived.toFixed(6);
     
     // Update orders list to highlight selected orders
     displayMatchingOrders(selectedOrders, accumulatedAmount, maxAmount);
@@ -415,6 +537,177 @@ function createOrderItem(order) {
     });
     
     return div;
+}
+
+// Find and display matching orders
+async function findAndDisplayOrders() {
+    if (!currentPair) {
+        showTradeError('No trading pair selected');
+        return;
+    }
+    
+    const amount = parseFloat(document.getElementById('trade-amount').value);
+    const price = parseFloat(document.getElementById('trade-price').value);
+    
+    if (!amount || amount <= 0) {
+        showTradeError('Please enter a valid amount');
+        return;
+    }
+    
+    if (!price || price <= 0) {
+        showTradeError('Please enter a valid price');
+        return;
+    }
+    
+    // Show loading state
+    const findBtn = document.getElementById('find-orders-btn');
+    if (findBtn) {
+        findBtn.disabled = true;
+        findBtn.textContent = 'Finding orders...';
+    }
+    
+    hideTradeError();
+    
+    // First, load available orders from the blockchain
+    try {
+        // Determine which orders to fetch based on trade type
+        const endpoint = tradeState.type === 'buy' ? API_ENDPOINTS.listAsks : API_ENDPOINTS.listBids;
+        
+        console.log(`[Trade] Fetching ${tradeState.type === 'buy' ? 'asks' : 'bids'} for ${currentPair.pair}`);
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                market: currentPair.pair,
+                limit: 50,
+                sort: 'price',
+                order: tradeState.type === 'buy' ? 'asc' : 'desc'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const orders = data.result || [];
+            
+            console.log(`[Trade] Loaded ${orders.length} orders`);
+            
+            tradeState.availableOrders = orders;
+            
+            // Find matching orders
+            findMatchingOrders();
+            
+            // Reset button
+            if (findBtn) {
+                findBtn.disabled = false;
+                findBtn.textContent = 'Find Available Orders';
+            }
+            
+            // Check if we found any orders
+            if (!tradeState.selectedOrders || tradeState.selectedOrders.length === 0) {
+                showTradeError(`No matching orders found. Please adjust your price or amount. (${orders.length} orders available)`);
+                return;
+            }
+            
+            // Display the orders in review section
+            displayOrdersForReview();
+        } else {
+            throw new Error('Failed to fetch orders');
+        }
+    } catch (error) {
+        console.error('[Trade] Error loading orders:', error);
+        showTradeError('Failed to load orders from blockchain. Please try again.');
+        
+        // Reset button
+        if (findBtn) {
+            findBtn.disabled = false;
+            findBtn.textContent = 'Find Available Orders';
+        }
+    }
+}
+
+// Display orders in review section
+function displayOrdersForReview() {
+    const ordersList = document.getElementById('selected-orders-list');
+    const reviewSection = document.getElementById('order-review-section');
+    const tradeFormContainer = document.querySelector('.trade-form-container');
+    
+    if (!ordersList || !reviewSection || !tradeState.selectedOrders) return;
+    
+    // Hide form, show review
+    if (tradeFormContainer) tradeFormContainer.style.display = 'none';
+    reviewSection.style.display = 'block';
+    
+    // Calculate totals
+    let totalSpending = 0;
+    let totalReceived = 0;
+    
+    // Render orders
+    ordersList.innerHTML = tradeState.selectedOrders.map((order, index) => {
+        const orderAmount = parseFloat(order.amountTaken || 0);
+        const orderPrice = order.price || calculatePriceFromOrder(order, currentPair.pair);
+        
+        let spending, received;
+        if (tradeState.type === 'buy') {
+            // Buying: spending in quote, receiving in base
+            spending = orderAmount * orderPrice;
+            received = orderAmount;
+            totalSpending += spending;
+            totalReceived += received;
+        } else {
+            // Selling: spending in base, receiving in quote
+            spending = orderAmount;
+            received = orderAmount * orderPrice;
+            totalSpending += spending;
+            totalReceived += received;
+        }
+        
+        console.log(`[Review] Order ${index + 1}:`, {
+            amountTaken: order.amountTaken,
+            orderAmount,
+            orderPrice,
+            spending,
+            received,
+            order
+        });
+        
+        return `
+            <div class="review-order-item">
+                <div class="review-order-header">
+                    <span class="order-number">Order ${index + 1}</span>
+                    <span class="order-price">${formatPrice(orderPrice)} ${currentPair.quote}</span>
+                </div>
+                <div class="review-order-details">
+                    <span>Spending: ${spending.toFixed(6)} ${tradeState.type === 'buy' ? currentPair.quote : currentPair.base}</span>
+                    <span>Receiving: ${received.toFixed(6)} ${tradeState.type === 'buy' ? currentPair.base : currentPair.quote}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Update summary
+    const avgPrice = totalReceived > 0 ? totalSpending / totalReceived : 0;
+    const spendingCurrency = tradeState.type === 'buy' ? currentPair.quote : currentPair.base;
+    const receivedCurrency = tradeState.type === 'buy' ? currentPair.base : currentPair.quote;
+    
+    document.getElementById('review-total-spending').textContent = `${totalSpending.toFixed(6)} ${spendingCurrency}`;
+    document.getElementById('review-avg-price').textContent = `${formatPrice(avgPrice)} ${currentPair.quote}`;
+    document.getElementById('review-total-received').textContent = `${totalReceived.toFixed(6)} ${receivedCurrency}`;
+    
+    // Update execute button text
+    const executeType = document.getElementById('execute-trade-type');
+    if (executeType) {
+        executeType.textContent = tradeState.type === 'buy' ? 'Buy' : 'Sell';
+    }
+}
+
+// Show trade form (back from review)
+function showTradeForm() {
+    const reviewSection = document.getElementById('order-review-section');
+    const tradeFormContainer = document.querySelector('.trade-form-container');
+    
+    if (reviewSection) reviewSection.style.display = 'none';
+    if (tradeFormContainer) tradeFormContainer.style.display = 'block';
 }
 
 // Execute trade

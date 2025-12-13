@@ -7,7 +7,7 @@ let chartData = {
     volumes: []
 };
 let chartInterval = '1y'; // Default interval
-let chartScaleType = 'linear'; // Default scale type
+let chartScaleType = 'logarithmic'; // Default scale type
 
 // Initialize chart
 function initializeChart() {
@@ -524,10 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initializeChart();
         
-        // Setup scale toggle button
+        // Setup scale toggle button and set initial text
         const scaleToggle = document.getElementById('scale-toggle');
         if (scaleToggle) {
             scaleToggle.addEventListener('click', toggleChartScale);
+            // Set button text to reflect current scale (log is default, so show "Linear" option)
+            scaleToggle.textContent = 'Linear';
         }
     }, 100);
 });

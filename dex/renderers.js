@@ -54,6 +54,13 @@ function renderOrderBook(orderBook, pair = null) {
             </div>
         `).join('')
         : '<div class="empty-orderbook">No sell orders</div>';
+    
+    // Scroll asks to bottom to show lowest prices (closest to spread)
+    if (orderBook.asks.length > 0) {
+        setTimeout(() => {
+            asksContainer.scrollTop = asksContainer.scrollHeight;
+        }, 0);
+    }
 
     // Render bids (highest price at top)
     bidsContainer.innerHTML = orderBook.bids.length > 0
