@@ -43,9 +43,6 @@ async function fetchNetworkStats() {
             // Nexus API returns data in 'result' object
             updateNetworkStats(data.result || data);
             updateAPIStatus('connected');
-            
-            // Also fetch ledger metrics for additional stats
-            fetchLedgerMetrics();
         } else {
             console.error('❌ Network stats request failed:', response.status);
             throw new Error('API unavailable');
@@ -53,24 +50,6 @@ async function fetchNetworkStats() {
     } catch (error) {
         console.error('Error fetching network stats:', error);
         updateAPIStatus('error', 'Failed to connect to Nexus API');
-    }
-}
-
-// Fetch Ledger Metrics for additional blockchain stats
-async function fetchLedgerMetrics() {
-    try {
-        const response = await fetch(API_ENDPOINTS.ledgerMetrics, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            updateLedgerMetrics(data.result || data);
-        }
-    } catch (error) {
-        console.error('Error fetching ledger metrics:', error);
     }
 }
 

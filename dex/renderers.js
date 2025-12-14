@@ -177,11 +177,6 @@ function updateNetworkStats(data) {
 }
 
 // Update Ledger Metrics display
-function updateLedgerMetrics(data) {
-    // Additional stats from ledger metrics could be displayed here
-    // e.g., stake rate, reserve rate, etc.
-}
-
 // Update API Status
 function updateAPIStatus(status, message = '') {
     const statusDot = document.getElementById('api-status-dot');

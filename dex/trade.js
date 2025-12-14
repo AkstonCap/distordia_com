@@ -147,13 +147,22 @@ function getHighestBid() {
 // Update trade button visibility based on wallet connection
 function updateTradeButtonVisibility() {
     const tradeBtn = document.getElementById('trade-btn');
-    if (!tradeBtn) return;
+    if (!tradeBtn) {
+        console.warn('[Trade] Trade button not found in DOM');
+        return;
+    }
     
     // Check if q-wallet is connected OR if native session is logged in
     const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnected) || (typeof isLoggedIn === 'function' && isLoggedIn());
     
     // Also check if a pair is selected
     const hasPairSelected = currentPair !== null;
+    
+    console.log('[Trade] Button visibility check:', {
+        hasPairSelected,
+        isWalletConnected,
+        currentPair: currentPair?.pair
+    });
     
     // Always show button if pair is selected
     if (hasPairSelected) {
@@ -284,9 +293,36 @@ function updatePriceLabel(type) {
 function findMatchingOrders() {
     const maxAmount = parseFloat(document.getElementById('trade-amount').value) || 0;
     const priceLimit = parseFloat(document.getElementById('trade-price').value) || 0;
+    const totalCurrency = document.getElementById('trade-total-currency');
     
-    if (maxAmount <= 0 || priceLimit <= 0 || !tradeState.availableOrders.length) {
+    // If no inputs yet, show 0
+    if (maxAmount <= 0 || priceLimit <= 0) {
         document.getElementById('trade-total-value').textContent = '0';
+        if (totalCurrency && currentPair) {
+            totalCurrency.textContent = tradeState.type === 'buy' ? currentPair.base : currentPair.quote;
+        }
+        return;
+    }
+    
+    // If no orders loaded yet, show estimated calculation
+    if (!tradeState.availableOrders.length) {
+        let estimatedReceived = 0;
+        let receiveCurrency = '';
+        
+        if (tradeState.type === 'buy') {
+            // Buying: estimate receiving base currency (amount / price)
+            estimatedReceived = maxAmount / priceLimit;
+            receiveCurrency = currentPair.base;
+        } else {
+            // Selling: estimate receiving quote currency (amount * price)
+            estimatedReceived = maxAmount * priceLimit;
+            receiveCurrency = currentPair.quote;
+        }
+        
+        if (totalCurrency) {
+            totalCurrency.textContent = receiveCurrency;
+        }
+        document.getElementById('trade-total-value').textContent = estimatedReceived.toFixed(6);
         return;
     }
     
@@ -318,12 +354,20 @@ function findMatchingOrders() {
     });
     
     // Accumulate orders until we reach maxAmount
-    let accumulatedAmount = 0;
-    let accumulatedTotal = 0;
+    // When buying: maxAmount is in quote currency (what you spend)
+    // When selling: maxAmount is in base currency (what you sell)
+    let accumulatedSpending = 0;  // For buy: quote currency spent
+    let accumulatedReceiving = 0;  // For buy: base currency received
     const selectedOrders = [];
     
     for (const order of matchingOrders) {
         const orderPrice = calculatePriceFromOrder(order, currentPair.pair);
+        
+        console.log('[Match] Processing order:', {
+            type: tradeState.type,
+            contract: { amount: order.contract?.amount, ticker: order.contract?.ticker },
+            order: { amount: order.order?.amount, ticker: order.order?.ticker }
+        });
         
         // Extract amount from order structure
         // For bids: order.order is what they're offering (base currency)
@@ -342,32 +386,47 @@ function findMatchingOrders() {
         }
         
         // Adjust for NXS divisible units if needed
+        // Note: DIST and other tokens are already in human-readable form
         if (amountTicker === 'NXS') {
             orderAmount = orderAmount / 1e6;
         }
-        
-        console.log(`[Match] Order:`, {
-            type: tradeState.type,
-            price: orderPrice,
-            rawAmount: tradeState.type === 'buy' ? order.contract?.amount : order.order?.amount,
-            ticker: amountTicker,
-            adjustedAmount: orderAmount
-        });
         
         if (orderAmount <= 0) {
             console.warn('[Match] Skipping order with zero amount');
             continue;
         }
         
-        if (accumulatedAmount >= maxAmount) {
-            break;
+        // Calculate how much we can take from this order
+        let amountToTake;
+        
+        if (tradeState.type === 'buy') {
+            // Buying: limit by spending amount (quote currency)
+            const orderCost = orderAmount * orderPrice;  // How much quote currency this order costs
+            const remainingBudget = maxAmount - accumulatedSpending;
+            
+            if (remainingBudget <= 0) break;
+            
+            if (orderCost <= remainingBudget) {
+                // Take the whole order
+                amountToTake = orderAmount;
+            } else {
+                // Take partial order based on remaining budget
+                amountToTake = remainingBudget / orderPrice;
+            }
+            
+            accumulatedSpending += amountToTake * orderPrice;
+            accumulatedReceiving += amountToTake;
+        } else {
+            // Selling: limit by selling amount (base currency)
+            const remainingToSell = maxAmount - accumulatedReceiving;
+            
+            if (remainingToSell <= 0) break;
+            
+            amountToTake = Math.min(orderAmount, remainingToSell);
+            
+            accumulatedReceiving += amountToTake * orderPrice;  // Quote received
+            accumulatedSpending += amountToTake;  // Base spent
         }
-        
-        // Take only what we need from this order
-        const amountToTake = Math.min(orderAmount, maxAmount - accumulatedAmount);
-        
-        accumulatedAmount += amountToTake;
-        accumulatedTotal += amountToTake * orderPrice;
         
         selectedOrders.push({
             ...order,
@@ -381,17 +440,16 @@ function findMatchingOrders() {
     tradeState.selectedOrders = selectedOrders;
     
     // Update display - show estimated received
-    const totalCurrency = document.getElementById('trade-total-currency');
     let estimatedReceived = 0;
     let receiveCurrency = '';
     
     if (tradeState.type === 'buy') {
         // Buying: receiving base currency
-        estimatedReceived = accumulatedAmount;
+        estimatedReceived = accumulatedReceiving;
         receiveCurrency = currentPair.base;
     } else {
         // Selling: receiving quote currency
-        estimatedReceived = accumulatedTotal;
+        estimatedReceived = accumulatedReceiving;
         receiveCurrency = currentPair.quote;
     }
     
@@ -402,7 +460,10 @@ function findMatchingOrders() {
     document.getElementById('trade-total-value').textContent = estimatedReceived.toFixed(6);
     
     // Update orders list to highlight selected orders
-    displayMatchingOrders(selectedOrders, accumulatedAmount, maxAmount);
+    // For buy: show how much quote currency was spent vs requested
+    // For sell: show how much base currency was sold vs requested
+    const filledAmount = tradeState.type === 'buy' ? accumulatedSpending : accumulatedSpending;
+    displayMatchingOrders(selectedOrders, filledAmount, maxAmount);
 }
 
 // Display matching orders with highlighting
@@ -482,7 +543,13 @@ async function loadAvailableOrders() {
         
         if (response.ok) {
             const data = await response.json();
+            console.log('[Trade] API response:', data);
             const orders = data.result || [];
+            
+            console.log('[Trade] Loaded orders:', {
+                count: orders.length,
+                orders: orders.slice(0, 3) // Show first 3 for debugging
+            });
             
             tradeState.availableOrders = orders;
             
@@ -541,6 +608,8 @@ function createOrderItem(order) {
 
 // Find and display matching orders
 async function findAndDisplayOrders() {
+    console.log('[Trade] findAndDisplayOrders called');
+    
     if (!currentPair) {
         showTradeError('No trading pair selected');
         return;
@@ -548,6 +617,8 @@ async function findAndDisplayOrders() {
     
     const amount = parseFloat(document.getElementById('trade-amount').value);
     const price = parseFloat(document.getElementById('trade-price').value);
+    
+    console.log('[Trade] Form values:', { amount, price, type: tradeState.type, pair: currentPair.pair });
     
     if (!amount || amount <= 0) {
         showTradeError('Please enter a valid amount');
@@ -573,6 +644,12 @@ async function findAndDisplayOrders() {
         // Determine which orders to fetch based on trade type
         const endpoint = tradeState.type === 'buy' ? API_ENDPOINTS.listAsks : API_ENDPOINTS.listBids;
         
+        console.log('[Trade] Fetching orders:', {
+            type: tradeState.type,
+            endpoint,
+            pair: currentPair.pair
+        });
+        
         console.log(`[Trade] Fetching ${tradeState.type === 'buy' ? 'asks' : 'bids'} for ${currentPair.pair}`);
         
         const response = await fetch(endpoint, {
@@ -586,9 +663,16 @@ async function findAndDisplayOrders() {
             })
         });
         
+        console.log('[Trade] Response status:', response.status, 'OK:', response.ok);
+        
         if (response.ok) {
             const data = await response.json();
-            const orders = data.result || [];
+            console.log('[Trade] API response data:', data);
+            console.log('[Trade] data.result:', data.result);
+            
+            // Extract orders from nested structure
+            const orderType = tradeState.type === 'buy' ? 'asks' : 'bids';
+            const orders = data.result?.[orderType] || [];
             
             console.log(`[Trade] Loaded ${orders.length} orders`);
             
@@ -596,6 +680,10 @@ async function findAndDisplayOrders() {
             
             // Find matching orders
             findMatchingOrders();
+            
+            console.log('[Trade] After matching:', {
+                selectedOrdersCount: tradeState.selectedOrders?.length || 0
+            });
             
             // Reset button
             if (findBtn) {
@@ -628,53 +716,79 @@ async function findAndDisplayOrders() {
 
 // Display orders in review section
 function displayOrdersForReview() {
+    console.log('[Review] displayOrdersForReview called');
+    
     const ordersList = document.getElementById('selected-orders-list');
     const reviewSection = document.getElementById('order-review-section');
-    const tradeFormContainer = document.querySelector('.trade-form-container');
+    const tradeForm = document.getElementById('trade-form');
     
-    if (!ordersList || !reviewSection || !tradeState.selectedOrders) return;
+    console.log('[Review] Elements found:', {
+        ordersList: !!ordersList,
+        reviewSection: !!reviewSection,
+        tradeForm: !!tradeForm,
+        selectedOrders: tradeState.selectedOrders?.length
+    });
+    
+    if (!ordersList || !reviewSection || !tradeState.selectedOrders) {
+        console.error('[Review] Missing required elements or orders');
+        return;
+    }
     
     // Hide form, show review
-    if (tradeFormContainer) tradeFormContainer.style.display = 'none';
+    if (tradeForm) tradeForm.style.display = 'none';
     reviewSection.style.display = 'block';
+    
+    console.log('[Review] Review section displayed');
     
     // Calculate totals
     let totalSpending = 0;
     let totalReceived = 0;
+    
+    // Add enabled flag to all orders (default true)
+    tradeState.selectedOrders.forEach(order => {
+        if (order.enabled === undefined) {
+            order.enabled = true;
+        }
+    });
     
     // Render orders
     ordersList.innerHTML = tradeState.selectedOrders.map((order, index) => {
         const orderAmount = parseFloat(order.amountTaken || 0);
         const orderPrice = order.price || calculatePriceFromOrder(order, currentPair.pair);
         
+        console.log(`[Review] Order ${index + 1}:`, {
+            orderAmount,
+            orderPrice,
+            amountTaken: order.amountTaken,
+            enabled: order.enabled
+        });
+        
         let spending, received;
         if (tradeState.type === 'buy') {
             // Buying: spending in quote, receiving in base
             spending = orderAmount * orderPrice;
             received = orderAmount;
-            totalSpending += spending;
-            totalReceived += received;
+            if (order.enabled) {
+                totalSpending += spending;
+                totalReceived += received;
+            }
         } else {
             // Selling: spending in base, receiving in quote
             spending = orderAmount;
             received = orderAmount * orderPrice;
-            totalSpending += spending;
-            totalReceived += received;
+            if (order.enabled) {
+                totalSpending += spending;
+                totalReceived += received;
+            }
         }
         
-        console.log(`[Review] Order ${index + 1}:`, {
-            amountTaken: order.amountTaken,
-            orderAmount,
-            orderPrice,
-            spending,
-            received,
-            order
-        });
-        
         return `
-            <div class="review-order-item">
+            <div class="review-order-item ${order.enabled ? '' : 'disabled'}" data-order-index="${index}">
                 <div class="review-order-header">
-                    <span class="order-number">Order ${index + 1}</span>
+                    <div class="order-header-left">
+                        <input type="checkbox" class="order-checkbox" data-order-index="${index}" ${order.enabled ? 'checked' : ''}>
+                        <span class="order-number">Order ${index + 1}</span>
+                    </div>
                     <span class="order-price">${formatPrice(orderPrice)} ${currentPair.quote}</span>
                 </div>
                 <div class="review-order-details">
@@ -684,6 +798,20 @@ function displayOrdersForReview() {
             </div>
         `;
     }).join('');
+    
+    // Attach checkbox event listeners
+    document.querySelectorAll('.order-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const index = parseInt(e.target.dataset.orderIndex);
+            tradeState.selectedOrders[index].enabled = e.target.checked;
+            
+            // Re-render to update totals
+            displayOrdersForReview();
+        });
+    });
+    
+    console.log('[Review] Orders HTML generated, length:', ordersList.innerHTML.length);
+    console.log('[Review] Totals:', { totalSpending, totalReceived });
     
     // Update summary
     const avgPrice = totalReceived > 0 ? totalSpending / totalReceived : 0;
@@ -704,16 +832,19 @@ function displayOrdersForReview() {
 // Show trade form (back from review)
 function showTradeForm() {
     const reviewSection = document.getElementById('order-review-section');
-    const tradeFormContainer = document.querySelector('.trade-form-container');
+    const tradeForm = document.getElementById('trade-form');
     
     if (reviewSection) reviewSection.style.display = 'none';
-    if (tradeFormContainer) tradeFormContainer.style.display = 'block';
+    if (tradeForm) tradeForm.style.display = 'block';
 }
 
 // Execute trade
 async function executeTrade() {
-    if (!tradeState.selectedOrders || tradeState.selectedOrders.length === 0) {
-        showTradeError('No matching orders found. Please adjust your price or amount.');
+    // Filter only enabled orders
+    const enabledOrders = tradeState.selectedOrders?.filter(order => order.enabled) || [];
+    
+    if (enabledOrders.length === 0) {
+        showTradeError('No orders selected. Please check at least one order to execute.');
         return;
     }
     
@@ -745,55 +876,63 @@ async function executeTrade() {
     try {
         hideTradeError();
         
-        // Execute trades for all matched orders
-        let successCount = 0;
-        let failCount = 0;
-        
-        for (const order of tradeState.selectedOrders) {
-            try {
-                // Check if using q-wallet or native session
-                if (typeof window.nexus !== 'undefined' && window.nexus.isConnected) {
-                    // Use q-wallet to execute trade
-                    await executeTradeWithQWallet(order, order.amountTaken, order.price);
-                } else if (isLoggedIn()) {
-                    // Use native Nexus session
-                    await executeTradeWithSession(order, order.amountTaken, order.price);
-                } else {
-                    showTradeError('Please connect your wallet or login first');
-                    return;
-                }
-                successCount++;
-            } catch (error) {
-                console.error(`Failed to execute order at ${order.price}:`, error);
-                failCount++;
-            }
-        }
-        
-        // Collect DIST token fee after successful trades
-        if (successCount > 0) {
-            try {
-                await collectTradeFee();
-                console.log('Trade fee collected successfully');
-            } catch (feeError) {
-                console.warn('Failed to collect trade fee:', feeError);
-                showNotification(`${successCount} order(s) executed, but fee collection failed: ${feeError.message}`, 'warning');
-            }
-        }
-        
-        // Show results
-        if (successCount > 0 && failCount === 0) {
-            showNotification(`Successfully executed ${successCount} order(s)!`, 'success');
+        // Check if using q-wallet or native session
+        if (typeof window.nexus !== 'undefined' && walletConnected) {
+            // Use q-wallet batch calls to execute all orders at once
+            await executeTradesWithQWallet(enabledOrders);
+            
+            showNotification(`Successfully executed ${enabledOrders.length} order(s)!`, 'success');
             closeTradeModal();
-        } else if (successCount > 0 && failCount > 0) {
-            showNotification(`Executed ${successCount} order(s), ${failCount} failed`, 'warning');
+            
+            // Refresh order book and trades
+            if (currentPair) {
+                loadOrderBook(currentPair);
+                fetchRecentTrades(currentPair.pair);
+            }
+        } else if (typeof isLoggedIn === 'function' && isLoggedIn()) {
+            // Use native Nexus session - execute one by one
+            let successCount = 0;
+            let failCount = 0;
+            
+            for (const order of enabledOrders) {
+                try {
+                    await executeTradeWithSession(order, order.amountTaken, order.price);
+                    successCount++;
+                } catch (error) {
+                    console.error(`Failed to execute order at ${order.price}:`, error);
+                    failCount++;
+                }
+            }
+            
+            // Collect DIST token fee after successful trades
+            if (successCount > 0) {
+                try {
+                    await collectTradeFee();
+                    console.log('Trade fee collected successfully');
+                } catch (feeError) {
+                    console.warn('Failed to collect trade fee:', feeError);
+                    showNotification(`${successCount} order(s) executed, but fee collection failed: ${feeError.message}`, 'warning');
+                }
+            }
+            
+            // Show results
+            if (successCount > 0 && failCount === 0) {
+                showNotification(`Successfully executed ${successCount} order(s)!`, 'success');
+                closeTradeModal();
+            } else if (successCount > 0 && failCount > 0) {
+                showNotification(`Executed ${successCount} order(s), ${failCount} failed`, 'warning');
+            } else {
+                throw new Error('All orders failed to execute');
+            }
+            
+            // Refresh order book and trades
+            if (currentPair) {
+                loadOrderBook(currentPair);
+                fetchRecentTrades(currentPair.pair);
+            }
         } else {
-            throw new Error('All orders failed to execute');
-        }
-        
-        // Refresh order book and trades
-        if (currentPair) {
-            loadOrderBook(currentPair);
-            fetchRecentTrades(currentPair.pair);
+            showTradeError('Please connect your wallet or login first');
+            return;
         }
         
     } catch (error) {
@@ -808,25 +947,46 @@ async function executeTrade() {
     }
 }
 
-// Execute trade using q-wallet
-async function executeTradeWithQWallet(order, amount, price) {
-    // Use q-wallet API to execute the order
-    // The order needs the txid of the order to execute
-    const orderTxid = order.txid;
-    
-    if (!orderTxid) {
-        throw new Error('Order transaction ID not found');
+// Execute trades using Q-Wallet batch calls
+async function executeTradesWithQWallet(orders) {
+    if (!orders || orders.length === 0) {
+        throw new Error('No orders to execute');
     }
     
-    // Call market/execute endpoint through q-wallet
-    const result = await window.nexus.executeMarketOrder({
-        txid: orderTxid,
-        from: 'default', // default account
-        to: 'default',   // default account
-        amount: amount
-    });
+    // Build batch calls array - market orders + fee payment
+    const calls = [];
     
-    console.log('Trade executed via q-wallet:', result);
+    // Add market execute calls for each order
+    for (const order of orders) {
+        if (!order.txid) {
+            throw new Error('Order transaction ID not found');
+        }
+        
+        calls.push({
+            endpoint: 'market/execute/order',
+            params: {
+                txid: order.txid,
+                from: 'default',
+                to: 'default'
+            }
+        });
+    }
+    
+    // Add DIST fee payment (1 DIST token)
+    // Note: executeBatchCalls already charges DIST fee, but we may need additional fee
+    // Check with the team if this is needed
+    
+    console.log('[Trade] Executing batch calls:', calls);
+    
+    // Execute all calls in one batch
+    const result = await window.nexus.executeBatchCalls(calls);
+    
+    console.log('[Trade] Batch execution result:', result);
+    
+    if (result.successfulCalls < calls.length) {
+        throw new Error(`Only ${result.successfulCalls}/${result.totalCalls} orders executed successfully`);
+    }
+    
     return result;
 }
 

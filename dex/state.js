@@ -19,7 +19,7 @@ function selectPairByName(pairName) {
 function selectPair(pair) {
     currentPair = pair;
     
-    console.log(`Selected pair: ${pair.pair}`);
+    console.log(`[State] Selected pair: ${pair.pair}`);
     
     // Update active state
     document.querySelectorAll('.pair-item').forEach(item => {
@@ -43,6 +43,7 @@ function selectPair(pair) {
     fetchRecentTrades(pair.pair);
     
     // Update trade button visibility (from trade.js)
+    console.log('[State] Calling onPairSelected, exists?', typeof onPairSelected === 'function');
     if (typeof onPairSelected === 'function') {
         onPairSelected();
     }

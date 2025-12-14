@@ -18,6 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize wallet connection
 async function initializeWallet() {
+    // Setup disconnect button (works for both Q-Wallet and native login)
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    console.log('[Wallet] Setting up disconnect button, found:', disconnectBtn);
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', () => {
+            console.log('[Wallet] Disconnect button clicked!');
+            disconnectWallet();
+        });
+        console.log('[Wallet] Disconnect listener attached');
+    } else {
+        console.warn('[Wallet] Disconnect button not found in DOM');
+    }
+    
     // 1. Check if Q-Wallet is installed
     if (typeof window.nexus === 'undefined') {
         console.warn('Q-Wallet not detected');
@@ -44,27 +57,31 @@ async function initializeWallet() {
     // 3. Setup connect button event listener
     const connectBtn = document.getElementById('connectWalletBtn');
     if (connectBtn) {
+        console.log('[Wallet] Connect button found, attaching click handler');
         connectBtn.addEventListener('click', async () => {
-            console.log('Connect button clicked');
-            console.log('window.nexus exists:', typeof window.nexus !== 'undefined');
+            console.log('[Wallet] Connect button clicked');
+            console.log('[Wallet] window.nexus exists:', typeof window.nexus !== 'undefined');
+            
+            if (typeof window.nexus === 'undefined') {
+                alert('Q-Wallet not detected. Please install the Q-Wallet browser extension first.');
+                return;
+            }
+            
             try {
-                console.log('Calling window.nexus.connect()...');
+                console.log('[Wallet] Calling window.nexus.connect()...');
                 const accounts = await window.nexus.connect();
-                console.log('connect() returned:', accounts);
+                console.log('[Wallet] connect() returned:', accounts);
                 if (accounts && accounts.length > 0) {
                     userAddress = accounts[0];
                     walletConnected = true;
-                    console.log('Connected to wallet:', userAddress);
+                    console.log('[Wallet] Connected to wallet:', userAddress);
                     updateWalletUI();
                 } else {
-                    console.warn('No accounts returned');
+                    console.warn('[Wallet] No accounts returned');
                     alert('No accounts found. Please make sure Q-Wallet is unlocked.');
                 }
             } catch (error) {
-                console.error('Failed to connect wallet. Error type:', typeof error);
-                console.error('Error:', error);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
+                console.error('[Wallet] Failed to connect. Error:', error);
                 
                 if (error.message && error.message.includes('denied')) {
                     alert('Connection denied. Please approve the connection in your Q-Wallet.');
@@ -76,21 +93,33 @@ async function initializeWallet() {
             }
         });
     }
-
-    // Setup disconnect button
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    if (disconnectBtn) {
-        disconnectBtn.addEventListener('click', disconnectWallet);
-    }
 }
 
 // Disconnect wallet
-function disconnectWallet() {
-    userAddress = null;
-    walletConnected = false;
+async function disconnectWallet() {
+    console.log('[Wallet] Disconnecting wallet...');
     
-    updateWalletUI();
-    console.log('Wallet disconnected');
+    try {
+        // Call Q-Wallet disconnect method
+        if (typeof window.nexus !== 'undefined') {
+            await window.nexus.disconnect();
+            console.log('[Wallet] Q-Wallet disconnected via API');
+        }
+        
+        // Clear local state
+        userAddress = null;
+        walletConnected = false;
+        
+        // Update UI
+        updateWalletUI();
+        console.log('[Wallet] Wallet disconnected successfully');
+    } catch (error) {
+        console.error('[Wallet] Error disconnecting from Q-Wallet:', error);
+        // Still clear local state even if API call fails
+        userAddress = null;
+        walletConnected = false;
+        updateWalletUI();
+    }
 }
 
 // Update wallet UI
@@ -114,14 +143,18 @@ function updateWalletUI() {
         }
         
         // Update trade button visibility
-        updateTradeButtonVisibility();
+        if (typeof updateTradeButtonVisibility === 'function') {
+            updateTradeButtonVisibility();
+        }
     } else {
         // Show connect button, hide wallet info
         if (connectBtn) connectBtn.style.display = 'block';
         if (walletInfo) walletInfo.style.display = 'none';
         
         // Update trade button visibility
-        updateTradeButtonVisibility();
+        if (typeof updateTradeButtonVisibility === 'function') {
+            updateTradeButtonVisibility();
+        }
     }
 }
 

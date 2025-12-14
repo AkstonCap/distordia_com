@@ -59,8 +59,6 @@ function formatTime(date) {
 
 // Calculate price from Nexus order data
 function calculatePriceFromOrder(order, marketPair) {
-    console.log(`Calculating price for ${marketPair}:`, order);
-    
     const [base, quote] = marketPair.split('/');
     
     // Get contract (what's being sold) and order (what's being bought)
@@ -69,11 +67,7 @@ function calculatePriceFromOrder(order, marketPair) {
     const orderAmount = parseFloat(order.order?.amount || 0);
     const orderTicker = order.order?.ticker || '';
     
-    console.log(`  Contract: ${contractAmount} ${contractTicker}`);
-    console.log(`  Order: ${orderAmount} ${orderTicker}`);
-    
     if (contractAmount === 0 || orderAmount === 0) {
-        console.log(`  Missing amounts - returning 0`);
         return 0;
     }
     
@@ -81,20 +75,15 @@ function calculatePriceFromOrder(order, marketPair) {
     const adjustedContractAmount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
     const adjustedOrderAmount = orderTicker === 'NXS' ? orderAmount / 1e6 : orderAmount;
     
-    console.log(`  Adjusted Contract: ${adjustedContractAmount} ${contractTicker}`);
-    console.log(`  Adjusted Order: ${adjustedOrderAmount} ${orderTicker}`);
-    
     // Price is how much quote currency per base currency
     // If contract is base and order is quote: price = orderAmount / contractAmount
     // If contract is quote and order is base: price = contractAmount / orderAmount
     
     if (contractTicker === base && orderTicker === quote) {
         const price = adjustedOrderAmount / adjustedContractAmount;
-        console.log(`  Price calculation (contract=base): ${adjustedOrderAmount} / ${adjustedContractAmount} = ${price}`);
         return price;
     } else if (contractTicker === quote && orderTicker === base) {
         const price = adjustedContractAmount / adjustedOrderAmount;
-        console.log(`  Price calculation (contract=quote): ${adjustedContractAmount} / ${adjustedOrderAmount} = ${price}`);
         return price;
     }
     
