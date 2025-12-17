@@ -279,6 +279,7 @@
     padding: 1rem;
     position: relative;
     min-height: 400px;
+    max-height: 600px;
     height: 100%;
 }
 
@@ -1028,22 +1029,31 @@
 
 /* Responsive adjustments for auth controls */
 @media (max-width: 768px) {
-    .auth-controls {
-        position: absolute;
-        top: 70px;
-        right: 1rem;
-        flex-direction: column;
-        gap: 0.5rem;
+    .auth-controls,
+    .auth-controls *,
+    #connectWalletBtn,
+    #walletInfo,
+    .connect-wallet-btn,
+    .wallet-info {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
     
-    .user-info {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.8rem;
+    /* Fix nav-links mobile menu positioning and visibility */
+    .nav-links {
+        left: -100% !important;
+        visibility: hidden;
+        opacity: 0;
+        transition: left 0.3s ease, opacity 0.3s ease, visibility 0s 0.3s;
     }
     
-    .auth-btn {
-        padding: 0.4rem 1rem;
-        font-size: 0.85rem;
+    .nav-links.active {
+        left: 0 !important;
+        visibility: visible;
+        opacity: 1;
+        transition: left 0.3s ease, opacity 0.3s ease, visibility 0s 0s;
     }
     
     .modal-content {
