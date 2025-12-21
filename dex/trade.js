@@ -734,8 +734,10 @@ function displayOrdersForReview() {
         return;
     }
     
-    // Hide form, show review
+    // Hide form and trade type selector, show review
     if (tradeForm) tradeForm.style.display = 'none';
+    const tradeTypeSelector = document.querySelector('.trade-type-selector');
+    if (tradeTypeSelector) tradeTypeSelector.style.display = 'none';
     reviewSection.style.display = 'block';
     
     console.log('[Review] Review section displayed');
@@ -833,9 +835,11 @@ function displayOrdersForReview() {
 function showTradeForm() {
     const reviewSection = document.getElementById('order-review-section');
     const tradeForm = document.getElementById('trade-form');
+    const tradeTypeSelector = document.querySelector('.trade-type-selector');
     
     if (reviewSection) reviewSection.style.display = 'none';
     if (tradeForm) tradeForm.style.display = 'block';
+    if (tradeTypeSelector) tradeTypeSelector.style.display = 'flex';
 }
 
 // Execute trade
