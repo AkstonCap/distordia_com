@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Distordia Product Catalogue - Browse and manage product registers on the Nexus blockchain">
+    <title>Product Catalogue | Distordia</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="products.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#research">Research</a></li>
+                <li><a href="../dex/index.html">DEX</a></li>
+                <li><a href="index.html" class="active">Products</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="auth-controls">
+                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <div id="walletInfo" class="wallet-info" style="display: none;">
+                    <span id="walletAddress" class="wallet-address"></span>
+                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+                </div>
+            </div>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="products-section">
+        <div class="container">
+            <!-- Header Controls -->
+            <div class="products-header">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search products..." />
+                    <button id="searchBtn" class="btn-search">Search</button>
+                </div>
+                <button id="addProductBtn" class="btn-primary" style="display: none;">
+                    <span class="icon">+</span> Register New Product
+                </button>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel">
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="food">Food & Beverage</option>
+                        <option value="home">Home & Garden</option>
+                        <option value="automotive">Automotive</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Owner:</label>
+                    <select id="ownerFilter">
+                        <option value="">All Products</option>
+                        <option value="mine">My Products</option>
+                    </select>
+                </div>
+                <button id="clearFiltersBtn" class="btn-secondary">Clear Filters</button>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="productsGrid" class="products-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading products from blockchain...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <h3>No Products Found</h3>
+                <p>Connect your wallet to register products on the blockchain</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Registration Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Register New Product</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <div class="form-group">
+                        <label for="productName">Product Name *</label>
+                        <input type="text" id="productName" required maxlength="100" placeholder="Enter product name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productSKU">SKU / Product Code *</label>
+                            <input type="text" id="productSKU" required maxlength="50" placeholder="e.g., PROD-12345">
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Category *</label>
+                            <select id="productCategory" required>
+                                <option value="">Select category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="food">Food & Beverage</option>
+                                <option value="home">Home & Garden</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productDescription">Description</label>
+                        <textarea id="productDescription" rows="4" maxlength="500" placeholder="Product description (max 500 characters)"></textarea>
+                        <span class="char-count">0/500</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productManufacturer">Manufacturer</label>
+                            <input type="text" id="productManufacturer" maxlength="100" placeholder="Manufacturer name">
+                        </div>
+                        <div class="form-group">
+                            <label for="productOrigin">Country of Origin</label>
+                            <input type="text" id="productOrigin" maxlength="50" placeholder="e.g., USA">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productBarcode">Barcode / GTIN</label>
+                            <input type="text" id="productBarcode" maxlength="50" placeholder="e.g., 1234567890123">
+                        </div>
+                        <div class="form-group">
+                            <label for="productWeight">Weight (kg)</label>
+                            <input type="number" id="productWeight" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productAttributes">Additional Attributes (JSON format)</label>
+                        <textarea id="productAttributes" rows="3" placeholder='{"color": "blue", "size": "M"}'></textarea>
+                        <small class="form-hint">Optional: Add custom attributes in JSON format</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                        <button type="submit" class="btn-primary" id="submitProductBtn">
+                            <span class="btn-text">Register on Blockchain</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner-small"></span> Processing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Product Details</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="productDetailContent">
+                    <!-- Product details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="editProductBtn" class="btn-secondary" style="display: none;">Edit Product</button>
+                <button id="transferProductBtn" class="btn-secondary" style="display: none;">Transfer Ownership</button>
+                <button class="btn-primary modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="products.js"></script>
+</body>
+</html>

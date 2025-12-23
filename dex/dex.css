@@ -7,13 +7,13 @@
 
 /* DEX Header */
 .dex-header {
-    padding: 8rem 0 3rem;
+    padding: 5rem 0 2rem;
     background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(10, 10, 15, 0.95) 100%);
     text-align: center;
 }
 
 .dex-header h1 {
-    font-size: 3.5rem;
+    font-size: 2.5rem;
     background: var(--gradient-1);
     -webkit-background-clip: text;
     background-clip: text;
@@ -23,8 +23,8 @@
 
 .dex-subtitle {
     color: var(--text-secondary);
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .market-stats {
@@ -62,7 +62,7 @@
 
 /* Trading Section */
 .trading-section {
-    padding: 3rem 0;
+    padding: 6rem 0 3rem;
     background: var(--bg-dark);
 }
 

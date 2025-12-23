@@ -123,6 +123,14 @@ body {
     width: 100%;
 }
 
+.nav-links a.active {
+    color: var(--primary-color);
+}
+
+.nav-links a.active::after {
+    width: 100%;
+}
+
 .menu-toggle {
     display: none;
     flex-direction: column;
