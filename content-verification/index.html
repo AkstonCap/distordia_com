@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Verify content authenticity on the blockchain - Check if content has been registered by verified creators">
+    <title>Content Verification | Distordia</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="content-verification.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="../index.html#use">Use ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="index.html" class="dropdown-item active">Content Verification</a>
+                        <a href="https://github.com/AkstonCap/q-wallet" target="_blank" class="dropdown-item">Q-wallet plugin</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">Nexus Interface DEX module</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="../index.html#projects">Projects ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../swap/index.html" class="dropdown-item">Swap</a>
+                        <a href="../fantasyfootball/index.html" class="dropdown-item">Fantasy Football</a>
+                        <a href="../ship-engineering/index.html" class="dropdown-item">Ship Engineering</a>
+                        <a href="https://github.com/AkstonCap/swapService" target="_blank" class="dropdown-item">swapService</a>
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo</a>
+                        <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="dropdown-item">q-mobile</a>
+                    </div>
+                </li>
+                <li><a href="../index.html#research">Research</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="verification-section">
+        <div class="container">
+            <!-- Hero -->
+            <div class="hero-banner">
+                <h1>🔐 Content Verification</h1>
+                <p class="hero-description">
+                    Verify authentic content registered on the blockchain by verified creators. 
+                    Combat misinformation by checking if content has been officially registered on-chain.
+                </p>
+            </div>
+
+            <!-- Verification Form -->
+            <div class="verification-card">
+                <h2>Verify Content by URL</h2>
+                <p class="instruction">Enter a URL to check if it has been registered as verified content on the blockchain:</p>
+                
+                <form id="verificationForm" class="verification-form">
+                    <div class="input-group">
+                        <input 
+                            type="url" 
+                            id="urlInput" 
+                            placeholder="https://example.com/article-or-content" 
+                            required
+                            pattern="https?://.+"
+                        >
+                        <button type="submit" class="btn-verify" id="verifyBtn">
+                            <span class="btn-text">🔍 Verify Content</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span> Searching...
+                            </span>
+                        </button>
+                    </div>
+                    <small class="form-hint">Enter the full URL including https://</small>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" style="display: none;">
+                <!-- Verified Content -->
+                <div id="verifiedResult" class="result-card verified" style="display: none;">
+                    <div class="result-header">
+                        <div class="status-badge verified">
+                            <span class="icon">✓</span>
+                            <span>Verified Content</span>
+                        </div>
+                        <div class="result-title" id="resultTitle"></div>
+                    </div>
+
+                    <div class="result-body">
+                        <div class="info-section">
+                            <h3>Content Creator</h3>
+                            <div class="creator-info">
+                                <div class="info-row">
+                                    <span class="label">Genesis:</span>
+                                    <span class="value mono" id="creatorGenesis"></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Username:</span>
+                                    <span class="value" id="creatorUsername"></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Registered:</span>
+                                    <span class="value" id="registrationDate"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3>Content Details</h3>
+                            <div class="content-details" id="contentDetails"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3>Blockchain Information</h3>
+                            <div class="blockchain-info">
+                                <div class="info-row">
+                                    <span class="label">Asset Address:</span>
+                                    <span class="value mono" id="assetAddress"></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Transaction ID:</span>
+                                    <span class="value mono" id="txid"></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Last Modified:</span>
+                                    <span class="value" id="modifiedDate"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="verification-seal">
+                            <div class="seal-icon">🔒</div>
+                            <div class="seal-text">
+                                <strong>Blockchain Verified</strong>
+                                <p>This content has been registered on the Nexus blockchain and is verifiably associated with the creator above.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Not Found -->
+                <div id="notFoundResult" class="result-card not-found" style="display: none;">
+                    <div class="result-header">
+                        <div class="status-badge not-found">
+                            <span class="icon">⚠</span>
+                            <span>Not Verified</span>
+                        </div>
+                    </div>
+                    <div class="result-body">
+                        <h3>Content Not Found on Blockchain</h3>
+                        <p>This URL has not been registered as verified content on the blockchain.</p>
+                        <div class="warning-box">
+                            <p><strong>What does this mean?</strong></p>
+                            <ul>
+                                <li>The content creator has not registered this URL on-chain</li>
+                                <li>This does not necessarily mean the content is fake, only that it's not blockchain-verified</li>
+                                <li>Consider verifying through other means or contacting the creator directly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                <div id="errorResult" class="result-card error" style="display: none;">
+                    <div class="result-header">
+                        <div class="status-badge error">
+                            <span class="icon">✗</span>
+                            <span>Error</span>
+                        </div>
+                    </div>
+                    <div class="result-body">
+                        <h3>Verification Error</h3>
+                        <p id="errorMessage"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="info-box">
+                <h2>How Content Verification Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Content Registration</h3>
+                            <p>Content creators register their work as blockchain assets with the URL and metadata</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>On-Chain Storage</h3>
+                            <p>The URL and creator information are stored immutably on the Nexus blockchain</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Instant Verification</h3>
+                            <p>Anyone can verify content authenticity by searching the blockchain with the URL</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="benefits-section">
+                    <h3>Benefits</h3>
+                    <div class="benefits-grid">
+                        <div class="benefit">
+                            <span class="benefit-icon">✓</span>
+                            <span>Combat deepfakes and misinformation</span>
+                        </div>
+                        <div class="benefit">
+                            <span class="benefit-icon">✓</span>
+                            <span>Verify content creator identity</span>
+                        </div>
+                        <div class="benefit">
+                            <span class="benefit-icon">✓</span>
+                            <span>Immutable proof of publication</span>
+                        </div>
+                        <div class="benefit">
+                            <span class="benefit-icon">✓</span>
+                            <span>Timestamp verification</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="api.js"></script>
+    <script src="content-verification.js"></script>
+</body>
+</html>

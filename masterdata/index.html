@@ -7,7 +7,7 @@
     <title>Product Catalogue | Distordia</title>
     <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="products.css">
+    <link rel="stylesheet" href="masterdata.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -22,9 +22,28 @@
             <ul class="nav-links">
                 <li><a href="../index.html">Home</a></li>
                 <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="../index.html#use">Use ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="index.html" class="dropdown-item active">Master Data</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="https://github.com/AkstonCap/q-wallet" target="_blank" class="dropdown-item">Q-wallet plugin</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">Nexus Interface DEX module</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="../index.html#projects">Projects ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../swap/index.html" class="dropdown-item">Swap</a>
+                        <a href="../fantasyfootball/index.html" class="dropdown-item">Fantasy Football</a>
+                        <a href="../ship-engineering/index.html" class="dropdown-item">Ship Engineering</a>
+                        <a href="https://github.com/AkstonCap/swapService" target="_blank" class="dropdown-item">swapService</a>
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo</a>
+                        <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="dropdown-item">q-mobile</a>
+                    </div>
+                </li>
                 <li><a href="../index.html#research">Research</a></li>
-                <li><a href="../dex/index.html">DEX</a></li>
-                <li><a href="index.html" class="active">Products</a></li>
                 <li><a href="../index.html#contact">Contact</a></li>
             </ul>
             <div class="auth-controls">
@@ -45,14 +64,41 @@
     <!-- Main Content -->
     <section class="products-section">
         <div class="container">
+            <!-- Value Proposition Banner -->
+            <div class="value-banner">
+                <h2>🌐 Global Master Data on Blockchain</h2>
+                <p class="value-description">
+                    Stop maintaining separate product databases in every ERP system. Register products once on the blockchain, 
+                    reference them everywhere. Immutable, transparent, and universally accessible material master data for modern supply chains.
+                </p>
+                <div class="benefits">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>One source of truth</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>No data silos</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>Immutable records</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">✓</span>
+                        <span>Universal reference</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Header Controls -->
             <div class="products-header">
                 <div class="search-bar">
-                    <input type="text" id="searchInput" placeholder="Search products..." />
+                    <input type="text" id="searchInput" placeholder="Search products, materials, SKUs..." />
                     <button id="searchBtn" class="btn-search">Search</button>
                 </div>
                 <button id="addProductBtn" class="btn-primary" style="display: none;">
-                    <span class="icon">+</span> Register New Product
+                    <span class="icon">+</span> Register Material
                 </button>
             </div>
 
@@ -91,8 +137,8 @@
             <!-- Empty State -->
             <div id="emptyState" class="empty-state" style="display: none;">
                 <div class="empty-icon">📦</div>
-                <h3>No Products Found</h3>
-                <p>Connect your wallet to register products on the blockchain</p>
+                <h3>No Materials Found</h3>
+                <p>Connect your wallet to register materials as global master data on the blockchain</p>
             </div>
         </div>
     </section>
@@ -101,20 +147,20 @@
     <div id="productModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Register New Product</h2>
+                <h2 id="modalTitle">Register Material as Master Data</h2>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="productForm">
                     <div class="form-group">
-                        <label for="productName">Product Name *</label>
-                        <input type="text" id="productName" required maxlength="100" placeholder="Enter product name">
+                        <label for="productName">Material/Product Name *</label>
+                        <input type="text" id="productName" required maxlength="100" placeholder="Enter material or product name">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="productSKU">SKU / Product Code *</label>
-                            <input type="text" id="productSKU" required maxlength="50" placeholder="e.g., PROD-12345">
+                            <label for="productSKU">SKU / Material Code *</label>
+                            <input type="text" id="productSKU" required maxlength="50" placeholder="e.g., MAT-12345 or your internal code">
                         </div>
                         <div class="form-group">
                             <label for="productCategory">Category *</label>
@@ -132,8 +178,9 @@
 
                     <div class="form-group">
                         <label for="productDescription">Description</label>
-                        <textarea id="productDescription" rows="4" maxlength="500" placeholder="Product description (max 500 characters)"></textarea>
+                        <textarea id="productDescription" rows="4" maxlength="500" placeholder="Material specifications and description (max 500 characters)"></textarea>
                         <span class="char-count">0/500</span>
+                        <small class="form-hint">📝 Tip: Include technical specifications that other companies can reference</small>
                     </div>
 
                     <div class="form-row">
@@ -163,10 +210,16 @@
                         <textarea id="productAttributes" rows="3" placeholder='{"color": "blue", "size": "M"}'></textarea>
                         <small class="form-hint">Optional: Add custom attributes in JSON format</small>
                     </div>
+blockchain-info">
+                        <p><strong>💡 Why register here?</strong></p>
+                        <p>Your material gets a unique blockchain address that any company can reference in their ERP/MRP systems, 
+                        eliminating the need for duplicate master data across organizations.</p>
+                    </div>
 
                     <div class="form-actions">
                         <button type="button" class="btn-secondary modal-cancel">Cancel</button>
                         <button type="submit" class="btn-primary" id="submitProductBtn">
+                            <span class="btn-text">Register as Global Master DatamitProductBtn">
                             <span class="btn-text">Register on Blockchain</span>
                             <span class="btn-loading" style="display: none;">
                                 <span class="spinner-small"></span> Processing...
@@ -175,7 +228,7 @@
                     </div>
                 </form>
             </div>
-        </div>
+        </div>Material Master Data
     </div>
 
     <!-- Product Detail Modal -->
@@ -200,6 +253,6 @@
 
     <script src="auth.js"></script>
     <script src="api.js"></script>
-    <script src="products.js"></script>
+    <script src="masterdata.js"></script>
 </body>
 </html>
