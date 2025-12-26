@@ -2,6 +2,7 @@
 
 // State
 let currentPosts = [];
+let quotedPostsCache = {}; // Cache for quoted posts
 let isConnected = false;
 let userAddress = null;
 
@@ -17,6 +18,7 @@ const createPostBtn = document.getElementById('createPostBtn');
 const postStatus = document.getElementById('postStatus');
 const filterType = document.getElementById('filterType');
 const namespaceInput = document.getElementById('namespaceInput');
+const realNamespaceOnly = document.getElementById('realNamespaceOnly');
 const refreshBtn = document.getElementById('refreshBtn');
 const postsContainer = document.getElementById('postsContainer');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -40,6 +42,7 @@ function setupEventListeners() {
     
     filterType?.addEventListener('change', handleFilterChange);
     namespaceInput?.addEventListener('input', debounce(applyFilters, 500));
+    realNamespaceOnly?.addEventListener('change', applyFilters);
     refreshBtn?.addEventListener('click', loadPosts);
 }
 
@@ -104,12 +107,27 @@ async function loadPosts() {
     hideError();
     
     try {
-        const posts = await nexusAPI.query("register/list/assets:asset", {
-            where: "results.distordia-type=distordia-post AND results.distordia-status=official"
-        });
+        // Load both posts (with Quoted address=0) and quotes (with existing quoted address)
+        const [posts, quotes] = await Promise.all([
+            // Regular posts with no quoted address
+            nexusAPI.query("register/list/assets:asset", {
+                where: "results.distordia-type=distordia-post AND results.distordia-status=official"
+            }),
+            // Quotes with existing quoted address
+            nexusAPI.query("register/list/assets:asset", {
+                where: "results.distordia-type=distordia-quote AND results.distordia-status=official"
+            })
+        ]);
         
-        if (posts && posts.length > 0) {
-            currentPosts = posts.sort((a, b) => (b.created || 0) - (a.created || 0));
+        // Combine posts and quotes
+        const allPosts = [...(posts || []), ...(quotes || [])];
+        
+        if (allPosts && allPosts.length > 0) {
+            currentPosts = allPosts.sort((a, b) => (b.created || 0) - (a.created || 0));
+            
+            // Fetch all quoted posts
+            await fetchQuotedPosts(currentPosts);
+            
             applyFilters();
         } else {
             currentPosts = [];
@@ -121,6 +139,34 @@ async function loadPosts() {
     } finally {
         hideLoading();
     }
+}
+
+// Fetch Quoted Posts
+async function fetchQuotedPosts(posts) {
+    // Extract unique quoted addresses from quote posts
+    const quotedAddresses = posts
+        .filter(post => post['distordia-type'] === 'distordia-quote')
+        .map(post => post['quoted-address'] || post['Quoted address'])
+        .filter(addr => addr && addr !== '0');
+    
+    // Remove duplicates
+    const uniqueAddresses = [...new Set(quotedAddresses)];
+    
+    // Fetch all quoted posts in parallel
+    const fetchPromises = uniqueAddresses.map(async (address) => {
+        try {
+            const result = await nexusAPI.query("register/get/assets:asset", {
+                address: address
+            });
+            if (result) {
+                quotedPostsCache[address] = result;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch quoted post ${address}:`, error);
+        }
+    });
+    
+    await Promise.all(fetchPromises);
 }
 
 // Create New Post
@@ -192,7 +238,16 @@ function handleFilterChange() {
 
 function applyFilters() {
     const filterValue = filterType.value;
+    const onlyRealNamespace = realNamespaceOnly?.checked ?? true;
     let filteredPosts = [...currentPosts];
+    
+    // Filter by real namespace (not empty or "*")
+    if (onlyRealNamespace) {
+        filteredPosts = filteredPosts.filter(post => {
+            const namespace = post["Creator's namespace"] || '';
+            return namespace !== '' && namespace !== '*';
+        });
+    }
     
     if (filterValue === 'official') {
         filteredPosts = filteredPosts.filter(post => 
@@ -232,11 +287,35 @@ function createPostElement(post) {
     postCard.className = 'post-card';
     
     const isOfficial = post['distordia-status'] === 'official';
+    const isQuote = post['distordia-type'] === 'distordia-quote';
     const namespace = post["Creator's namespace"] || 'anonymous';
     const owner = post.owner || 'unknown';
     const text = post.Text || '';
     const created = post.created ? new Date(post.created * 1000).toLocaleString() : 'Unknown';
     const version = post.version || 1;
+    const quotedAddress = post['quoted-address'] || post['Quoted address'];
+    
+    // Build the quoted post section if this is a quote
+    let quotedPostHTML = '';
+    if (isQuote && quotedAddress && quotedAddress !== '0') {
+        const quotedPost = quotedPostsCache[quotedAddress];
+        if (quotedPost) {
+            const quotedText = quotedPost.Text || 'No text';
+            const quotedAuthor = quotedPost["Creator's namespace"] || 'Unknown';
+            quotedPostHTML = `
+                <div class="quoted-post">
+                    <div class="quoted-author">@${escapeHtml(quotedAuthor)}</div>
+                    <div class="quoted-text">${escapeHtml(quotedText)}</div>
+                </div>
+            `;
+        } else {
+            quotedPostHTML = `
+                <div class="quoted-post">
+                    <div class="quoted-text">Quoted post not found</div>
+                </div>
+            `;
+        }
+    }
     
     postCard.innerHTML = `
         <div class="post-header">
@@ -246,10 +325,12 @@ function createPostElement(post) {
             </div>
             <div class="post-badges">
                 ${isOfficial ? '<span class="badge badge-official">Official</span>' : ''}
+                ${isQuote ? '<span class="badge badge-verified">Quote</span>' : ''}
             </div>
         </div>
         
         <div class="post-text">${escapeHtml(text)}</div>
+        ${quotedPostHTML}
         
         <div class="post-footer">
             <div class="post-meta">
