@@ -1,57 +1,5 @@
 /* Social Platform Specific Styles */
 
-/* Wallet Connection Styles */
-.connect-wallet-btn {
-    background: var(--gradient-1);
-    color: white;
-    border: none;
-    padding: 0.6rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-}
-
-.connect-wallet-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-}
-
-.wallet-info {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    background: var(--bg-card);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.wallet-address {
-    color: var(--primary-color);
-    font-size: 0.9rem;
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-}
-
-.disconnect-btn {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.disconnect-btn:hover {
-    background: rgba(255, 107, 53, 0.1);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
 .post-btn {
     background: var(--gradient-1);
     color: white;

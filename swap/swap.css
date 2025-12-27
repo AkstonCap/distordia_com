@@ -494,21 +494,6 @@
     }
 }
 
-/* Ensure navbar and footer display properly */
-body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.navbar {
-    flex-shrink: 0;
-}
-
-footer {
-    margin-top: auto;
-}
-
 /* Transaction item styling */
 .transaction-item {
     display: flex;
