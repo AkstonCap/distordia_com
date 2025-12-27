@@ -49,7 +49,8 @@
                 <li><a href="../index.html#contact">Contact</a></li>
             </ul>
             <div class="auth-controls">
-                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <button id="loginToPostBtn" class="login-to-post-btn">Log in to post</button>
+                <button id="connectWalletBtn" class="connect-wallet-btn" style="display: none;">Connect Wallet</button>
                 <div id="walletInfo" class="wallet-info" style="display: none;">
                     <span id="walletAddress" class="wallet-address"></span>
                     <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
@@ -79,24 +80,6 @@
         <div class="container">
             <div class="social-container">
                 
-                <!-- Create Post Section -->
-                <div class="create-post-card" id="createPostCard" style="display: none;">
-                    <h2>Create Post</h2>
-                    <div class="post-form">
-                        <textarea 
-                            id="postText" 
-                            class="post-textarea" 
-                            placeholder="What's happening on-chain?"
-                            maxlength="500"
-                        ></textarea>
-                        <div class="post-actions">
-                            <span class="char-count"><span id="charCount">0</span>/500</span>
-                            <button id="createPostBtn" class="btn-primary">Post to Blockchain</button>
-                        </div>
-                    </div>
-                    <div id="postStatus" class="status-message"></div>
-                </div>
-
                 <!-- Filter Controls -->
                 <div class="filter-controls">
                     <div class="filter-group">
@@ -121,6 +104,7 @@
                         </label>
                     </div>
                     <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+                    <button id="postBtn" class="post-btn" style="display: none;">✍️ Post</button>
                 </div>
 
                 <!-- Posts Feed -->
@@ -139,6 +123,49 @@
             </div>
         </div>
     </section>
+
+    <!-- Asset JSON Modal -->
+    <div id="assetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Asset Data</h2>
+                <span class="modal-close" onclick="closeAssetModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="assetJsonContainer" class="asset-json-container">
+                    <div class="loading-spinner">Loading asset data...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeAssetModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✍️ Create Post</h2>
+                <span class="modal-close" onclick="closeCreatePostModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="post-form">
+                    <textarea 
+                        id="postText" 
+                        class="post-textarea" 
+                        placeholder="What's happening?"
+                        maxlength="500"
+                    ></textarea>
+                    <div class="post-actions">
+                        <span class="char-count"><span id="charCount">0</span>/500</span>
+                        <button id="createPostBtn" class="btn-primary">Post to Nexus</button>
+                    </div>
+                </div>
+                <div id="postStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

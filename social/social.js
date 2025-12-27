@@ -6,27 +6,48 @@ let quotedPostsCache = {}; // Cache for quoted posts
 let isConnected = false;
 let userAddress = null;
 
-// DOM Elements
-const connectWalletBtn = document.getElementById('connectWalletBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
-const walletInfo = document.getElementById('walletInfo');
-const walletAddress = document.getElementById('walletAddress');
-const createPostCard = document.getElementById('createPostCard');
-const postText = document.getElementById('postText');
-const charCount = document.getElementById('charCount');
-const createPostBtn = document.getElementById('createPostBtn');
-const postStatus = document.getElementById('postStatus');
-const filterType = document.getElementById('filterType');
-const namespaceInput = document.getElementById('namespaceInput');
-const realNamespaceOnly = document.getElementById('realNamespaceOnly');
-const refreshBtn = document.getElementById('refreshBtn');
-const postsContainer = document.getElementById('postsContainer');
-const loadingIndicator = document.getElementById('loadingIndicator');
-const errorMessage = document.getElementById('errorMessage');
-const noPosts = document.getElementById('noPosts');
+// DOM Elements (will be initialized after DOM loads)
+let connectWalletBtn;
+let disconnectBtn;
+let walletInfo;
+let walletAddress;
+let postBtn;
+let loginToPostBtn;
+let postText;
+let charCount;
+let createPostBtn;
+let postStatus;
+let filterType;
+let namespaceInput;
+let realNamespaceOnly;
+let refreshBtn;
+let postsContainer;
+let loadingIndicator;
+let errorMessage;
+let noPosts;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements
+    connectWalletBtn = document.getElementById('connectWalletBtn');
+    disconnectBtn = document.getElementById('disconnectBtn');
+    walletInfo = document.getElementById('walletInfo');
+    walletAddress = document.getElementById('walletAddress');
+    postBtn = document.getElementById('postBtn');
+    loginToPostBtn = document.getElementById('loginToPostBtn');
+    postText = document.getElementById('postText');
+    charCount = document.getElementById('charCount');
+    createPostBtn = document.getElementById('createPostBtn');
+    postStatus = document.getElementById('postStatus');
+    filterType = document.getElementById('filterType');
+    namespaceInput = document.getElementById('namespaceInput');
+    realNamespaceOnly = document.getElementById('realNamespaceOnly');
+    refreshBtn = document.getElementById('refreshBtn');
+    postsContainer = document.getElementById('postsContainer');
+    loadingIndicator = document.getElementById('loadingIndicator');
+    errorMessage = document.getElementById('errorMessage');
+    noPosts = document.getElementById('noPosts');
+    
     checkWalletConnection();
     loadPosts();
     setupEventListeners();
@@ -36,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     connectWalletBtn?.addEventListener('click', connectWallet);
     disconnectBtn?.addEventListener('click', disconnectWallet);
+    postBtn?.addEventListener('click', openCreatePostModal);
+    loginToPostBtn?.addEventListener('click', connectWallet);
     
     postText?.addEventListener('input', updateCharCount);
     createPostBtn?.addEventListener('click', createPost);
@@ -59,25 +82,35 @@ function checkWalletConnection() {
 }
 
 async function connectWallet() {
+    console.log('Connect wallet clicked');
     try {
         if (typeof window.nexus === 'undefined') {
-            showError('Q-Wallet not detected. Please install the Q-Wallet browser extension.');
+            alert('Q-Wallet not detected. Please install the Q-Wallet browser extension.');
+            console.error('Q-Wallet not detected');
             return;
         }
 
-        const response = await window.nexus.authenticate();
+        // Request connection from Q-Wallet (will prompt user for approval)
+        const accounts = await window.nexus.connect();
         
-        if (response && response.genesis) {
+        if (accounts && accounts.length > 0) {
             isConnected = true;
-            userAddress = response.genesis;
+            userAddress = accounts[0];
             sessionStorage.setItem('nexus_connected', 'true');
-            sessionStorage.setItem('nexus_genesis', response.genesis);
-            updateWalletUI(response.genesis);
-            showSuccess('Wallet connected successfully!');
+            sessionStorage.setItem('nexus_genesis', accounts[0]);
+            updateWalletUI(accounts[0]);
+            //console.log('Wallet connected successfully:', accounts[0]);
+        } else {
+            console.error('No accounts returned from wallet');
+            alert('No accounts found. Please unlock your Q-Wallet.');
         }
     } catch (error) {
         console.error('Wallet connection error:', error);
-        showError('Failed to connect wallet: ' + error.message);
+        if (error.message.includes('denied') || error.message.includes('rejected')) {
+            alert('Connection request was denied. Please approve the connection in Q-Wallet.');
+        } else {
+            alert('Failed to connect wallet: ' + error.message);
+        }
     }
 }
 
@@ -87,18 +120,20 @@ function disconnectWallet() {
     sessionStorage.removeItem('nexus_connected');
     sessionStorage.removeItem('nexus_genesis');
     
-    if (connectWalletBtn) connectWalletBtn.style.display = 'block';
     if (walletInfo) walletInfo.style.display = 'none';
-    if (createPostCard) createPostCard.style.display = 'none';
+    if (postBtn) postBtn.style.display = 'none';
+    if (loginToPostBtn) loginToPostBtn.style.display = 'block';
+    if (connectWalletBtn) connectWalletBtn.style.display = 'none';
     
     showSuccess('Wallet disconnected');
 }
 
 function updateWalletUI(address) {
-    if (connectWalletBtn) connectWalletBtn.style.display = 'none';
     if (walletInfo) walletInfo.style.display = 'flex';
     if (walletAddress) walletAddress.textContent = formatAddress(address);
-    if (createPostCard) createPostCard.style.display = 'block';
+    if (postBtn) postBtn.style.display = 'block';
+    if (loginToPostBtn) loginToPostBtn.style.display = 'none';
+    if (connectWalletBtn) connectWalletBtn.style.display = 'none';
 }
 
 // Load Posts from Blockchain
@@ -196,7 +231,7 @@ async function createPost() {
         const assetData = {
             "Text": text,
             "distordia-type": "distordia-post",
-            "distordia-status": "user-post"
+            "distordia-status": "official"
         };
 
         // Use Nexus API to create the asset
@@ -207,8 +242,9 @@ async function createPost() {
             postText.value = '';
             updateCharCount();
             
-            // Reload posts after short delay
+            // Close modal and reload posts after a short delay
             setTimeout(() => {
+                closeCreatePostModal();
                 loadPosts();
             }, 2000);
         } else {
@@ -290,6 +326,7 @@ function createPostElement(post) {
     const isQuote = post['distordia-type'] === 'distordia-quote';
     const namespace = post["Creator's namespace"] || 'anonymous';
     const owner = post.owner || 'unknown';
+    const assetAddress = post.address || 'unknown';
     const text = post.Text || '';
     const created = post.created ? new Date(post.created * 1000).toLocaleString() : 'Unknown';
     const version = post.version || 1;
@@ -338,7 +375,7 @@ function createPostElement(post) {
                 <span class="post-version">v${version}</span>
             </div>
             <div class="post-actions-footer">
-                <button class="action-btn" onclick="viewOnChain('${owner}')">View on Chain</button>
+                <button class="action-btn" onclick="viewOnChain('${assetAddress}')">View on Chain</button>
             </div>
         </div>
     `;
@@ -346,10 +383,67 @@ function createPostElement(post) {
     return postCard;
 }
 
-// View post on blockchain explorer
-function viewOnChain(address) {
-    // Open blockchain explorer (adjust URL as needed)
-    window.open(`https://nexus.io/explorer/address/${address}`, '_blank');
+// View post on blockchain - show modal with full asset JSON
+async function viewOnChain(assetAddress) {
+    const modal = document.getElementById('assetModal');
+    const container = document.getElementById('assetJsonContainer');
+    
+    if (!modal || !container) return;
+    
+    // Show modal with loading state
+    container.innerHTML = '<div class="loading-spinner">Loading asset data...</div>';
+    modal.classList.add('show');
+    
+    try {
+        // Fetch the full asset data from the blockchain
+        const assetData = await nexusAPI.query("register/get/assets:asset", {
+            address: assetAddress
+        });
+        
+        if (assetData) {
+            // Display the full JSON in a formatted way
+            container.innerHTML = `<pre>${JSON.stringify(assetData, null, 2)}</pre>`;
+        } else {
+            container.innerHTML = '<div class="loading-spinner" style="color: var(--error-color);">Asset not found</div>';
+        }
+    } catch (error) {
+        console.error('Error fetching asset data:', error);
+        container.innerHTML = `<div class="loading-spinner" style="color: var(--error-color);">Error loading asset: ${escapeHtml(error.message)}</div>`;
+    }
+}
+
+// Close the asset modal
+function closeAssetModal() {
+    const modal = document.getElementById('assetModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Open create post modal
+function openCreatePostModal() {
+    const modal = document.getElementById('createPostModal');
+    if (modal) {
+        modal.classList.add('show');
+        // Clear previous content
+        const postText = document.getElementById('postText');
+        if (postText) {
+            postText.value = '';
+            updateCharCount();
+        }
+        const postStatus = document.getElementById('postStatus');
+        if (postStatus) {
+            postStatus.style.display = 'none';
+        }
+    }
+}
+
+// Close create post modal
+function closeCreatePostModal() {
+    const modal = document.getElementById('createPostModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 // Utility Functions
@@ -448,3 +542,15 @@ function showError(message) {
         }, 5000);
     }
 }
+
+// Close modals when clicking outside of them
+window.onclick = function(event) {
+    const assetModal = document.getElementById('assetModal');
+    const createPostModal = document.getElementById('createPostModal');
+    
+    if (event.target === assetModal) {
+        closeAssetModal();
+    } else if (event.target === createPostModal) {
+        closeCreatePostModal();
+    }
+};
