@@ -95,13 +95,21 @@ class ProductCatalogue {
 
         try {
             // Load all products from blockchain
-            const assets = await nexusAPI.listAllProducts({ limit: 100 });
+            const assets = await nexusAPI.listAllProducts();
             
-            // Parse and filter for product assets
-            this.products = assets
-                .filter(asset => asset.sku || asset.name) // Filter for product-like assets
-                .map(asset => nexusAPI.parseAssetToProduct(asset));
+            console.log('Assets loaded:', assets); // Debug log
+            
+            if (!assets || assets.length === 0) {
+                console.log('No assets returned from API');
+                this.products = [];
+                this.showEmpty();
+                return;
+            }
+            
+            // Parse assets to products (already filtered by distordia-type in API)
+            this.products = assets.map(asset => nexusAPI.parseAssetToProduct(asset));
 
+            console.log('Products parsed:', this.products.length); // Debug log
             this.displayProducts(this.products);
         } catch (error) {
             console.error('Error loading products:', error);

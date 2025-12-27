@@ -102,10 +102,9 @@ class NexusAPI {
      * List all products (assets) on the blockchain
      * Note: This will return all assets, we'll need to filter for products
      */
-    async listAllProducts(filters = {}) {
+    async listAllProducts() {
         const params = {
-            limit: filters.limit || 100,
-            page: filters.page || 0
+            where: "results.distordia-type=product AND results.distordia-status=valid"
         };
 
         try {
@@ -236,18 +235,20 @@ class NexusAPI {
             created: asset.created,
             modified: asset.modified,
             name: asset.name || '',
-            sku: asset.sku || '',
+            sku: asset.sku || asset['art-nr'] || '', // Support both sku and art-nr
             category: asset.category || '',
+            subcategory: asset.subcategory || '',
             description: asset.description || '',
             manufacturer: asset.manufacturer || '',
             origin: asset.origin || '',
             barcode: asset.barcode || '',
-            weight: asset.weight || 0
+            weight: asset.weight || 0,
+            url: asset.url || ''
         };
 
         // Add any additional custom fields
         Object.keys(asset).forEach(key => {
-            if (!['address', 'owner', 'created', 'modified', 'version', 'type'].includes(key)) {
+            if (!['address', 'owner', 'created', 'modified', 'version', 'type', 'form', 'distordia-type', 'distordia-status'].includes(key)) {
                 if (!product[key]) {
                     product[key] = asset[key];
                 }
