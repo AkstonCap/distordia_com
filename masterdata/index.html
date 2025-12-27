@@ -38,7 +38,7 @@
                         <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
                         <a href="../fantasyfootball/index.html" class="dropdown-item">Fantasy Football</a>
                         <a href="../ship-engineering/index.html" class="dropdown-item">Ship Engineering</a>
-                        <a href="../social/index.html" class="dropdown-item">Distordia Social</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
                         <a href="https://github.com/AkstonCap/swapService" target="_blank" class="dropdown-item">swapService</a>
                         <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
                         <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="dropdown-item">q-mobile</a>
@@ -198,12 +198,35 @@
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="productUnit">Unit *</label>
+                            <select id="productUnit" required>
+                                <option value="">Select unit</option>
+                                <option value="pieces">Pieces (pcs)</option>
+                                <option value="meter">Meter (m)</option>
+                                <option value="meter2">Square Meter (m²)</option>
+                                <option value="meter3">Cubic Meter (m³)</option>
+                                <option value="liter">Liter (L)</option>
+                                <option value="kilogram">Kilogram (kg)</option>
+                                <option value="ton">Ton (t)</option>
+                                <option value="box">Box</option>
+                                <option value="pallet">Pallet</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="productWeight">Weight per Unit (grams) *</label>
+                            <input type="number" id="productWeight" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
                             <label for="productBarcode">Barcode / GTIN</label>
                             <input type="text" id="productBarcode" maxlength="50" placeholder="e.g., 1234567890123">
                         </div>
                         <div class="form-group">
-                            <label for="productWeight">Weight (kg)</label>
-                            <input type="number" id="productWeight" step="0.01" min="0" placeholder="0.00">
+                            <label for="productDimensions">Dimensions (optional)</label>
+                            <input type="text" id="productDimensions" maxlength="50" placeholder="e.g., 10x20x30 cm">
                         </div>
                     </div>
 
@@ -221,8 +244,7 @@ blockchain-info">
                     <div class="form-actions">
                         <button type="button" class="btn-secondary modal-cancel">Cancel</button>
                         <button type="submit" class="btn-primary" id="submitProductBtn">
-                            <span class="btn-text">Register as Global Master DatamitProductBtn">
-                            <span class="btn-text">Register on Blockchain</span>
+                            <span class="btn-text">Register as Global Master Data</span>
                             <span class="btn-loading" style="display: none;">
                                 <span class="spinner-small"></span> Processing...
                             </span>

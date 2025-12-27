@@ -161,6 +161,12 @@ class ProductCatalogue {
                 </div>
                 ${description}
                 <div class="product-details">
+                    ${product.unit || product.weight ? `
+                        <div class="product-detail-row">
+                            <span class="product-detail-label">Unit:</span>
+                            <span class="product-detail-value">${this.escapeHtml(product.unit || 'N/A')}${product.weight ? ` (${product.weight}g/unit)` : ''}</span>
+                        </div>
+                    ` : ''}
                     ${product.manufacturer ? `
                         <div class="product-detail-row">
                             <span class="product-detail-label">Manufacturer:</span>
@@ -231,6 +237,24 @@ class ProductCatalogue {
 
                 <div class="detail-section">
                     <h3>Product Details</h3>
+                    ${product.unit ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Unit:</span>
+                            <span class="detail-value">${this.escapeHtml(product.unit)}</span>
+                        </div>
+                    ` : ''}
+                    ${product.weight ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Weight per Unit:</span>
+                            <span class="detail-value">${product.weight} grams</span>
+                        </div>
+                    ` : ''}
+                    ${product.dimensions ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Dimensions:</span>
+                            <span class="detail-value">${this.escapeHtml(product.dimensions)}</span>
+                        </div>
+                    ` : ''}
                     ${product.manufacturer ? `
                         <div class="detail-row">
                             <span class="detail-label">Manufacturer:</span>
@@ -247,12 +271,6 @@ class ProductCatalogue {
                         <div class="detail-row">
                             <span class="detail-label">Barcode:</span>
                             <span class="detail-value">${this.escapeHtml(product.barcode)}</span>
-                        </div>
-                    ` : ''}
-                    ${product.weight ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Weight:</span>
-                            <span class="detail-value">${product.weight} kg</span>
                         </div>
                     ` : ''}
                 </div>
@@ -303,7 +321,11 @@ class ProductCatalogue {
             document.getElementById('productManufacturer').value = product.manufacturer || '';
             document.getElementById('productOrigin').value = product.origin || '';
             document.getElementById('productBarcode').value = product.barcode || '';
+            document.getElementById('productUnit').value = product.unit || '';
             document.getElementById('productWeight').value = product.weight || '';
+            if (document.getElementById('productDimensions')) {
+                document.getElementById('productDimensions').value = product.dimensions || '';
+            }
         }
 
         modal.classList.add('active');
@@ -336,7 +358,9 @@ class ProductCatalogue {
                 manufacturer: document.getElementById('productManufacturer').value,
                 origin: document.getElementById('productOrigin').value,
                 barcode: document.getElementById('productBarcode').value,
-                weight: parseFloat(document.getElementById('productWeight').value) || 0
+                unit: document.getElementById('productUnit').value,
+                weight: parseFloat(document.getElementById('productWeight').value) || 0,
+                dimensions: document.getElementById('productDimensions')?.value || ''
             };
 
             // Parse additional attributes if provided
