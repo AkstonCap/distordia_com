@@ -5,65 +5,56 @@ function isQWalletInstalled() {
     return typeof window.nexus !== 'undefined';
 }
 
-// Listen for Q-Wallet events
-if (isQWalletInstalled()) {
+// Setup Q-Wallet event listeners (call this after Q-Wallet is detected)
+function setupQWalletListeners() {
+    if (!isQWalletInstalled()) {
+        return;
+    }
+    
     // Listen for account changes
     window.nexus.on('accountsChanged', (accounts) => {
         console.log('Accounts changed:', accounts);
         if (accounts && accounts.length > 0) {
             const address = accounts[0];
             sessionStorage.setItem('nexus_genesis', address);
-            updateWalletUI(address);
+            if (typeof updateWalletUI === 'function') {
+                updateWalletUI(address);
+            }
         } else {
-            disconnectWallet();
+            if (typeof disconnectWallet === 'function') {
+                disconnectWallet();
+            }
         }
     });
     
     // Listen for disconnection
     window.nexus.on('disconnect', () => {
         console.log('Wallet disconnected');
-        disconnectWallet();
-    });
-}
-
-// Verify session is still valid
-async function verifySession() {
-    const session = sessionStorage.getItem('nexus_session');
-    const genesis = sessionStorage.getItem('nexus_genesis');
-    
-    if (!session || !genesis) {
-        return false;
-    }
-    
-    try {
-        // Try to make a simple authenticated request
-        const response = await fetch('https://nexus.io:8080/users/get/status', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                session: session
-            })
-        });
-        
-        const data = await response.json();
-        return !data.error;
-    } catch (error) {
-        console.error('Session verification failed:', error);
-        return false;
-    }
-}
-
-// Auto-reconnect if session exists
-document.addEventListener('DOMContentLoaded', async () => {
-    const connected = sessionStorage.getItem('nexus_connected') === 'true';
-    
-    if (connected) {
-        const isValid = await verifySession();
-        if (!isValid) {
-            // Session expired, clear storage
+        if (typeof disconnectWallet === 'function') {
             disconnectWallet();
         }
+    });
+    
+    console.log('[Auth] Q-Wallet event listeners setup complete');
+}
+
+// Wait for Q-Wallet and setup listeners
+async function initializeQWallet() {
+    const maxWaitTime = 3000;
+    const checkInterval = 100;
+    let waited = 0;
+    
+    while (!isQWalletInstalled() && waited < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        waited += checkInterval;
     }
+    
+    if (isQWalletInstalled()) {
+        setupQWalletListeners();
+    }
+}
+
+// Auto-initialize Q-Wallet listeners when DOM loads
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeQWallet();
 });

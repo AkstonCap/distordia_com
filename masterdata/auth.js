@@ -27,9 +27,19 @@ class WalletAuth {
     }
 
     async checkConnection() {
+        // Wait for Q-Wallet to be injected (with timeout)
+        const maxWaitTime = 3000;
+        const checkInterval = 100;
+        let waited = 0;
+        
+        while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            waited += checkInterval;
+        }
+        
         // Check if Q-Wallet extension is installed
         if (typeof window.nexus === 'undefined') {
-            console.log('Q-Wallet extension not installed');
+            console.log('Q-Wallet extension not installed after waiting');
             return false;
         }
 
@@ -41,6 +51,7 @@ class WalletAuth {
                 this.connected = true;
                 this.updateUI();
                 this.onConnectionChange(true);
+                console.log('Already connected to wallet:', accounts[0]);
                 return true;
             }
         } catch (error) {
@@ -51,6 +62,16 @@ class WalletAuth {
     }
 
     async connect() {
+        // Wait for Q-Wallet to be injected (with timeout)
+        const maxWaitTime = 3000;
+        const checkInterval = 100;
+        let waited = 0;
+        
+        while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            waited += checkInterval;
+        }
+        
         // Check if Q-Wallet is installed
         if (typeof window.nexus === 'undefined') {
             this.showError('Q-Wallet extension not found. Please install Q-Wallet to continue.');
@@ -67,18 +88,36 @@ class WalletAuth {
                 this.updateUI();
                 this.onConnectionChange(true);
                 this.showSuccess('Wallet connected successfully!');
+                console.log('Wallet connected:', accounts[0]);
                 return true;
             }
         } catch (error) {
             console.error('Connection failed:', error);
-            this.showError('Failed to connect wallet. Please try again.');
+            if (error.message && error.message.includes('denied')) {
+                this.showError('Connection denied. Please approve the connection in Q-Wallet.');
+            } else {
+                this.showError('Failed to connect wallet. Please try again.');
+            }
             return false;
         }
 
         return false;
     }
 
-    disconnect() {
+    async disconnect() {
+        console.log('Disconnecting wallet...');
+        
+        try {
+            // Call Q-Wallet disconnect method
+            if (typeof window.nexus !== 'undefined' && window.nexus.disconnect) {
+                await window.nexus.disconnect();
+                console.log('Q-Wallet disconnected via API');
+            }
+        } catch (error) {
+            console.error('Error disconnecting from Q-Wallet:', error);
+        }
+        
+        // Clear local state
         this.connected = false;
         this.account = null;
         this.username = null;

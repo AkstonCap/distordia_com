@@ -27,7 +27,7 @@ let errorMessage;
 let noPosts;
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize DOM elements
     connectWalletBtn = document.getElementById('connectWalletBtn');
     disconnectBtn = document.getElementById('disconnectBtn');
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage = document.getElementById('errorMessage');
     noPosts = document.getElementById('noPosts');
     
-    checkWalletConnection();
+    await checkWalletConnection();
     loadPosts();
     setupEventListeners();
 });
@@ -70,7 +70,39 @@ function setupEventListeners() {
 }
 
 // Wallet Connection
-function checkWalletConnection() {
+async function checkWalletConnection() {
+    // Wait for Q-Wallet to be injected (with timeout)
+    const maxWaitTime = 3000;
+    const checkInterval = 100;
+    let waited = 0;
+    
+    while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        waited += checkInterval;
+    }
+    
+    if (typeof window.nexus === 'undefined') {
+        console.warn('Q-Wallet not detected after waiting');
+        return;
+    }
+    
+    // Check if already connected from previous session
+    try {
+        const accounts = await window.nexus.getAccounts();
+        if (accounts && accounts.length > 0) {
+            console.log('Already connected to wallet:', accounts[0]);
+            isConnected = true;
+            userAddress = accounts[0];
+            sessionStorage.setItem('nexus_connected', 'true');
+            sessionStorage.setItem('nexus_genesis', accounts[0]);
+            updateWalletUI(accounts[0]);
+            return;
+        }
+    } catch (error) {
+        console.log('Not connected to wallet yet:', error.message);
+    }
+    
+    // Fallback to session storage check
     const connected = sessionStorage.getItem('nexus_connected') === 'true';
     const address = sessionStorage.getItem('nexus_genesis');
     
@@ -84,6 +116,16 @@ function checkWalletConnection() {
 async function connectWallet() {
     console.log('Connect wallet clicked');
     try {
+        // Wait for Q-Wallet to be injected (with timeout)
+        const maxWaitTime = 3000;
+        const checkInterval = 100;
+        let waited = 0;
+        
+        while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            waited += checkInterval;
+        }
+        
         if (typeof window.nexus === 'undefined') {
             alert('Q-Wallet not detected. Please install the Q-Wallet browser extension.');
             console.error('Q-Wallet not detected');
@@ -99,7 +141,7 @@ async function connectWallet() {
             sessionStorage.setItem('nexus_connected', 'true');
             sessionStorage.setItem('nexus_genesis', accounts[0]);
             updateWalletUI(accounts[0]);
-            //console.log('Wallet connected successfully:', accounts[0]);
+            console.log('Wallet connected successfully:', accounts[0]);
         } else {
             console.error('No accounts returned from wallet');
             alert('No accounts found. Please unlock your Q-Wallet.');
@@ -114,12 +156,26 @@ async function connectWallet() {
     }
 }
 
-function disconnectWallet() {
+async function disconnectWallet() {
+    console.log('Disconnecting wallet...');
+    
+    try {
+        // Call Q-Wallet disconnect method
+        if (typeof window.nexus !== 'undefined' && window.nexus.disconnect) {
+            await window.nexus.disconnect();
+            console.log('Q-Wallet disconnected via API');
+        }
+    } catch (error) {
+        console.error('Error disconnecting from Q-Wallet:', error);
+    }
+    
+    // Clear local state
     isConnected = false;
     userAddress = null;
     sessionStorage.removeItem('nexus_connected');
     sessionStorage.removeItem('nexus_genesis');
     
+    // Update UI
     if (walletInfo) walletInfo.style.display = 'none';
     if (postBtn) postBtn.style.display = 'none';
     if (loginToPostBtn) loginToPostBtn.style.display = 'block';
