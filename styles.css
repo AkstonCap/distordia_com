@@ -712,11 +712,20 @@ section {
         width: 100%;
         padding: 2rem;
         gap: 1.5rem;
-        transition: left 0.3s ease;
+        transition: left 0.3s ease, opacity 0.3s ease, visibility 0s 0.3s;
+        visibility: hidden;
+        opacity: 0;
     }
 
     .nav-links.active {
         left: 0;
+        visibility: visible;
+        opacity: 1;
+        transition: left 0.3s ease, opacity 0.3s ease, visibility 0s 0s;
+    }
+
+    .auth-controls {
+        display: none !important;
     }
 
     .logo-img {
