@@ -153,7 +153,8 @@ function updateTradeButtonVisibility() {
     }
     
     // Check if q-wallet is connected OR if native session is logged in
-    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnected) || (typeof isLoggedIn === 'function' && isLoggedIn());
+    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnectedCheck) || (typeof isLoggedIn === 'function' && isLoggedIn());
     
     // Also check if a pair is selected
     const hasPairSelected = currentPair !== null;
@@ -161,6 +162,7 @@ function updateTradeButtonVisibility() {
     console.log('[Trade] Button visibility check:', {
         hasPairSelected,
         isWalletConnected,
+        walletConnectedCheck,
         currentPair: currentPair?.pair
     });
     
@@ -188,7 +190,8 @@ function openTradeModal() {
     }
     
     // Check if wallet is connected
-    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnected) || (typeof isLoggedIn === 'function' && isLoggedIn());
+    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnectedCheck) || (typeof isLoggedIn === 'function' && isLoggedIn());
     
     if (!isWalletConnected) {
         // Prompt user to connect wallet
@@ -715,7 +718,7 @@ async function findAndDisplayOrders() {
 }
 
 // Display orders in review section
-function displayOrdersForReview() {
+async function displayOrdersForReview() {
     console.log('[Review] displayOrdersForReview called');
     
     const ordersList = document.getElementById('selected-orders-list');
@@ -829,6 +832,132 @@ function displayOrdersForReview() {
     if (executeType) {
         executeType.textContent = tradeState.type === 'buy' ? 'Buy' : 'Sell';
     }
+    
+    // Load and populate account dropdowns
+    await loadAccountDropdowns();
+}
+
+// Fetch user accounts and populate dropdowns
+async function loadAccountDropdowns() {
+    const paymentSelect = document.getElementById('payment-account');
+    const receivalSelect = document.getElementById('receival-account');
+    const fromTokenSpan = document.getElementById('from-token');
+    const toTokenSpan = document.getElementById('to-token');
+    
+    if (!paymentSelect || !receivalSelect || !currentPair) {
+        console.error('[Trade] Account dropdowns not found');
+        return;
+    }
+    
+    // Update token labels based on trade type
+    const fromToken = tradeState.type === 'buy' ? currentPair.quote : currentPair.base;
+    const toToken = tradeState.type === 'buy' ? currentPair.base : currentPair.quote;
+    
+    if (fromTokenSpan) fromTokenSpan.textContent = fromToken;
+    if (toTokenSpan) toTokenSpan.textContent = toToken;
+    
+    try {
+        let accounts = [];
+        
+        // Check if using q-wallet
+        const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+        if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
+            // Use q-wallet to get accounts
+            accounts = await fetchAccountsFromQWallet();
+        } else {
+            throw new Error('Q-Wallet not connected');
+        }
+        
+        console.log('[Trade] Loaded accounts:', accounts);
+        
+        // Populate payment account dropdown (from)
+        populateAccountDropdown(paymentSelect, accounts, fromToken);
+        
+        // Populate receival account dropdown (to)
+        populateAccountDropdown(receivalSelect, accounts, toToken);
+        
+    } catch (error) {
+        console.error('[Trade] Failed to load accounts:', error);
+        paymentSelect.innerHTML = '<option value="">No accounts available</option>';
+        receivalSelect.innerHTML = '<option value="">No accounts available</option>';
+    }
+}
+
+// Fetch accounts from Q-Wallet
+async function fetchAccountsFromQWallet() {
+    try {
+        // Use window.nexus.listAccounts() to get all accounts including token accounts
+        const accounts = await window.nexus.listAccounts();
+        
+        console.log('[Trade] Q-Wallet accounts:', accounts);
+        
+        if (!accounts || accounts.length === 0) {
+            // Return default account as fallback
+            return [{
+                name: 'default',
+                token: 'NXS',
+                balance: 0,
+                address: 'default'
+            }];
+        }
+        
+        // Transform to simplified format
+        return accounts.map(acc => ({
+            name: acc.name || 'unnamed',
+            token: acc.ticker || 'NXS',
+            balance: acc.balance || 0,
+            address: acc.address || acc.name
+        }));
+    } catch (error) {
+        console.error('[Trade] Q-Wallet account fetch error:', error);
+        throw error;
+    }
+}
+
+// Populate a dropdown with account options
+function populateAccountDropdown(selectElement, accounts, filterToken) {
+    // Clear existing options
+    selectElement.innerHTML = '';
+    
+    // Filter accounts by token type
+    const filteredAccounts = accounts.filter(acc => 
+        acc.token === filterToken || 
+        (filterToken === 'NXS' && !acc.token) ||
+        acc.token === '0' // NXS accounts have token = 0
+    );
+    
+    // If no filtered accounts, show all and add warning
+    if (filteredAccounts.length === 0) {
+        console.warn(`[Trade] No ${filterToken} accounts found, showing all accounts`);
+        filteredAccounts.push(...accounts);
+    }
+    
+    // Add default option if exists
+    const defaultAccount = filteredAccounts.find(acc => acc.name === 'default');
+    if (defaultAccount) {
+        const option = document.createElement('option');
+        option.value = defaultAccount.name;
+        option.textContent = `default (Balance: ${defaultAccount.balance.toFixed(2)} ${defaultAccount.token})`;
+        selectElement.appendChild(option);
+    }
+    
+    // Add other accounts
+    filteredAccounts.forEach(account => {
+        if (account.name === 'default') return; // Already added
+        
+        const option = document.createElement('option');
+        option.value = account.name;
+        option.textContent = `${account.name} (Balance: ${account.balance.toFixed(2)} ${account.token})`;
+        selectElement.appendChild(option);
+    });
+    
+    // If no accounts at all, add a placeholder
+    if (selectElement.options.length === 0) {
+        const option = document.createElement('option');
+        option.value = 'default';
+        option.textContent = 'default (account)';
+        selectElement.appendChild(option);
+    }
 }
 
 // Show trade form (back from review)
@@ -881,7 +1010,8 @@ async function executeTrade() {
         hideTradeError();
         
         // Check if using q-wallet or native session
-        if (typeof window.nexus !== 'undefined' && walletConnected) {
+        const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+        if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
             // Use q-wallet batch calls to execute all orders at once
             await executeTradesWithQWallet(enabledOrders);
             
@@ -957,6 +1087,16 @@ async function executeTradesWithQWallet(orders) {
         throw new Error('No orders to execute');
     }
     
+    // Get selected accounts from dropdowns
+    const paymentAccount = document.getElementById('payment-account')?.value || 'default';
+    const receivalAccount = document.getElementById('receival-account')?.value || 'default';
+    
+    if (!paymentAccount || !receivalAccount) {
+        throw new Error('Please select both payment and receival accounts');
+    }
+    
+    console.log('[Trade] Using accounts:', { from: paymentAccount, to: receivalAccount });
+    
     // Build batch calls array - market orders + fee payment
     const calls = [];
     
@@ -970,8 +1110,8 @@ async function executeTradesWithQWallet(orders) {
             endpoint: 'market/execute/order',
             params: {
                 txid: order.txid,
-                from: 'default',
-                to: 'default'
+                from: paymentAccount,
+                to: receivalAccount
             }
         });
     }
@@ -1006,6 +1146,16 @@ async function executeTradeWithSession(order, amount, price) {
         throw new Error('Order transaction ID not found');
     }
     
+    // Get selected accounts from dropdowns
+    const paymentAccount = document.getElementById('payment-account')?.value || 'default';
+    const receivalAccount = document.getElementById('receival-account')?.value || 'default';
+    
+    if (!paymentAccount || !receivalAccount) {
+        throw new Error('Please select both payment and receival accounts');
+    }
+    
+    console.log('[Trade] Using accounts:', { from: paymentAccount, to: receivalAccount });
+    
     // Get PIN once for both trade and fee
     const pin = prompt('Enter your PIN to execute the trade (including 1 DIST fee):');
     if (!pin) {
@@ -1024,8 +1174,8 @@ async function executeTradeWithSession(order, amount, price) {
             session: session.session,
             pin: pin,
             txid: orderTxid,
-            from: 'default',
-            to: 'default'
+            from: paymentAccount,
+            to: receivalAccount
         })
     });
     
@@ -1077,7 +1227,8 @@ function onPairSelected() {
 // Collect DIST token trading fee
 async function collectTradeFee() {
     // Check if using q-wallet or native session
-    if (typeof window.nexus !== 'undefined' && walletConnected) {
+    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+    if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
         return await collectTradeFeeWithQWallet();
     } else if (typeof isLoggedIn === 'function' && isLoggedIn()) {
         return await collectTradeFeeWithSession();

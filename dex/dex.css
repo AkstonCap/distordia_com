@@ -1400,6 +1400,80 @@
     transform: none;
 }
 
+/* Account Selection Styles */
+.account-selection {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.account-selection h4 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.account-selectors {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.account-selector-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.account-selector-group label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.account-dropdown {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.account-dropdown:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.account-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.account-dropdown option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 0.5rem;
+}
+
+.account-helper {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.account-helper span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
 .find-orders-btn {
     flex: 1;
     padding: 0.8rem;

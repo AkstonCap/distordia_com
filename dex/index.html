@@ -337,6 +337,25 @@
                             <span id="review-total-received">-</span>
                         </div>
                     </div>
+                    <div class="account-selection">
+                        <h4>Select Accounts</h4>
+                        <div class="account-selectors">
+                            <div class="account-selector-group">
+                                <label for="payment-account">Payment Account (From):</label>
+                                <select id="payment-account" class="account-dropdown">
+                                    <option value="">Loading accounts...</option>
+                                </select>
+                                <p class="account-helper">Account to send <span id="from-token">tokens</span> from</p>
+                            </div>
+                            <div class="account-selector-group">
+                                <label for="receival-account">Receival Account (To):</label>
+                                <select id="receival-account" class="account-dropdown">
+                                    <option value="">Loading accounts...</option>
+                                </select>
+                                <p class="account-helper">Account to receive <span id="to-token">tokens</span> in</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="review-actions">
                         <button type="button" id="back-to-form" class="cancel-trade-btn">Back</button>
                         <button type="button" id="execute-trade" class="execute-trade-btn">
