@@ -269,7 +269,6 @@
     margin-top: 1.5rem;
 }
 
-.connect-wallet-btn,
 .swap-btn {
     width: 100%;
     padding: 1.25rem;
@@ -279,16 +278,6 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-}
-
-.connect-wallet-btn {
-    background: linear-gradient(135deg, var(--solana-purple), var(--nexus-orange));
-    color: white;
-}
-
-.connect-wallet-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
 }
 
 .swap-btn {
