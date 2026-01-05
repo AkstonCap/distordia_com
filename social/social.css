@@ -590,3 +590,99 @@
         transform: translateY(0);
     }
 }
+
+/* Info Button */
+.btn-info {
+    padding: 0.6rem 1.2rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.btn-info:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Info Modal Styles */
+.modal-wide {
+    max-width: 800px;
+}
+
+.info-modal-body {
+    max-height: 69vh;
+    overflow-y: auto;
+}
+
+.info-content {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.info-section {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.info-section h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.15rem;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.info-section p {
+    margin-bottom: 0.4rem;
+}
+
+.info-section strong {
+    color: var(--primary-color);
+}
+
+.info-section ul,
+.info-section ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.info-section li {
+    margin-bottom: 0.3rem;
+}
+
+.info-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.info-section a:hover {
+    text-decoration: underline;
+}
+
+#infoModal .modal-footer {
+    justify-content: center;
+    padding: 1rem 2rem;
+}
+
+#infoModal .modal-footer .btn-primary {
+    padding: 0.7rem 2.5rem;
+    font-size: 1rem;
+    border-radius: 25px;
+    display: inline-block;
+    white-space: nowrap;
+}

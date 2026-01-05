@@ -87,9 +87,17 @@ async function connectWallet() {
     }
     
     try {
-        console.log('[Wallet] Calling window.nexus.connect()...');
-        const accounts = await window.nexus.connect();
-        console.log('[Wallet] connect() returned:', accounts);
+        // Connect with fee (1 DIST for 24 hours)
+        const feeConfig = {
+            tokenName: 'DIST',
+            amount: 1,
+            recipientAddress: 'DIST',
+            validitySeconds: 24 * 60 * 60 // 24 hours
+        };
+        
+        console.log('[Wallet] Calling window.nexus.connectWithFee()...');
+        const accounts = await window.nexus.connectWithFee(feeConfig);
+        console.log('[Wallet] connectWithFee() returned:', accounts);
         if (accounts && accounts.length > 0) {
             userAddress = accounts[0];
             walletConnected = true;
@@ -163,6 +171,11 @@ function updateWalletUI() {
         if (typeof updateTradeButtonVisibility === 'function') {
             updateTradeButtonVisibility();
         }
+        
+        // Update trading panel overlay
+        if (typeof updateTradingPanelOverlay === 'function') {
+            updateTradingPanelOverlay();
+        }
     } else {
         // Show connect button, hide wallet info
         if (connectBtn) {
@@ -177,6 +190,11 @@ function updateWalletUI() {
         // Update trade button visibility
         if (typeof updateTradeButtonVisibility === 'function') {
             updateTradeButtonVisibility();
+        }
+        
+        // Update trading panel overlay
+        if (typeof updateTradingPanelOverlay === 'function') {
+            updateTradingPanelOverlay();
         }
     }
 }

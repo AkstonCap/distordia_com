@@ -43,6 +43,27 @@ function setupEventListeners() {
     
     // Swap button
     swapBtn.addEventListener('click', executeSwap);
+    
+    // Info button
+    const infoBtn = document.getElementById('infoBtn');
+    if (infoBtn) {
+        infoBtn.addEventListener('click', openInfoModal);
+    }
+}
+
+// Info Modal functions
+function openInfoModal() {
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeInfoModal() {
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 // Connect Wallets

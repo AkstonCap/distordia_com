@@ -79,8 +79,15 @@ class WalletAuth {
         }
 
         try {
-            // Request connection - this will show approval popup to user
-            const accounts = await window.nexus.connect();
+            // Request connection with fee (1 DIST for 24 hours)
+            const feeConfig = {
+                tokenName: 'DIST',
+                amount: 1,
+                recipientAddress: 'DIST',
+                validitySeconds: 24 * 60 * 60 // 24 hours
+            };
+            
+            const accounts = await window.nexus.connectWithFee(feeConfig);
             
             if (accounts && accounts.length > 0) {
                 this.account = accounts[0];

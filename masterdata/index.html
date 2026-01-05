@@ -99,9 +99,14 @@
                     <input type="text" id="searchInput" placeholder="Search products, materials, SKUs..." />
                     <button id="searchBtn" class="btn-search">Search</button>
                 </div>
-                <button id="addProductBtn" class="btn-primary" style="display: none;">
-                    <span class="icon">+</span> Register Material
-                </button>
+                <div class="header-buttons">
+                    <button id="infoBtn" class="btn-secondary" title="How it Works">
+                        ℹ️ How it Works
+                    </button>
+                    <button id="addProductBtn" class="btn-primary" style="display: none;">
+                        <span class="icon">+</span> Register Material
+                    </button>
+                </div>
             </div>
 
             <!-- Filter Panel -->
@@ -271,6 +276,100 @@ blockchain-info">
                 <button id="editProductBtn" class="btn-secondary" style="display: none;">Edit Product</button>
                 <button id="transferProductBtn" class="btn-secondary" style="display: none;">Transfer Ownership</button>
                 <button class="btn-primary modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info/Whitepaper Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>📋 Distordia Master Data - How it Works</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body info-modal-body">
+                <div class="info-content">
+                    <section class="info-section">
+                        <h3>🎯 The Problem We Solve</h3>
+                        <p>Every company maintains their own master data for products and materials. When businesses trade, they waste time mapping between different systems. A product exists with different IDs, descriptions, and attributes across suppliers, manufacturers, and retailers.</p>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>💡 The Blockchain Solution</h3>
+                        <p>This catalogue creates <strong>globally unique, blockchain-verified master data</strong> that any company can reference. Each product becomes a tamper-proof NFT with a permanent address. Any ERP or MRP system can query the blockchain for authoritative product information.</p>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>🏭 Use Cases</h3>
+                        <ul>
+                            <li><strong>Manufacturer</strong>: Register your products once - all resellers reference the same master data</li>
+                            <li><strong>Supplier</strong>: Import blockchain-verified material specs into your ERP automatically</li>
+                            <li><strong>Retailer</strong>: Trust product authenticity from verified manufacturers</li>
+                            <li><strong>Supply Chain</strong>: Track materials through the supply chain with immutable records</li>
+                        </ul>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>✨ Key Features</h3>
+                        <ul>
+                            <li><strong>Immutable Records</strong>: Product data cannot be altered once registered</li>
+                            <li><strong>Global Accessibility</strong>: Query from any system via standard APIs</li>
+                            <li><strong>Ownership Tracking</strong>: Clear ownership and transfer history on blockchain</li>
+                            <li><strong>Unique Identifiers</strong>: Blockchain addresses eliminate duplicate SKU confusion</li>
+                            <li><strong>Cross-Company Reference</strong>: Link your internal IDs to universal blockchain IDs</li>
+                        </ul>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>📦 Material Attributes Stored</h3>
+                        <div class="attribute-grid">
+                            <div class="attribute-item">📝 Name & Description</div>
+                            <div class="attribute-item">🏷️ SKU / Material Code</div>
+                            <div class="attribute-item">📂 Category</div>
+                            <div class="attribute-item">🏭 Manufacturer</div>
+                            <div class="attribute-item">🌍 Country of Origin</div>
+                            <div class="attribute-item">📏 Unit of Measure</div>
+                            <div class="attribute-item">⚖️ Weight</div>
+                            <div class="attribute-item">📐 Dimensions</div>
+                            <div class="attribute-item">🔢 Barcode / GTIN</div>
+                            <div class="attribute-item">⚙️ Custom Attributes (JSON)</div>
+                        </div>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>🔗 ERP Integration</h3>
+                        <p>Your ERP/MRP system can query the Nexus blockchain API to import verified product data 
+                            using the Nexus API with any Nexus node, either locally or through url (as with api.distordia.com shown below):</p>
+                        <pre><code>POST https://api.distordia.com/register/list/assets:asset
+{
+  "where": "results.type=distordia-product"
+}</code></pre>
+                        <p>Each product returns complete master data including blockchain address for unique reference.
+                            To get details of a specific product by its blockchain address, use:
+                        </p>
+                        <pre><code>POST https://api.distordia.com/register/get/assets:asset
+{
+  "address": "&lt;product_blockchain_address&gt;"
+}</code></pre>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>🚀 Getting Started</h3>
+                        <ol>
+                            <li><strong>Connect Wallet</strong>: Click "Connect Q-Wallet" in the top navigation</li>
+                            <li><strong>Register Material</strong>: Click "+ Register Material" and fill in product details</li>
+                            <li><strong>Reference Anywhere</strong>: Use the blockchain address in your ERP systems</li>
+                        </ol>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>🔮 Built on Nexus Blockchain</h3>
+                        <p>This dApp runs on the <a href="https://nexus.io" target="_blank">Nexus blockchain</a>, providing enterprise-grade security, low transaction fees, and a quantum-resistant architecture for long-term data integrity.</p>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary modal-close">Got it!</button>
             </div>
         </div>
     </div>

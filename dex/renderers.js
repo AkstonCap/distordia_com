@@ -47,7 +47,7 @@ function renderOrderBook(orderBook, pair = null) {
     // Render asks (reverse order for display - lowest price at bottom)
     asksContainer.innerHTML = orderBook.asks.length > 0 
         ? orderBook.asks.slice().reverse().map(order => `
-            <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
+            <div class="orderbook-row clickable" style="--depth: ${(order.total / maxTotal * 100)}%">
                 <span>${formatPrice(order.price)}</span>
                 <span>${order.amount.toFixed(4)}</span>
                 <span>${order.total.toFixed(4)}</span>
@@ -65,7 +65,7 @@ function renderOrderBook(orderBook, pair = null) {
     // Render bids (highest price at top)
     bidsContainer.innerHTML = orderBook.bids.length > 0
         ? orderBook.bids.map(order => `
-            <div class="orderbook-row" style="--depth: ${(order.total / maxTotal * 100)}%">
+            <div class="orderbook-row clickable" style="--depth: ${(order.total / maxTotal * 100)}%">
                 <span>${formatPrice(order.price)}</span>
                 <span>${order.amount.toFixed(4)}</span>
                 <span>${order.total.toFixed(4)}</span>

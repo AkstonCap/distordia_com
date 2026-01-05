@@ -67,6 +67,10 @@ function setupEventListeners() {
     namespaceInput?.addEventListener('input', debounce(applyFilters, 500));
     realNamespaceOnly?.addEventListener('change', applyFilters);
     refreshBtn?.addEventListener('click', loadPosts);
+    
+    // Info button
+    const infoBtn = document.getElementById('infoBtn');
+    infoBtn?.addEventListener('click', openInfoModal);
 }
 
 // Wallet Connection
@@ -132,8 +136,15 @@ async function connectWallet() {
             return;
         }
 
-        // Request connection from Q-Wallet (will prompt user for approval)
-        const accounts = await window.nexus.connect();
+        // Request connection from Q-Wallet with fee (1 DIST for 24 hours)
+        const feeConfig = {
+            tokenName: 'DIST',
+            amount: 1,
+            recipientAddress: 'DIST',
+            validitySeconds: 24 * 60 * 60 // 24 hours
+        };
+        
+        const accounts = await window.nexus.connectWithFee(feeConfig);
         
         if (accounts && accounts.length > 0) {
             isConnected = true;
@@ -497,6 +508,22 @@ function openCreatePostModal() {
 // Close create post modal
 function closeCreatePostModal() {
     const modal = document.getElementById('createPostModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Open info modal
+function openInfoModal() {
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+// Close info modal
+function closeInfoModal() {
+    const modal = document.getElementById('infoModal');
     if (modal) {
         modal.classList.remove('show');
     }

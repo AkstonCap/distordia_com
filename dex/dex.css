@@ -70,13 +70,14 @@
     display: grid;
     grid-template-columns: 300px 1fr 350px;
     gap: 1rem;
-    min-height: 600px;
+    min-height: 700px;
 }
 
 /* Panel Styles */
 .market-pairs-panel,
 .chart-panel,
-.orderbook-panel {
+.orderbook-panel,
+.trading-panel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 10px;
@@ -1598,3 +1599,639 @@
     gap: 1rem;
 }
 
+/* ====================================
+   INLINE TRADING PANEL STYLES
+   ==================================== */
+
+/* Chart and Trading Panel Container */
+.chart-trade-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.chart-trade-container .chart-panel {
+    flex: 1;
+    min-height: 400px;
+}
+
+/* Trading Panel */
+.trading-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Wallet Not Connected Overlay */
+.trading-panel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 15, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+}
+
+.trading-panel-overlay.hidden {
+    display: none;
+}
+
+.overlay-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.overlay-content .lock-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.overlay-content p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.overlay-connect-btn {
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.overlay-connect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+}
+
+/* Trading Panel Content */
+.trading-panel-content {
+    padding: 1.25rem;
+}
+
+/* Order Type Tabs */
+.order-type-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background: var(--bg-darker);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.order-type-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.order-type-tab:hover {
+    color: var(--text-primary);
+}
+
+.order-type-tab.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Buy/Sell Toggle */
+.trade-side-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.trade-side-btn {
+    flex: 1;
+    background: var(--bg-darker);
+    border: 2px solid transparent;
+    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trade-side-btn.buy:hover,
+.trade-side-btn.buy.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10B981;
+    color: #10B981;
+}
+
+.trade-side-btn.sell:hover,
+.trade-side-btn.sell.active {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #EF4444;
+    color: #EF4444;
+}
+
+/* Balance Display */
+.balance-display {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg-darker);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.balance-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.balance-label {
+    color: var(--text-secondary);
+}
+
+.balance-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.balance-token {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Trading Form */
+.inline-trade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-row label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.input-with-buttons {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.input-with-buttons:focus-within {
+    border-color: var(--primary-color);
+}
+
+.quick-price-btn {
+    background: var(--bg-card);
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-right: 1px solid var(--border-color);
+}
+
+.quick-price-btn:last-of-type {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+}
+
+.quick-price-btn:hover {
+    background: var(--primary-color);
+    color: var(--bg-dark);
+}
+
+.input-with-buttons input,
+.input-with-suffix input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    min-width: 0;
+}
+
+.input-with-buttons input:focus,
+.input-with-suffix input:focus {
+    outline: none;
+}
+
+.input-with-buttons input::placeholder,
+.input-with-suffix input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.input-suffix {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+}
+
+.input-with-suffix {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.input-with-suffix:focus-within {
+    border-color: var(--primary-color);
+}
+
+/* Quick Amount Buttons */
+.quick-amount-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.quick-amount-btn {
+    flex: 1;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-amount-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.quick-amount-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--bg-dark);
+}
+
+/* Total Row */
+.total-row {
+    padding: 1rem;
+    background: var(--bg-darker);
+    border-radius: 8px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-row label {
+    font-size: 0.9rem;
+}
+
+.total-display {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+}
+
+.total-display #inline-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.total-display #total-suffix {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Order Preview */
+.order-preview {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 107, 53, 0.05);
+    border: 1px solid rgba(255, 107, 53, 0.2);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    padding: 0.25rem 0;
+}
+
+.preview-row span:last-child {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Submit Button */
+.submit-trade-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+.submit-trade-btn.buy {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+}
+
+.submit-trade-btn.buy:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.submit-trade-btn.sell {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+}
+
+.submit-trade-btn.sell:hover {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.submit-trade-btn:disabled {
+    background: var(--bg-darker);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Error Display */
+.inline-trade-error {
+    padding: 0.75rem 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #EF4444;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* Clickable Order Book Rows */
+.orderbook-row.clickable {
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.orderbook-row.clickable:hover {
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.orderbook-row.selected {
+    background: rgba(255, 107, 53, 0.2) !important;
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Trade Mode Sections */
+.trade-mode {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Fill Mode Styles */
+.fill-instructions {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fill-instructions p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.fill-instructions p.note {
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Selected Orders */
+.selected-orders {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.selected-orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.clear-selection-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.clear-selection-btn:hover {
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.selected-orders-list {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.no-orders-selected {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+.selected-order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-card);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.selected-order-item:last-child {
+    margin-bottom: 0;
+}
+
+.selected-order-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.selected-order-type {
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.selected-order-type.ask {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+}
+
+.selected-order-type.bid {
+    background: rgba(239, 68, 68, 0.15);
+    color: #EF4444;
+}
+
+.selected-order-details {
+    color: var(--text-secondary);
+}
+
+.selected-order-details strong {
+    color: var(--text-primary);
+}
+
+.remove-order-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.remove-order-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+/* Fill Summary */
+.fill-summary {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fill-summary .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.fill-summary .summary-row span:last-child {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.fill-summary .summary-row.fee-row {
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+}
+
+.fill-summary .summary-row.fee-row span:last-child {
+    color: var(--primary-color);
+}
+
+/* Responsive Trading Panel */
+@media (max-width: 768px) {
+    .trading-panel {
+        margin-top: 1rem;
+    }
+    
+    .trade-side-toggle {
+        flex-direction: column;
+    }
+    
+    .quick-amount-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .quick-amount-btn {
+        flex: 0 0 calc(50% - 0.25rem);
+    }
+}

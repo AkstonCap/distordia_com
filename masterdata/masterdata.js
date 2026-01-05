@@ -29,6 +29,12 @@ class ProductCatalogue {
             addProductBtn.addEventListener('click', () => this.openProductModal());
         }
 
+        // Info/How it Works button
+        const infoBtn = document.getElementById('infoBtn');
+        if (infoBtn) {
+            infoBtn.addEventListener('click', () => this.openInfoModal());
+        }
+
         // Product form submission
         const productForm = document.getElementById('productForm');
         if (productForm) {
@@ -329,6 +335,13 @@ class ProductCatalogue {
         }
 
         modal.classList.add('active');
+    }
+
+    openInfoModal() {
+        const modal = document.getElementById('infoModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
     }
 
     async handleProductSubmit(e) {

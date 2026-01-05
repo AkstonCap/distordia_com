@@ -19,6 +19,9 @@ function initializeTrade() {
     const amountInput = document.getElementById('trade-amount');
     const priceInput = document.getElementById('trade-price');
     
+    // Initialize inline trading panel
+    initializeInlineTradingPanel();
+    
     // Show/hide trade button based on wallet connection
     updateTradeButtonVisibility();
     
@@ -1222,6 +1225,11 @@ if (typeof window.nexus !== 'undefined') {
 // This will be called from state.js when selectPair is called
 function onPairSelected() {
     updateTradeButtonVisibility();
+    
+    // Update inline trading panel for new pair
+    if (typeof updateInlinePanelForPair === 'function') {
+        updateInlinePanelForPair();
+    }
 }
 
 // Collect DIST token trading fee
@@ -1299,5 +1307,603 @@ async function collectTradeFeeWithSession() {
     } finally {
         // Clear cached PIN
         sessionStorage.removeItem('temp_pin');
+    }
+}
+// ====================================
+// INLINE TRADING PANEL
+// ====================================
+
+// Inline trading panel state
+let inlineTrade = {
+    mode: 'fill', // 'fill' or 'create'
+    createSide: 'bid', // 'bid' or 'ask'
+    selectedOrders: [], // Array of selected order objects
+    price: 0,
+    amount: 0
+};
+
+// Initialize inline trading panel
+function initializeInlineTradingPanel() {
+    console.log('[InlineTrade] Initializing inline trading panel');
+    
+    // Mode tabs (Fill Orders / Create Order)
+    const orderTypeTabs = document.querySelectorAll('.order-type-tab');
+    orderTypeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            orderTypeTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            inlineTrade.mode = tab.dataset.type;
+            updateTradeModeDisplay();
+        });
+    });
+    
+    // Create Order: Bid/Ask toggle
+    const tradeSideBtns = document.querySelectorAll('.trade-side-btn');
+    tradeSideBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tradeSideBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            inlineTrade.createSide = btn.dataset.side;
+            updateCreateOrderPanel();
+        });
+    });
+    
+    // Quick price buttons
+    const bestBidBtn = document.getElementById('best-bid-btn');
+    const bestAskBtn = document.getElementById('best-ask-btn');
+    
+    if (bestBidBtn) {
+        bestBidBtn.addEventListener('click', () => {
+            const bid = getHighestBid();
+            if (bid) {
+                document.getElementById('inline-price').value = bid;
+                calculateInlineTotal();
+            }
+        });
+    }
+    
+    if (bestAskBtn) {
+        bestAskBtn.addEventListener('click', () => {
+            const ask = getLowestAsk();
+            if (ask) {
+                document.getElementById('inline-price').value = ask;
+                calculateInlineTotal();
+            }
+        });
+    }
+    
+    // Quick amount buttons
+    const quickAmountBtns = document.querySelectorAll('.quick-amount-btn');
+    quickAmountBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            quickAmountBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const percent = parseInt(btn.dataset.percent);
+            await setAmountByPercent(percent);
+        });
+    });
+    
+    // Price and amount input handlers
+    const priceInput = document.getElementById('inline-price');
+    const amountInput = document.getElementById('inline-amount');
+    
+    if (priceInput) {
+        priceInput.addEventListener('input', calculateInlineTotal);
+    }
+    
+    if (amountInput) {
+        amountInput.addEventListener('input', calculateInlineTotal);
+    }
+    
+    // Clear selection button
+    const clearSelectionBtn = document.getElementById('clear-selection-btn');
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', clearSelectedOrders);
+    }
+    
+    // Fill orders button
+    const fillOrdersBtn = document.getElementById('fill-orders-btn');
+    if (fillOrdersBtn) {
+        fillOrdersBtn.addEventListener('click', executeSelectedOrders);
+    }
+    
+    // Create order button
+    const createOrderBtn = document.getElementById('create-order-btn');
+    if (createOrderBtn) {
+        createOrderBtn.addEventListener('click', createNewOrder);
+    }
+    
+    // Overlay connect button
+    const overlayConnectBtn = document.getElementById('overlay-connect-btn');
+    if (overlayConnectBtn) {
+        overlayConnectBtn.addEventListener('click', () => {
+            if (typeof connectWallet === 'function') {
+                connectWallet();
+            }
+        });
+    }
+    
+    // Update panel visibility
+    updateTradingPanelOverlay();
+    
+    // Make order book rows clickable for order selection
+    setupOrderBookClickHandlers();
+}
+
+// Update trading panel overlay based on wallet connection
+function updateTradingPanelOverlay() {
+    const overlay = document.getElementById('trading-panel-overlay');
+    if (!overlay) return;
+    
+    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
+    
+    if (isWalletConnected) {
+        overlay.classList.add('hidden');
+        // Load balance when connected
+        loadUserBalance();
+    } else {
+        overlay.classList.remove('hidden');
+    }
+}
+
+// Switch between Fill and Create modes
+function updateTradeModeDisplay() {
+    const fillMode = document.getElementById('fill-mode');
+    const createMode = document.getElementById('create-mode');
+    
+    if (inlineTrade.mode === 'fill') {
+        if (fillMode) fillMode.style.display = 'block';
+        if (createMode) createMode.style.display = 'none';
+    } else {
+        if (fillMode) fillMode.style.display = 'none';
+        if (createMode) createMode.style.display = 'block';
+        loadUserBalance();
+    }
+}
+
+// Update create order panel for bid/ask change
+function updateCreateOrderPanel() {
+    const createOrderBtn = document.getElementById('create-order-btn');
+    const btnText = createOrderBtn?.querySelector('.btn-text');
+    const orderTypeDisplay = document.getElementById('order-type-display');
+    
+    if (createOrderBtn) {
+        createOrderBtn.classList.remove('buy', 'sell');
+        createOrderBtn.classList.add(inlineTrade.createSide === 'bid' ? 'buy' : 'sell');
+    }
+    
+    if (btnText) {
+        btnText.textContent = inlineTrade.createSide === 'bid' ? 'Place Bid Order' : 'Place Ask Order';
+    }
+    
+    if (orderTypeDisplay) {
+        orderTypeDisplay.textContent = inlineTrade.createSide === 'bid' ? 'Limit Bid' : 'Limit Ask';
+    }
+    
+    loadUserBalance();
+    calculateInlineTotal();
+}
+
+// Update inline panel when pair changes
+function updateInlinePanelForPair() {
+    if (!currentPair) return;
+    
+    const [baseToken, quoteToken] = currentPair.pair.split('/');
+    
+    // Update suffixes
+    const priceSuffix = document.getElementById('price-suffix');
+    const amountSuffix = document.getElementById('amount-suffix');
+    const totalSuffix = document.getElementById('total-suffix');
+    
+    // Update fill mode tokens
+    const fillAmountToken = document.getElementById('fill-amount-token');
+    const fillCostToken = document.getElementById('fill-cost-token');
+    
+    if (priceSuffix) priceSuffix.textContent = quoteToken;
+    if (amountSuffix) amountSuffix.textContent = baseToken;
+    if (totalSuffix) totalSuffix.textContent = quoteToken;
+    if (fillAmountToken) fillAmountToken.textContent = baseToken;
+    if (fillCostToken) fillCostToken.textContent = quoteToken;
+    
+    // Set initial price from best order
+    const priceInput = document.getElementById('inline-price');
+    if (priceInput) {
+        if (inlineTrade.createSide === 'bid') {
+            const bid = getHighestBid();
+            if (bid) priceInput.value = bid;
+        } else {
+            const ask = getLowestAsk();
+            if (ask) priceInput.value = ask;
+        }
+    }
+    
+    // Clear selected orders when pair changes
+    clearSelectedOrders();
+    
+    // Load balance
+    loadUserBalance();
+    calculateInlineTotal();
+}
+
+// Load user balance for current pair (for Create Order mode)
+async function loadUserBalance() {
+    const balanceValue = document.getElementById('available-balance');
+    const balanceToken = document.getElementById('balance-token');
+    
+    if (!balanceValue || !balanceToken) return;
+    
+    // Check wallet connection
+    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
+    if (!walletConnectedCheck || !currentPair) {
+        balanceValue.textContent = '-';
+        balanceToken.textContent = '-';
+        return;
+    }
+    
+    const [baseToken, quoteToken] = currentPair.pair.split('/');
+    // For bids, we spend quote currency; for asks, we spend base currency
+    const relevantToken = inlineTrade.createSide === 'bid' ? quoteToken : baseToken;
+    
+    try {
+        // Try to get balance from Q-Wallet
+        if (typeof window.nexus !== 'undefined') {
+            const accounts = await window.nexus.listAccounts();
+            if (accounts) {
+                // Find the relevant token account
+                const tokenAccount = accounts.find(acc => 
+                    acc.ticker === relevantToken || 
+                    acc.token_name === relevantToken ||
+                    (relevantToken === 'NXS' && acc.token === '0')
+                );
+                
+                if (tokenAccount) {
+                    const balance = parseFloat(tokenAccount.balance || 0);
+                    balanceValue.textContent = balance.toFixed(4);
+                    balanceToken.textContent = relevantToken;
+                    return;
+                }
+            }
+        }
+        
+        balanceValue.textContent = '0.0000';
+        balanceToken.textContent = relevantToken;
+    } catch (error) {
+        console.error('[InlineTrade] Error loading balance:', error);
+        balanceValue.textContent = '-';
+        balanceToken.textContent = relevantToken;
+    }
+}
+
+// Set amount by percentage of balance (for Create Order mode)
+async function setAmountByPercent(percent) {
+    const balanceText = document.getElementById('available-balance')?.textContent;
+    const balance = parseFloat(balanceText) || 0;
+    
+    if (balance <= 0) return;
+    
+    const amountInput = document.getElementById('inline-amount');
+    const priceInput = document.getElementById('inline-price');
+    
+    if (!amountInput) return;
+    
+    if (inlineTrade.createSide === 'bid') {
+        // For bid: balance is in quote currency, need to calculate base amount
+        const price = parseFloat(priceInput?.value) || 0;
+        if (price > 0) {
+            const maxSpend = balance * (percent / 100);
+            const amount = maxSpend / price;
+            amountInput.value = amount.toFixed(6);
+        }
+    } else {
+        // For ask: balance is in base currency
+        const amount = balance * (percent / 100);
+        amountInput.value = amount.toFixed(6);
+    }
+    
+    calculateInlineTotal();
+}
+
+// Calculate and display total (for Create Order mode)
+function calculateInlineTotal() {
+    const priceInput = document.getElementById('inline-price');
+    const amountInput = document.getElementById('inline-amount');
+    const totalDisplay = document.getElementById('inline-total');
+    
+    const price = parseFloat(priceInput?.value) || 0;
+    const amount = parseFloat(amountInput?.value) || 0;
+    
+    const total = price * amount;
+    
+    if (totalDisplay) {
+        totalDisplay.textContent = total.toFixed(4);
+    }
+    
+    inlineTrade.price = price;
+    inlineTrade.amount = amount;
+}
+
+// Setup order book click handlers to SELECT orders (not just fill price)
+function setupOrderBookClickHandlers() {
+    const asksContainer = document.getElementById('orderbook-asks');
+    const bidsContainer = document.getElementById('orderbook-bids');
+    
+    const handleRowClick = (e, orderType) => {
+        const row = e.target.closest('.orderbook-row');
+        if (!row) return;
+        
+        // Extract order data from the row
+        const spans = row.querySelectorAll('span');
+        if (spans.length < 3) return;
+        
+        const price = parseFloat(spans[0].textContent.replace(/,/g, ''));
+        const amount = parseFloat(spans[1].textContent.replace(/,/g, ''));
+        const total = parseFloat(spans[2].textContent.replace(/,/g, ''));
+        
+        if (isNaN(price) || isNaN(amount)) return;
+        
+        // Check if in Fill mode
+        if (inlineTrade.mode === 'fill') {
+            // Toggle selection
+            const orderId = `${orderType}-${price}-${amount}`;
+            const existingIndex = inlineTrade.selectedOrders.findIndex(o => o.id === orderId);
+            
+            if (existingIndex >= 0) {
+                // Deselect
+                inlineTrade.selectedOrders.splice(existingIndex, 1);
+                row.classList.remove('selected');
+            } else {
+                // Select
+                inlineTrade.selectedOrders.push({
+                    id: orderId,
+                    type: orderType,
+                    price: price,
+                    amount: amount,
+                    total: total,
+                    row: row
+                });
+                row.classList.add('selected');
+            }
+            
+            updateSelectedOrdersDisplay();
+        } else {
+            // In Create mode, just fill the price input
+            const priceInput = document.getElementById('inline-price');
+            if (priceInput) {
+                priceInput.value = price;
+                calculateInlineTotal();
+            }
+        }
+    };
+    
+    if (asksContainer) {
+        asksContainer.addEventListener('click', (e) => handleRowClick(e, 'ask'));
+    }
+    
+    if (bidsContainer) {
+        bidsContainer.addEventListener('click', (e) => handleRowClick(e, 'bid'));
+    }
+}
+
+// Clear all selected orders
+function clearSelectedOrders() {
+    // Remove visual selection
+    inlineTrade.selectedOrders.forEach(order => {
+        if (order.row) {
+            order.row.classList.remove('selected');
+        }
+    });
+    
+    // Also check for any remaining selected rows
+    document.querySelectorAll('.orderbook-row.selected').forEach(row => {
+        row.classList.remove('selected');
+    });
+    
+    inlineTrade.selectedOrders = [];
+    updateSelectedOrdersDisplay();
+}
+
+// Update the selected orders display
+function updateSelectedOrdersDisplay() {
+    const listContainer = document.getElementById('selected-orders-list');
+    const summary = document.getElementById('fill-summary');
+    const fillBtn = document.getElementById('fill-orders-btn');
+    const btnText = fillBtn?.querySelector('.btn-text');
+    
+    if (!listContainer) return;
+    
+    if (inlineTrade.selectedOrders.length === 0) {
+        listContainer.innerHTML = '<div class="no-orders-selected">No orders selected</div>';
+        if (summary) summary.style.display = 'none';
+        if (fillBtn) fillBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Select Orders to Fill';
+        return;
+    }
+    
+    // Build selected orders list
+    const [baseToken, quoteToken] = currentPair?.pair.split('/') || ['-', '-'];
+    
+    listContainer.innerHTML = inlineTrade.selectedOrders.map(order => `
+        <div class="selected-order-item" data-order-id="${order.id}">
+            <div class="selected-order-info">
+                <span class="selected-order-type ${order.type}">${order.type === 'ask' ? 'Buy' : 'Sell'}</span>
+                <span class="selected-order-details">
+                    <strong>${order.amount.toFixed(4)}</strong> ${baseToken} @ <strong>${order.price.toFixed(8)}</strong> ${quoteToken}
+                </span>
+            </div>
+            <button class="remove-order-btn" onclick="removeSelectedOrder('${order.id}')" title="Remove">×</button>
+        </div>
+    `).join('');
+    
+    // Calculate totals
+    let totalAmount = 0;
+    let totalCost = 0;
+    
+    inlineTrade.selectedOrders.forEach(order => {
+        totalAmount += order.amount;
+        totalCost += order.total;
+    });
+    
+    const avgPrice = totalAmount > 0 ? totalCost / totalAmount : 0;
+    
+    // Update summary
+    document.getElementById('fill-order-count').textContent = inlineTrade.selectedOrders.length;
+    document.getElementById('fill-total-amount').textContent = totalAmount.toFixed(4);
+    document.getElementById('fill-total-cost').textContent = totalCost.toFixed(4);
+    document.getElementById('fill-avg-price').textContent = avgPrice.toFixed(8) + ' ' + quoteToken;
+    
+    if (summary) summary.style.display = 'block';
+    
+    // Update button
+    if (fillBtn) fillBtn.disabled = false;
+    
+    // Determine if we're buying or selling based on selected orders
+    const hasBids = inlineTrade.selectedOrders.some(o => o.type === 'bid');
+    const hasAsks = inlineTrade.selectedOrders.some(o => o.type === 'ask');
+    
+    if (fillBtn) {
+        fillBtn.classList.remove('buy', 'sell');
+        if (hasAsks && !hasBids) {
+            fillBtn.classList.add('buy');
+            if (btnText) btnText.textContent = `Buy ${totalAmount.toFixed(4)} ${baseToken}`;
+        } else if (hasBids && !hasAsks) {
+            fillBtn.classList.add('sell');
+            if (btnText) btnText.textContent = `Sell ${totalAmount.toFixed(4)} ${baseToken}`;
+        } else {
+            fillBtn.classList.add('buy');
+            if (btnText) btnText.textContent = `Fill ${inlineTrade.selectedOrders.length} Orders`;
+        }
+    }
+}
+
+// Remove a single selected order
+function removeSelectedOrder(orderId) {
+    const index = inlineTrade.selectedOrders.findIndex(o => o.id === orderId);
+    if (index >= 0) {
+        const order = inlineTrade.selectedOrders[index];
+        if (order.row) {
+            order.row.classList.remove('selected');
+        }
+        inlineTrade.selectedOrders.splice(index, 1);
+        updateSelectedOrdersDisplay();
+    }
+}
+
+// Execute selected orders
+async function executeSelectedOrders() {
+    if (inlineTrade.selectedOrders.length === 0) {
+        showInlineError('No orders selected');
+        return;
+    }
+    
+    const fillBtn = document.getElementById('fill-orders-btn');
+    const btnText = fillBtn?.querySelector('.btn-text');
+    const originalText = btnText?.textContent;
+    
+    if (fillBtn) {
+        fillBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Processing...';
+    }
+    
+    hideInlineError();
+    
+    try {
+        // For now, use the existing modal flow for execution
+        // Set up trade state based on first selected order type
+        const firstOrder = inlineTrade.selectedOrders[0];
+        tradeState.type = firstOrder.type === 'ask' ? 'buy' : 'sell';
+        tradeState.availableOrders = inlineTrade.selectedOrders.map(o => ({
+            price: o.price,
+            amount: o.amount,
+            total: o.total,
+            selected: true
+        }));
+        
+        // Open trade modal with selected orders
+        openTradeModal();
+        
+        // The modal will handle the actual execution
+        
+    } catch (error) {
+        console.error('[InlineTrade] Error executing orders:', error);
+        showInlineError(error.message || 'Failed to execute orders');
+    } finally {
+        if (fillBtn) {
+            fillBtn.disabled = false;
+            if (btnText) btnText.textContent = originalText;
+        }
+    }
+}
+
+// Create a new order (bid or ask)
+async function createNewOrder() {
+    if (!currentPair) {
+        showInlineError('Please select a trading pair');
+        return;
+    }
+    
+    const price = parseFloat(document.getElementById('inline-price')?.value) || 0;
+    const amount = parseFloat(document.getElementById('inline-amount')?.value) || 0;
+    
+    if (price <= 0) {
+        showInlineError('Please enter a valid price');
+        return;
+    }
+    
+    if (amount <= 0) {
+        showInlineError('Please enter a valid amount');
+        return;
+    }
+    
+    const createBtn = document.getElementById('create-order-btn');
+    const btnText = createBtn?.querySelector('.btn-text');
+    const originalText = btnText?.textContent;
+    
+    if (createBtn) {
+        createBtn.disabled = true;
+        if (btnText) btnText.textContent = 'Creating...';
+    }
+    
+    hideInlineError();
+    
+    try {
+        // For now, alert that this feature requires further implementation
+        // In production, this would call market/create/bid or market/create/ask
+        const [baseToken, quoteToken] = currentPair.pair.split('/');
+        const orderType = inlineTrade.createSide === 'bid' ? 'Bid' : 'Ask';
+        
+        alert(`Creating ${orderType} Order:\n\nPair: ${currentPair.pair}\nPrice: ${price} ${quoteToken}\nAmount: ${amount} ${baseToken}\nTotal: ${(price * amount).toFixed(4)} ${quoteToken}\n\nThis will be submitted via Q-Wallet for approval.`);
+        
+        // TODO: Implement actual order creation via Q-Wallet
+        // const result = await window.nexus.request({
+        //     method: inlineTrade.createSide === 'bid' ? 'market/create/bid' : 'market/create/ask',
+        //     params: { ... }
+        // });
+        
+    } catch (error) {
+        console.error('[InlineTrade] Error creating order:', error);
+        showInlineError(error.message || 'Failed to create order');
+    } finally {
+        if (createBtn) {
+            createBtn.disabled = false;
+            if (btnText) btnText.textContent = originalText;
+        }
+    }
+}
+
+// Show inline error
+function showInlineError(message) {
+    const errorDisplay = document.getElementById('inline-trade-error');
+    if (errorDisplay) {
+        errorDisplay.textContent = message;
+        errorDisplay.style.display = 'block';
+    }
+}
+
+// Hide inline error
+function hideInlineError() {
+    const errorDisplay = document.getElementById('inline-trade-error');
+    if (errorDisplay) {
+        errorDisplay.style.display = 'none';
     }
 }

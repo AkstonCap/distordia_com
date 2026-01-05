@@ -55,7 +55,7 @@ Distributor also needs it:
 
 ### Blockchain Way (Unified)
 ```
-Anyone registers material ONCE on blockchain:
+Anyone registers material ONCE as an "asset" on the Nexus blockchain in a  standard format pre-defined by Distordia, generating a unique address in the asset's json element on-chain:
 - Material: "Stainless Steel Bolt M8x20"
 - Blockchain Address: 87VmNhitFJv3WA3Yrovt9A3hts2...
 
@@ -82,7 +82,7 @@ Everyone references this address:
 - **My Materials**: Filter to show materials you've registered
 
 ### 🔗 Blockchain Integration
-- All materials stored as Assets on Nexus blockchain
+- All materials stored as Assets on the Nexus blockchain
 - Immutable product records with timestamps
 - Ownership tracking and transfer capabilities
 - Transaction history for each material
@@ -94,30 +94,17 @@ Products are registered with the following standardized attributes:
 
 ### Required Fields
 - **Name**: Product name (max 100 characters)
-- **SKU**: Unique product code or SKU
+- **SKU**: Unique product code (Nexus asset address added here)
 - **Category**: Product category (Electronics, Clothing, Food, etc.)
-
-### Optional Fields
-- **Description**: Product description (max 500 characters)
-- **Manufacturer**: Manufacturer name
-- **Country of Origin**: Where the product is made
-- **Barcode/GTIN**: Product barcode or GTIN number
-- **Weight**: Product weight in kilograms
-- *Material Attributes
-
-Materials are registered with the following standardized attributes:
-
-### Required Fields
-- **Name**: Material/product name (max 100 characters)
-- **SKU**: Your internal material code or SKU
-- **Category**: Material category (Electronics, Raw Materials, Components, etc.)
 
 ### Optional Fields
 - **Description**: Material specifications (max 500 characters)
 - **Manufacturer**: Manufacturer or supplier name
 - **Country of Origin**: Where the material is produced
 - **Barcode/GTIN**: Standard barcode identifier
-- **Weight**: Material weight in kilograms
+- **Unit**: Unit of measure (pieces, kg, meters, etc.)
+- **Weight**: Weight per unit in grams
+- **Dimensions**: Physical dimensions
 - **Custom Attributes**: Additional attributes in JSON format
 
 ## Integration with ERP/MRP Systems
@@ -138,16 +125,14 @@ Share the blockchain address with suppliers, customers, or partners. They can:
 - Reference the same material in their systems
 - Verify specifications without manual data entry
 
-## *Custom Attributes**: Additional attributes in JSON format
-
 ## Technical Implementation
 
 ### Architecture
 ```
-products/
+masterdata/
 ├── index.html       # Main HTML structure
-├── products.css     # Styling
-├── products.js      # Main UI logic and coordination
+├── masterdata.css   # Styling
+├── masterdata.js    # Main UI logic and coordination
 ├── auth.js          # Q-Wallet authentication module
 ├── api.js           # Nexus blockchain API module
 └── README.md        # Documentation
@@ -156,7 +141,7 @@ products/
 ### Modules
 
 #### auth.js - Wallet Authentication
-- Handles Q-Wallet connection and authentication
+- Handles Q-Wallet connection via connectWithFee
 - Manages wallet state and user sessions
 - Provides UI feedback for connection status
 
@@ -165,7 +150,7 @@ products/
 - Asset creation, retrieval, and management
 - Product data parsing and formatting
 
-#### products.js - Main Application
+#### masterdata.js - Main Application
 - Coordinates between auth and API modules
 - Manages UI state and interactions
 - Handles product listing, filtering, and display
@@ -202,42 +187,37 @@ products/
 
 ```javascript
 const productData = {
-    name: "Example Product",
-    sku: "PROD-12345",
+    name: "Example Material",
+    sku: "MAT-12345",
     category: "electronics",
-    description: "Product description",
+    description: "Material specifications",
     manufacturer: "Manufacturer Name",
     origin: "USA",
     barcode: "1234567890123",
-    weight: 1.5,
+    unit: "pieces",
+    weight: 150,  // in grams
     attributes: {
         color: "blue",
         size: "M"
     }
 };
 
-// Via Q-Wallet
-const result = await window.nexus.sendTransaction({
-    type: 'asset.create',
-    data: productData
-});
+// Via NexusAPI class (api.js)
+const nexusAPI = new NexusAPI('https://api.distordia.com');
+const result = await nexusAPI.createProduct(productData, pin, session);
 ```
 
 #### Querying Products
 
 ```javascript
-// List all products
-const products = await nexusAPI.listAllProducts({ limit: 100 });
+// List all products (with distordia-type=product filter)
+const products = await nexusAPI.listAllProducts();
 
-// Get specific product
+// Get specific product by address
 const product = await nexusAPI.getProduct(address);
 
-// Filter products
-const filtered = nexusAPI.filterProducts(products, {
-    category: 'electronics',
-    search: 'phone',
-    owner: 'mine'
-});
+// Products are filtered client-side using ProductCatalogue class
+catalogue.applyFilters(); // Uses category, owner, search filters
 ```
 
 ## API Reference

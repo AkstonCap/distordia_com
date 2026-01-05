@@ -62,6 +62,7 @@
             <div class="hero-content">
                 <h1>🔄 Cross-Chain Stablecoin Swap</h1>
                 <p class="subtitle">Seamlessly swap USDC on Solana to USDD on Nexus</p>
+                <button id="infoBtn" class="btn-info">ℹ️ How it Works</button>
             </div>
         </div>
     </section>
@@ -235,6 +236,61 @@
             </div>
         </div>
     </section>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>🔄 Cross-Chain Swap - How it Works</h2>
+                <span class="modal-close" onclick="closeInfoModal()">&times;</span>
+            </div>
+            <div class="modal-body info-modal-body">
+                <div class="info-content">
+                    <section class="info-section">
+                        <h3>🎯 What is This Bridge?</h3>
+                        <p>A cross-chain bridge that enables seamless swapping between <strong>USDC on Solana</strong> and <strong>USDD on Nexus</strong>. Move stablecoins between blockchains in minutes.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>💱 Exchange Details</h3>
+                        <ul>
+                            <li><strong>Rate</strong>: 1:1 exchange ratio (1 USDC = 1 USDD)</li>
+                            <li><strong>Fee</strong>: 0.5% bridge fee</li>
+                            <li><strong>Speed</strong>: Typically completes within minutes</li>
+                            <li><strong>Minimum</strong>: No minimum amount</li>
+                        </ul>
+                    </section>
+                    <section class="info-section">
+                        <h3>🔒 Security</h3>
+                        <ul>
+                            <li><strong>Non-Custodial</strong>: Lock-and-mint mechanism</li>
+                            <li><strong>Transparent</strong>: All transactions verifiable on-chain</li>
+                            <li><strong>Audited</strong>: Smart contracts reviewed for security</li>
+                        </ul>
+                    </section>
+                    <section class="info-section">
+                        <h3>🚀 How to Swap</h3>
+                        <ol>
+                            <li><strong>Connect Wallets</strong>: Connect both Phantom (Solana) and enter your Nexus address</li>
+                            <li><strong>Enter Amount</strong>: Specify how much USDC to swap</li>
+                            <li><strong>Confirm</strong>: Review the details and approve the transaction</li>
+                            <li><strong>Receive</strong>: USDD arrives in your Nexus wallet</li>
+                        </ol>
+                    </section>
+                    <section class="info-section">
+                        <h3>⚠️ Important Notes</h3>
+                        <ul>
+                            <li>Double-check your Nexus receiving address before confirming</li>
+                            <li>Keep some SOL for Solana transaction fees</li>
+                            <li>Transactions are irreversible once confirmed</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeInfoModal()">Got it!</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

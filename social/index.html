@@ -71,6 +71,7 @@
                 <h1>🌐 Distordia Social</h1>
                 <p class="subtitle">Decentralized Social Media on the Nexus Blockchain</p>
                 <p class="description">True content ownership. No censorship. Forever on-chain.</p>
+                <button id="infoBtn" class="btn-info">ℹ️ How it Works</button>
             </div>
         </div>
     </section>
@@ -163,6 +164,53 @@
                     </div>
                 </div>
                 <div id="postStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>🌐 Distordia Social - How it Works</h2>
+                <span class="modal-close" onclick="closeInfoModal()">&times;</span>
+            </div>
+            <div class="modal-body info-modal-body">
+                <div class="info-content">
+                    <section class="info-section">
+                        <h3>🎯 What is Distordia Social?</h3>
+                        <p>A decentralized social media platform where every post is stored permanently on the Nexus blockchain. No central authority can delete or censor your content.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>💡 True Ownership</h3>
+                        <p>Each post becomes a <strong>blockchain asset</strong> that you own. Your content exists forever on-chain, tied to your cryptographic identity.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>✨ Key Features</h3>
+                        <ul>
+                            <li><strong>Immutable Posts</strong>: Once posted, content cannot be altered or deleted</li>
+                            <li><strong>Namespace Identity</strong>: Posts tied to your Nexus namespace</li>
+                            <li><strong>No Censorship</strong>: Truly decentralized - no one can remove your posts</li>
+                            <li><strong>Verifiable</strong>: Anyone can verify post authenticity on blockchain</li>
+                        </ul>
+                    </section>
+                    <section class="info-section">
+                        <h3>🚀 Getting Started</h3>
+                        <ol>
+                            <li><strong>Connect Wallet</strong>: Click "Connect Wallet" and approve with Q-Wallet</li>
+                            <li><strong>Create Post</strong>: Click "Post" and write your message (max 500 chars)</li>
+                            <li><strong>Confirm Transaction</strong>: Approve the blockchain transaction in your wallet</li>
+                            <li><strong>View Posts</strong>: Your post appears in the feed, stored forever on-chain</li>
+                        </ol>
+                    </section>
+                    <section class="info-section">
+                        <h3>🔮 Built on Nexus Blockchain</h3>
+                        <p>Posts are stored as NFT assets on the <a href="https://nexus.io" target="_blank">Nexus blockchain</a>, ensuring permanent, tamper-proof storage with low transaction fees.</p>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeInfoModal()">Got it!</button>
             </div>
         </div>
     </div>

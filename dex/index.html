@@ -88,30 +88,175 @@
                     </div>
                 </div>
 
-                <!-- Trading Chart -->
-                <div class="chart-panel">
-                    <div class="panel-header">
-                        <div class="current-pair">
-                            <h2 id="current-pair-name">Select a trading pair</h2>
-                            <div class="pair-stats">
-                                <span class="current-price" id="current-price">-</span>
-                                <span class="price-change" id="price-change">-</span>
+                <!-- Chart and Trading Panel Container -->
+                <div class="chart-trade-container">
+                    <!-- Trading Chart -->
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="current-pair">
+                                <h2 id="current-pair-name">Select a trading pair</h2>
+                                <div class="pair-stats">
+                                    <span class="current-price" id="current-price">-</span>
+                                    <span class="price-change" id="price-change">-</span>
+                                </div>
+                            </div>
+                            <div class="chart-controls">
+                                <button class="chart-interval" data-interval="1d">1D</button>
+                                <button class="chart-interval" data-interval="1w">1W</button>
+                                <button class="chart-interval" data-interval="1m">1M</button>
+                                <button class="chart-interval active" data-interval="1y">1Y</button>
+                                <div class="chart-divider"></div>
+                                <button class="chart-scale-toggle" id="scale-toggle">Log</button>
                             </div>
                         </div>
-                        <div class="chart-controls">
-                            <button id="trade-btn" class="trade-btn" style="display: none;">
-                                <span class="trade-btn-text"><span class="trade-icon">💱</span> Trade</span>
-                            </button>
-                            <button class="chart-interval" data-interval="1d">1D</button>
-                            <button class="chart-interval" data-interval="1w">1W</button>
-                            <button class="chart-interval" data-interval="1m">1M</button>
-                            <button class="chart-interval active" data-interval="1y">1Y</button>
-                            <div class="chart-divider"></div>
-                            <button class="chart-scale-toggle" id="scale-toggle">Log</button>
+                        <div class="chart-container">
+                            <canvas id="price-chart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="price-chart"></canvas>
+
+                    <!-- Inline Trading Panel -->
+                    <div class="trading-panel" id="trading-panel">
+                        <!-- Wallet Not Connected Overlay -->
+                        <div class="trading-panel-overlay" id="trading-panel-overlay">
+                            <div class="overlay-content">
+                                <span class="lock-icon">🔒</span>
+                                <p>Connect your wallet to start trading</p>
+                                <button class="overlay-connect-btn" id="overlay-connect-btn">Connect Wallet</button>
+                            </div>
+                        </div>
+
+                        <!-- Trading Panel Content -->
+                        <div class="trading-panel-content">
+                            <!-- Order Type Tabs -->
+                            <div class="order-type-tabs">
+                                <button class="order-type-tab active" data-type="fill">Fill Orders</button>
+                                <button class="order-type-tab" data-type="create">Create Order</button>
+                            </div>
+
+                            <!-- Fill Orders Mode -->
+                            <div class="trade-mode fill-mode" id="fill-mode">
+                                <div class="fill-instructions">
+                                    <p>📋 Click on orders in the order book to select them for execution.</p>
+                                    <p class="note">Orders must be executed in full - no partial fills.</p>
+                                </div>
+
+                                <!-- Selected Orders List -->
+                                <div class="selected-orders" id="selected-orders">
+                                    <div class="selected-orders-header">
+                                        <span>Selected Orders</span>
+                                        <button type="button" class="clear-selection-btn" id="clear-selection-btn">Clear All</button>
+                                    </div>
+                                    <div class="selected-orders-list" id="selected-orders-list">
+                                        <div class="no-orders-selected">No orders selected</div>
+                                    </div>
+                                </div>
+
+                                <!-- Fill Summary -->
+                                <div class="fill-summary" id="fill-summary" style="display: none;">
+                                    <div class="summary-row">
+                                        <span>Orders to fill:</span>
+                                        <span id="fill-order-count">0</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Total Amount:</span>
+                                        <span><span id="fill-total-amount">0</span> <span id="fill-amount-token">-</span></span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Total Cost:</span>
+                                        <span><span id="fill-total-cost">0</span> <span id="fill-cost-token">-</span></span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Avg. Price:</span>
+                                        <span id="fill-avg-price">-</span>
+                                    </div>
+                                    <div class="summary-row fee-row">
+                                        <span>Fee per order:</span>
+                                        <span>1 DIST</span>
+                                    </div>
+                                </div>
+
+                                <!-- Fill Button -->
+                                <button type="button" class="submit-trade-btn buy" id="fill-orders-btn" disabled>
+                                    <span class="btn-text">Select Orders to Fill</span>
+                                </button>
+                            </div>
+
+                            <!-- Create Order Mode -->
+                            <div class="trade-mode create-mode" id="create-mode" style="display: none;">
+                                <!-- Buy/Sell Toggle -->
+                                <div class="trade-side-toggle">
+                                    <button class="trade-side-btn buy active" data-side="bid">Place Bid</button>
+                                    <button class="trade-side-btn sell" data-side="ask">Place Ask</button>
+                                </div>
+
+                                <!-- Balance Display -->
+                                <div class="balance-display">
+                                    <div class="balance-item">
+                                        <span class="balance-label">Available:</span>
+                                        <span class="balance-value" id="available-balance">-</span>
+                                        <span class="balance-token" id="balance-token">-</span>
+                                    </div>
+                                </div>
+
+                                <!-- Create Order Form -->
+                                <div class="inline-trade-form">
+                                    <!-- Price Input -->
+                                    <div class="form-row">
+                                        <label>Price</label>
+                                        <div class="input-with-buttons">
+                                            <button type="button" class="quick-price-btn" id="best-bid-btn" title="Best Bid">Bid</button>
+                                            <input type="number" id="inline-price" placeholder="0.00" step="0.00000001" min="0">
+                                            <button type="button" class="quick-price-btn" id="best-ask-btn" title="Best Ask">Ask</button>
+                                            <span class="input-suffix" id="price-suffix">USDD</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amount Input -->
+                                    <div class="form-row">
+                                        <label>Amount</label>
+                                        <div class="input-with-suffix">
+                                            <input type="number" id="inline-amount" placeholder="0.00" step="0.000001" min="0">
+                                            <span class="input-suffix" id="amount-suffix">NXS</span>
+                                        </div>
+                                        <div class="quick-amount-buttons">
+                                            <button type="button" class="quick-amount-btn" data-percent="25">25%</button>
+                                            <button type="button" class="quick-amount-btn" data-percent="50">50%</button>
+                                            <button type="button" class="quick-amount-btn" data-percent="75">75%</button>
+                                            <button type="button" class="quick-amount-btn" data-percent="100">100%</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total Display -->
+                                    <div class="form-row total-row">
+                                        <label>Total</label>
+                                        <div class="total-display">
+                                            <span id="inline-total">0.00</span>
+                                            <span id="total-suffix">USDD</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Order Preview -->
+                                    <div class="order-preview">
+                                        <div class="preview-row">
+                                            <span>Order Fee:</span>
+                                            <span>1 DIST</span>
+                                        </div>
+                                        <div class="preview-row">
+                                            <span>Type:</span>
+                                            <span id="order-type-display">Limit Bid</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <button type="button" class="submit-trade-btn buy" id="create-order-btn">
+                                        <span class="btn-text">Place Bid Order</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Error Display -->
+                            <div class="inline-trade-error" id="inline-trade-error" style="display: none;"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -226,36 +371,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Login to Nexus</h2>
-                <button id="close-modal" class="close-modal">&times;</button>
-            </div>
-            <form id="login-form" class="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
-                </div>
-                <div class="form-group">
-                    <label for="pin">PIN</label>
-                    <input type="password" id="pin" name="pin" required autocomplete="off" inputmode="numeric">
-                </div>
-                <div id="login-error" class="login-error" style="display: none;"></div>
-                <button type="submit" class="login-submit-btn">Login</button>
-            </form>
-            <div class="login-info">
-                <p><small>Your session will automatically expire after 3 minutes of inactivity.</small></p>
-                <p><small>Credentials are sent directly to the Nexus node and not stored.</small></p>
-            </div>
-        </div>
-    </div>
 
     <!-- Trade Modal -->
     <div id="trade-modal" class="modal">

@@ -668,3 +668,149 @@
     border: 1px solid #359fff;
     color: #359fff;
 }
+
+/* Header Buttons Container */
+.header-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* Info Modal Styles */
+.modal-wide {
+    max-width: 800px;
+}
+
+.info-modal-body {
+    max-height: 69vh;
+    overflow-y: auto;
+}
+
+.info-content {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.info-section {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.info-section h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.15rem;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.info-section p {
+    margin-bottom: 0.4rem;
+}
+
+.info-section strong {
+    color: var(--primary-color);
+}
+
+.info-section ul,
+.info-section ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.info-section li {
+    margin-bottom: 0.5rem;
+}
+
+.info-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.info-section a:hover {
+    text-decoration: underline;
+}
+
+.info-section pre {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.info-section code {
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.attribute-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.attribute-item {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid rgba(255, 107, 53, 0.2);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+/* Info Button specific styling */
+#infoBtn {
+    white-space: nowrap;
+}
+
+#infoBtn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Info Modal Footer */
+#infoModal .modal-footer {
+    justify-content: center;
+    padding: 1rem 2rem;
+}
+
+#infoModal .modal-footer .btn-primary {
+    padding: 0.7rem 2.5rem;
+    font-size: 1rem;
+    border-radius: 25px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .header-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .header-buttons button {
+        width: 100%;
+    }
+    
+    .modal-wide {
+        max-width: 95%;
+    }
+    
+    .attribute-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

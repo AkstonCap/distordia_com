@@ -171,12 +171,37 @@ class ContentVerification {
     }
 }
 
+// Info Modal functions
+function openInfoModal() {
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeInfoModal() {
+    const modal = document.getElementById('infoModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
 // Initialize when DOM is ready
 let contentVerification;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         contentVerification = new ContentVerification();
+        // Setup info button
+        const infoBtn = document.getElementById('infoBtn');
+        if (infoBtn) {
+            infoBtn.addEventListener('click', openInfoModal);
+        }
     });
 } else {
     contentVerification = new ContentVerification();
+    // Setup info button
+    const infoBtn = document.getElementById('infoBtn');
+    if (infoBtn) {
+        infoBtn.addEventListener('click', openInfoModal);
+    }
 }

@@ -66,6 +66,7 @@
                     Verify authentic content registered on the blockchain by verified creators. 
                     Combat misinformation by checking if content has been officially registered on-chain.
                 </p>
+                <button id="infoBtn" class="btn-info">ℹ️ How it Works</button>
             </div>
 
             <!-- Verification Form -->
@@ -245,6 +246,56 @@
             </div>
         </div>
     </section>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>🔐 Content Verification - How it Works</h2>
+                <span class="modal-close" onclick="closeInfoModal()">&times;</span>
+            </div>
+            <div class="modal-body info-modal-body">
+                <div class="info-content">
+                    <section class="info-section">
+                        <h3>🎯 What is Content Verification?</h3>
+                        <p>A blockchain-based system that lets anyone verify if online content has been officially registered by its creator. Combat deepfakes and misinformation with cryptographic proof.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>💡 The Problem We Solve</h3>
+                        <p>In the age of AI-generated content and deepfakes, it's increasingly difficult to verify authentic content. This tool provides <strong>immutable proof</strong> that content was registered by a specific creator at a specific time.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>✨ Key Features</h3>
+                        <ul>
+                            <li><strong>URL Verification</strong>: Check any URL against registered blockchain records</li>
+                            <li><strong>Creator Identity</strong>: See who registered the content</li>
+                            <li><strong>Timestamp Proof</strong>: Verify when content was registered</li>
+                            <li><strong>Immutable Records</strong>: Registration cannot be altered or deleted</li>
+                        </ul>
+                    </section>
+                    <section class="info-section">
+                        <h3>🔍 How to Verify Content</h3>
+                        <ol>
+                            <li><strong>Enter URL</strong>: Paste the content URL in the search box</li>
+                            <li><strong>Click Verify</strong>: The system searches the blockchain</li>
+                            <li><strong>View Results</strong>: See if content is registered and by whom</li>
+                        </ol>
+                    </section>
+                    <section class="info-section">
+                        <h3>📝 For Content Creators</h3>
+                        <p>Register your content using the <a href="https://github.com/AkstonCap/verificationModule" target="_blank">Nexus Interface Verification Module</a> to create immutable proof of authorship.</p>
+                    </section>
+                    <section class="info-section">
+                        <h3>🔮 Built on Nexus Blockchain</h3>
+                        <p>Content registrations are stored as assets on the <a href="https://nexus.io" target="_blank">Nexus blockchain</a>, providing permanent, tamper-proof verification.</p>
+                    </section>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeInfoModal()">Got it!</button>
+            </div>
+        </div>
+    </div>
 
     <script src="../script.js"></script>
     <script src="api.js"></script>
