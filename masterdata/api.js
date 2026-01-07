@@ -45,13 +45,20 @@ class NexusAPI {
     /**
      * Create a new product asset on the blockchain via Q-Wallet
      * Uses executeBatchCalls to prompt user for PIN approval
+     * Creates a basic format asset (not JSON)
      */
     async createProduct(productData) {
-        // Prepare the asset data in JSON format using the new schema
-        const assetData = {
+        // Prepare the asset data in basic format using the new schema
+        const assetParams = {
+            format: 'basic',
+            name: `product-${productData['art-nr']}`,
+
+            // Public address field
+            'asset-address': '', // Let the system generate the address (not displayed/private in register/list/assets:asset call), update this field later accordingly
+            
             // Distordia standard fields
             'distordia-type': 'product',
-            'distordia-status': 'valid',
+            'status': 'valid',
             
             // Identification
             'art-nr': productData['art-nr'],
@@ -68,18 +75,18 @@ class NexusAPI {
         };
 
         // Add optional fields only if they have values
-        if (productData.GTIN) assetData.GTIN = productData.GTIN;
-        if (productData.brand) assetData.brand = productData.brand;
-        if (productData.subcategory) assetData.subcategory = productData.subcategory;
-        if (productData.GPC) assetData.GPC = productData.GPC;
-        if (productData.HSCode) assetData.HSCode = productData.HSCode;
-        if (productData.origin) assetData.origin = productData.origin;
-        if (productData.weight) assetData.weight = productData.weight;
-        if (productData.hazardous) assetData.hazardous = productData.hazardous;
-        if (productData.perishable) assetData.perishable = productData.perishable;
-        if (productData.shelflife) assetData.shelflife = productData.shelflife;
-        if (productData.url) assetData.url = productData.url;
-        if (productData.replaces) assetData.replaces = productData.replaces;
+        if (productData.GTIN) assetParams.GTIN = productData.GTIN;
+        if (productData.brand) assetParams.brand = productData.brand;
+        if (productData.subcategory) assetParams.subcategory = productData.subcategory;
+        if (productData.GPC) assetParams.GPC = productData.GPC;
+        if (productData.HSCode) assetParams.HSCode = productData.HSCode;
+        if (productData.origin) assetParams.origin = productData.origin;
+        if (productData.weight) assetParams.weight = productData.weight;
+        if (productData.hazardous) assetParams.hazardous = productData.hazardous;
+        if (productData.perishable) assetParams.perishable = productData.perishable;
+        if (productData.shelflife) assetParams.shelflife = productData.shelflife;
+        if (productData.url) assetParams.url = productData.url;
+        if (productData.replaces) assetParams.replaces = productData.replaces;
 
         // Check if Q-Wallet is available
         if (typeof window.nexus === 'undefined') {
@@ -92,12 +99,7 @@ class NexusAPI {
             const result = await window.nexus.executeBatchCalls([
                 {
                     endpoint: 'assets/create/asset',
-                    params: {
-                        format: 'JSON',
-                        'asset-address': '', // Empty for new asset, to be updated as address is given at creation
-                        json: JSON.stringify(assetData),
-                        name: `product-${productData['art-nr']}`
-                    }
+                    params: assetParams
                 }
             ]);
 
@@ -170,19 +172,36 @@ class NexusAPI {
     }
 
     /**
-     * Update an existing product
+     * Update an existing product via Q-Wallet
+     * Uses executeBatchCalls to prompt user for PIN approval
+     * Updates using basic format (not JSON)
      */
-    async updateProduct(address, updates, pin, session) {
-        const params = {
-            pin: pin,
-            session: session,
+    async updateProduct(address, updates) {
+        // Prepare the update parameters in basic format
+        const updateParams = {
+            format: 'basic',
             address: address,
-            format: 'JSON',
-            json: JSON.stringify(updates)
+            ...updates  // Spread all update fields directly
         };
 
+        // Check if Q-Wallet is available
+        if (typeof window.nexus === 'undefined') {
+            throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
+        }
+
         try {
-            const result = await this.request('assets/update/asset', params);
+            // Use Q-Wallet's executeBatchCalls to update the asset
+            const result = await window.nexus.executeBatchCalls([
+                {
+                    endpoint: 'assets/update/asset',
+                    params: updateParams
+                }
+            ]);
+
+            if (result.successfulCalls === 0) {
+                throw new Error('Asset update failed. Please try again.');
+            }
+
             return result;
         } catch (error) {
             console.error('Error updating product:', error);
@@ -191,18 +210,31 @@ class NexusAPI {
     }
 
     /**
-     * Transfer product ownership to another user
+     * Transfer product ownership to another user via Q-Wallet
+     * Uses executeBatchCalls to prompt user for PIN approval
      */
-    async transferProduct(address, recipient, pin, session) {
-        const params = {
-            pin: pin,
-            session: session,
-            address: address,
-            username: recipient // or address of recipient
-        };
+    async transferProduct(address, recipient) {
+        // Check if Q-Wallet is available
+        if (typeof window.nexus === 'undefined') {
+            throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
+        }
 
         try {
-            const result = await this.request('assets/transfer/asset', params);
+            // Use Q-Wallet's executeBatchCalls to transfer the asset
+            const result = await window.nexus.executeBatchCalls([
+                {
+                    endpoint: 'assets/transfer/asset',
+                    params: {
+                        address: address,
+                        username: recipient  // or genesis/namespace of recipient
+                    }
+                }
+            ]);
+
+            if (result.successfulCalls === 0) {
+                throw new Error('Asset transfer failed. Please try again.');
+            }
+
             return result;
         } catch (error) {
             console.error('Error transferring product:', error);
