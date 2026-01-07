@@ -43,33 +43,68 @@ class NexusAPI {
     }
 
     /**
-     * Create a new product asset on the blockchain
+     * Create a new product asset on the blockchain via Q-Wallet
+     * Uses executeBatchCalls to prompt user for PIN approval
      */
-    async createProduct(productData, pin, session) {
-        // Prepare the asset data in JSON format
+    async createProduct(productData) {
+        // Prepare the asset data in JSON format using the new schema
         const assetData = {
-            name: productData.name,
-            sku: productData.sku,
-            category: productData.category,
-            subcategory: productData.subcategory || '',
-            description: productData.description || '',
-            manufacturer: productData.manufacturer || '',
-            origin: productData.origin || '',
-            barcode: productData.barcode || '',
-            weight: productData.weight || 0,
-            ...productData.attributes
+            // Distordia standard fields
+            'distordia-type': 'product',
+            'distordia-status': 'valid',
+            
+            // Identification
+            'art-nr': productData['art-nr'],
+            
+            // Classification
+            'category': productData.category,
+            
+            // Description
+            'description': productData.description,
+            'manufacturer': productData.manufacturer,
+            
+            // Physical Properties
+            'UOM': productData.UOM
         };
 
-        const params = {
-            pin: pin,
-            session: session,
-            format: 'JSON',
-            json: JSON.stringify(assetData),
-            name: `product-${productData.sku}` // Name the asset for easy lookup
-        };
+        // Add optional fields only if they have values
+        if (productData.GTIN) assetData.GTIN = productData.GTIN;
+        if (productData.brand) assetData.brand = productData.brand;
+        if (productData.subcategory) assetData.subcategory = productData.subcategory;
+        if (productData.GPC) assetData.GPC = productData.GPC;
+        if (productData.HSCode) assetData.HSCode = productData.HSCode;
+        if (productData.origin) assetData.origin = productData.origin;
+        if (productData.weight) assetData.weight = productData.weight;
+        if (productData.hazardous) assetData.hazardous = productData.hazardous;
+        if (productData.perishable) assetData.perishable = productData.perishable;
+        if (productData.shelflife) assetData.shelflife = productData.shelflife;
+        if (productData.url) assetData.url = productData.url;
+        if (productData.replaces) assetData.replaces = productData.replaces;
+
+        // Check if Q-Wallet is available
+        if (typeof window.nexus === 'undefined') {
+            throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
+        }
 
         try {
-            const result = await this.request('assets/create/asset', params);
+            // Use Q-Wallet's executeBatchCalls to create the asset
+            // This prompts the user for PIN approval
+            const result = await window.nexus.executeBatchCalls([
+                {
+                    endpoint: 'assets/create/asset',
+                    params: {
+                        format: 'JSON',
+                        'asset-address': '', // Empty for new asset, to be updated as address is given at creation
+                        json: JSON.stringify(assetData),
+                        name: `product-${productData['art-nr']}`
+                    }
+                }
+            ]);
+
+            if (result.successfulCalls === 0) {
+                throw new Error('Asset creation failed. Please try again.');
+            }
+
             return result;
         } catch (error) {
             console.error('Error creating product:', error);
@@ -199,10 +234,12 @@ class NexusAPI {
     filterProducts(products, filters) {
         let filtered = [...products];
 
-        // Filter by category
+        // Filter by category (partial match)
         if (filters.category && filters.category !== '') {
+            const categoryLower = filters.category.toLowerCase();
             filtered = filtered.filter(p => 
-                p.category && p.category.toLowerCase() === filters.category.toLowerCase()
+                (p.category && p.category.toLowerCase().includes(categoryLower)) ||
+                (p.subcategory && p.subcategory.toLowerCase().includes(categoryLower))
             );
         }
 
@@ -210,9 +247,13 @@ class NexusAPI {
         if (filters.search && filters.search !== '') {
             const searchLower = filters.search.toLowerCase();
             filtered = filtered.filter(p => 
-                (p.name && p.name.toLowerCase().includes(searchLower)) ||
+                (p.description && p.description.toLowerCase().includes(searchLower)) ||
+                (p['art-nr'] && p['art-nr'].toLowerCase().includes(searchLower)) ||
                 (p.sku && p.sku.toLowerCase().includes(searchLower)) ||
-                (p.description && p.description.toLowerCase().includes(searchLower))
+                (p.manufacturer && p.manufacturer.toLowerCase().includes(searchLower)) ||
+                (p.brand && p.brand.toLowerCase().includes(searchLower)) ||
+                (p.GTIN && p.GTIN.includes(searchLower)) ||
+                (p.category && p.category.toLowerCase().includes(searchLower))
             );
         }
 
@@ -228,32 +269,50 @@ class NexusAPI {
      * Parse asset data to product format
      */
     parseAssetToProduct(asset) {
-        // Extract standard fields and custom fields
+        // Extract all fields from the new schema
         const product = {
+            // System fields (auto-generated by Nexus)
             address: asset.address,
             owner: asset.owner,
             created: asset.created,
             modified: asset.modified,
-            name: asset.name || '',
-            sku: asset.sku || asset['art-nr'] || '', // Support both sku and art-nr
+            version: asset.version,
+            
+            // Distordia standard fields
+            'distordia-type': asset['distordia-type'] || 'product',
+            'distordia-status': asset['distordia-status'] || 'valid',
+            
+            // Identification
+            'art-nr': asset['art-nr'] || asset.sku || '',
+            'GTIN': asset.GTIN || asset.barcode || '',
+            'brand': asset.brand || '',
+            
+            // Classification
             category: asset.category || '',
             subcategory: asset.subcategory || '',
+            GPC: asset.GPC || '',
+            HSCode: asset.HSCode || '',
+            
+            // Description
             description: asset.description || '',
             manufacturer: asset.manufacturer || '',
             origin: asset.origin || '',
-            barcode: asset.barcode || '',
+            
+            // Physical Properties
+            UOM: asset.UOM || asset.unit || '',
             weight: asset.weight || 0,
-            url: asset.url || ''
+            hazardous: asset.hazardous || false,
+            perishable: asset.perishable || false,
+            shelflife: asset.shelflife || 0,
+            
+            // References
+            url: asset.url || '',
+            replaces: asset.replaces || '',
+            
+            // Legacy field support
+            name: asset.name || '',
+            sku: asset.sku || asset['art-nr'] || ''
         };
-
-        // Add any additional custom fields
-        Object.keys(asset).forEach(key => {
-            if (!['address', 'owner', 'created', 'modified', 'version', 'type', 'form', 'distordia-type', 'distordia-status'].includes(key)) {
-                if (!product[key]) {
-                    product[key] = asset[key];
-                }
-            }
-        });
 
         return product;
     }

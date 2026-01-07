@@ -113,15 +113,7 @@
             <div class="filter-panel">
                 <div class="filter-group">
                     <label>Category:</label>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="clothing">Clothing</option>
-                        <option value="food">Food & Beverage</option>
-                        <option value="home">Home & Garden</option>
-                        <option value="automotive">Automotive</option>
-                        <option value="other">Other</option>
-                    </select>
+                    <input type="text" id="categoryFilter" placeholder="Filter by category...">
                 </div>
                 <div class="filter-group">
                     <label>Owner:</label>
@@ -159,91 +151,191 @@
             </div>
             <div class="modal-body">
                 <form id="productForm">
-                    <div class="form-group">
-                        <label for="productName">Material/Product Name *</label>
-                        <input type="text" id="productName" required maxlength="100" placeholder="Enter material or product name">
-                    </div>
-
-                    <div class="form-row">
+                    <!-- Section: Identification -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <span class="section-icon">🏷️</span> Identification
+                            <button type="button" class="info-tooltip" data-tooltip="identification">ℹ️</button>
+                        </h3>
+                        
                         <div class="form-group">
-                            <label for="productSKU">SKU / Material Code *</label>
-                            <input type="text" id="productSKU" required maxlength="50" placeholder="e.g., MAT-12345 or your internal code">
+                            <label for="productArtNr">Article Number (art-nr) *</label>
+                            <input type="text" id="productArtNr" required maxlength="50" placeholder="e.g., BV-DN25-TH">
+                            <small class="form-hint">Your internal article/part number for this product</small>
                         </div>
-                        <div class="form-group">
-                            <label for="productCategory">Category *</label>
-                            <select id="productCategory" required>
-                                <option value="">Select category</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="clothing">Clothing</option>
-                                <option value="food">Food & Beverage</option>
-                                <option value="home">Home & Garden</option>
-                                <option value="automotive">Automotive</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="productDescription">Description</label>
-                        <textarea id="productDescription" rows="4" maxlength="500" placeholder="Material specifications and description (max 500 characters)"></textarea>
-                        <span class="char-count">0/500</span>
-                        <small class="form-hint">📝 Tip: Include technical specifications that other companies can reference</small>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productManufacturer">Manufacturer</label>
-                            <input type="text" id="productManufacturer" maxlength="100" placeholder="Manufacturer name">
-                        </div>
-                        <div class="form-group">
-                            <label for="productOrigin">Country of Origin</label>
-                            <input type="text" id="productOrigin" maxlength="50" placeholder="e.g., USA">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productGTIN">GTIN (Global Trade Item Number)</label>
+                                <input type="text" id="productGTIN" maxlength="14" pattern="[0-9]{8,14}" placeholder="e.g., 00012345678905">
+                                <small class="form-hint">8-14 digit barcode (EAN/UPC/GTIN)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="productBrand">Brand</label>
+                                <input type="text" id="productBrand" maxlength="50" placeholder="e.g., FlowMaster">
+                                <small class="form-hint">Brand name (if different from manufacturer)</small>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productUnit">Unit *</label>
-                            <select id="productUnit" required>
-                                <option value="">Select unit</option>
-                                <option value="pieces">Pieces (pcs)</option>
-                                <option value="meter">Meter (m)</option>
-                                <option value="meter2">Square Meter (m²)</option>
-                                <option value="meter3">Cubic Meter (m³)</option>
-                                <option value="liter">Liter (L)</option>
-                                <option value="kilogram">Kilogram (kg)</option>
-                                <option value="ton">Ton (t)</option>
-                                <option value="box">Box</option>
-                                <option value="pallet">Pallet</option>
-                                <option value="other">Other</option>
-                            </select>
+                    <!-- Section: Classification -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <span class="section-icon">📂</span> Classification
+                            <button type="button" class="info-tooltip" data-tooltip="classification">ℹ️</button>
+                        </h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productCategory">Category *</label>
+                                <input type="text" id="productCategory" required maxlength="50" placeholder="e.g., Piping">
+                                <small class="form-hint">Main product category</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="productSubcategory">Subcategory</label>
+                                <input type="text" id="productSubcategory" maxlength="50" placeholder="e.g., Valves">
+                                <small class="form-hint">More specific classification</small>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="productWeight">Weight per Unit (grams) *</label>
-                            <input type="number" id="productWeight" step="0.01" min="0" placeholder="0.00" required>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productGPC">GPC Code</label>
+                                <input type="text" id="productGPC" maxlength="8" pattern="[0-9]{8}" placeholder="e.g., 40161500">
+                                <small class="form-hint">GS1 Global Product Classification (8 digits)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="productHSCode">HS Code</label>
+                                <input type="text" id="productHSCode" maxlength="10" pattern="[0-9]{6,10}" placeholder="e.g., 848180">
+                                <small class="form-hint">Harmonized System code for trade (6-10 digits)</small>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <!-- Section: Description -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <span class="section-icon">📝</span> Product Information
+                            <button type="button" class="info-tooltip" data-tooltip="description">ℹ️</button>
+                        </h3>
+
                         <div class="form-group">
-                            <label for="productBarcode">Barcode / GTIN</label>
-                            <input type="text" id="productBarcode" maxlength="50" placeholder="e.g., 1234567890123">
+                            <label for="productDescription">Description *</label>
+                            <input type="text" id="productDescription" required maxlength="100" placeholder="e.g., Ball Valve DN25 Threaded Brass">
+                            <small class="form-hint">Concise product description (max 100 characters)</small>
                         </div>
-                        <div class="form-group">
-                            <label for="productDimensions">Dimensions (optional)</label>
-                            <input type="text" id="productDimensions" maxlength="50" placeholder="e.g., 10x20x30 cm">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productManufacturer">Manufacturer *</label>
+                                <input type="text" id="productManufacturer" required maxlength="50" placeholder="e.g., Distordia">
+                                <small class="form-hint">Manufacturer name or GLN</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="productOrigin">Country of Origin</label>
+                                <select id="productOrigin">
+                                    <option value="">Select country</option>
+                                    <option value="CN">China (CN)</option>
+                                    <option value="DE">Germany (DE)</option>
+                                    <option value="IN">India (IN)</option>
+                                    <option value="IT">Italy (IT)</option>
+                                    <option value="JP">Japan (JP)</option>
+                                    <option value="KR">South Korea (KR)</option>
+                                    <option value="MX">Mexico (MX)</option>
+                                    <option value="NL">Netherlands (NL)</option>
+                                    <option value="NO">Norway (NO)</option>
+                                    <option value="PL">Poland (PL)</option>
+                                    <option value="US">United States (US)</option>
+                                    <option value="GB">United Kingdom (GB)</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                                <small class="form-hint">ISO 3166-1 alpha-2 country code</small>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="productAttributes">Additional Attributes (JSON format)</label>
-                        <textarea id="productAttributes" rows="3" placeholder='{"color": "blue", "size": "M"}'></textarea>
-                        <small class="form-hint">Optional: Add custom attributes in JSON format</small>
+                    <!-- Section: Physical Properties -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <span class="section-icon">⚖️</span> Physical Properties
+                            <button type="button" class="info-tooltip" data-tooltip="physical">ℹ️</button>
+                        </h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productUOM">Unit of Measure (UOM) *</label>
+                                <select id="productUOM" required>
+                                    <option value="">Select unit</option>
+                                    <option value="EA">Each (EA)</option>
+                                    <option value="PC">Piece (PC)</option>
+                                    <option value="SET">Set (SET)</option>
+                                    <option value="PR">Pair (PR)</option>
+                                    <option value="KG">Kilogram (KG)</option>
+                                    <option value="GRM">Gram (GRM)</option>
+                                    <option value="LTR">Liter (LTR)</option>
+                                    <option value="MTR">Meter (MTR)</option>
+                                    <option value="MTK">Square Meter (MTK)</option>
+                                    <option value="MTQ">Cubic Meter (MTQ)</option>
+                                    <option value="TNE">Metric Ton (TNE)</option>
+                                    <option value="BX">Box (BX)</option>
+                                    <option value="CT">Carton (CT)</option>
+                                    <option value="PF">Pallet (PF)</option>
+                                </select>
+                                <small class="form-hint">UN/CEFACT standard unit codes</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="productWeight">Weight (grams)</label>
+                                <input type="number" id="productWeight" step="1" min="0" placeholder="e.g., 2320">
+                                <small class="form-hint">Net weight per unit in grams</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="productHazardous">
+                                    <span>⚠️ Hazardous Material</span>
+                                </label>
+                                <small class="form-hint">Dangerous goods flag</small>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="productPerishable">
+                                    <span>❄️ Perishable</span>
+                                </label>
+                                <small class="form-hint">Temperature-sensitive product</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="shelfLifeGroup" style="display: none;">
+                            <label for="productShelfLife">Shelf Life (days)</label>
+                            <input type="number" id="productShelfLife" min="1" placeholder="e.g., 90">
+                            <small class="form-hint">Number of days product remains usable</small>
+                        </div>
                     </div>
-blockchain-info">
-                        <p><strong>💡 Why register here?</strong></p>
-                        <p>Your material gets a unique blockchain address that any company can reference in their ERP/MRP systems, 
-                        eliminating the need for duplicate master data across organizations.</p>
+
+                    <!-- Section: References -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <span class="section-icon">🔗</span> External References
+                            <button type="button" class="info-tooltip" data-tooltip="references">ℹ️</button>
+                        </h3>
+
+                        <div class="form-group">
+                            <label for="productURL">Product URL</label>
+                            <input type="text" id="productURL" maxlength="100" placeholder="e.g., distordia.com/products/bv-dn25">
+                            <small class="form-hint">Link to extended product information (no https://)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="productReplaces">Replaces (Blockchain Address)</label>
+                            <input type="text" id="productReplaces" maxlength="128" placeholder="e.g., a1b2c3...">
+                            <small class="form-hint">Address of superseded product (if applicable)</small>
+                        </div>
+                    </div>
+                    <!-- Blockchain Info Box -->
+                    <div class="blockchain-info">
+                        <p><strong>💡 Asset Size Limit:</strong> Nexus assets are limited to 1KB. This form captures essential master data attributes (~500 bytes). Extended specifications should be stored off-chain and linked via the URL field.</p>
                     </div>
 
                     <div class="form-actions">
@@ -300,6 +392,85 @@ blockchain-info">
                     </section>
 
                     <section class="info-section">
+                        <h3>📦 On-Chain Attribute Schema</h3>
+                        <p>Our schema is based on global ERP standards (SAP, Oracle) and international specifications (GS1, UN/CEFACT, ISO). Each asset is limited to <strong>1KB</strong> on Nexus blockchain.</p>
+                        
+                        <div class="attribute-table">
+                            <h4>🏷️ Identification Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Standard</th></tr>
+                                <tr><td><code>art-nr</code></td><td>Internal article/part number</td><td>Free text</td></tr>
+                                <tr><td><code>GTIN</code></td><td>Global Trade Item Number (barcode)</td><td>GS1 (8-14 digits)</td></tr>
+                                <tr><td><code>brand</code></td><td>Brand name if different from manufacturer</td><td>Free text</td></tr>
+                            </table>
+
+                            <h4>📂 Classification Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Standard</th></tr>
+                                <tr><td><code>category</code></td><td>Human-readable product category</td><td>Free text</td></tr>
+                                <tr><td><code>subcategory</code></td><td>More specific classification</td><td>Free text</td></tr>
+                                <tr><td><code>GPC</code></td><td>GS1 Global Product Classification</td><td>8-digit code</td></tr>
+                                <tr><td><code>HSCode</code></td><td>Harmonized System code for international trade</td><td>6-10 digits</td></tr>
+                            </table>
+
+                            <h4>📝 Description Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Standard</th></tr>
+                                <tr><td><code>description</code></td><td>Short product description (≤100 chars)</td><td>Free text</td></tr>
+                                <tr><td><code>manufacturer</code></td><td>Manufacturer name or GLN</td><td>Free text / GS1 GLN</td></tr>
+                                <tr><td><code>origin</code></td><td>Country of origin</td><td>ISO 3166-1 alpha-2</td></tr>
+                            </table>
+
+                            <h4>⚖️ Physical Property Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Standard</th></tr>
+                                <tr><td><code>UOM</code></td><td>Base unit of measure</td><td>UN/CEFACT codes</td></tr>
+                                <tr><td><code>weight</code></td><td>Net weight per unit in grams</td><td>Integer</td></tr>
+                                <tr><td><code>hazardous</code></td><td>Dangerous goods flag</td><td>Boolean</td></tr>
+                                <tr><td><code>perishable</code></td><td>Temperature-sensitive product</td><td>Boolean</td></tr>
+                                <tr><td><code>shelflife</code></td><td>Shelf life in days (if perishable)</td><td>Integer</td></tr>
+                            </table>
+
+                            <h4>🔗 Reference Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Standard</th></tr>
+                                <tr><td><code>url</code></td><td>Link to extended product info</td><td>URL (no https://)</td></tr>
+                                <tr><td><code>replaces</code></td><td>Blockchain address of superseded product</td><td>Nexus address</td></tr>
+                            </table>
+
+                            <h4>🔒 System Attributes (Auto-Generated by Nexus)</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th></tr>
+                                <tr><td><code>address</code></td><td>Unique blockchain identifier for this asset</td></tr>
+                                <tr><td><code>owner</code></td><td>Blockchain address of asset owner</td></tr>
+                                <tr><td><code>created</code></td><td>Unix timestamp of asset creation</td></tr>
+                                <tr><td><code>modified</code></td><td>Unix timestamp of last modification</td></tr>
+                                <tr><td><code>version</code></td><td>Asset version number (increments on update)</td></tr>
+                            </table>
+
+                            <h4>🏷️ Distordia Standard Attributes</h4>
+                            <table>
+                                <tr><th>Attribute</th><th>Description</th><th>Values</th></tr>
+                                <tr><td><code>distordia-type</code></td><td>Asset type identifier</td><td><code>product</code></td></tr>
+                                <tr><td><code>distordia-status</code></td><td>Lifecycle status</td><td><code>valid</code>, <code>discontinued</code>, <code>recalled</code></td></tr>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>💾 What Stays Off-Chain?</h3>
+                        <p>Due to the 1KB asset limit, the following should be stored in your private systems and linked via the <code>url</code> field:</p>
+                        <ul>
+                            <li><strong>Pricing</strong> - List prices, customer-specific prices, discounts</li>
+                            <li><strong>Inventory</strong> - Stock levels, warehouse locations, reorder points</li>
+                            <li><strong>Media</strong> - Product images, videos, 3D models, PDFs</li>
+                            <li><strong>Long Descriptions</strong> - Marketing text, translations, detailed specs</li>
+                            <li><strong>Supplier Data</strong> - Lead times, MOQs, supplier-specific codes</li>
+                            <li><strong>Compliance</strong> - Certificates, SDS documents (store link only)</li>
+                        </ul>
+                    </section>
+
+                    <section class="info-section">
                         <h3>🏭 Use Cases</h3>
                         <ul>
                             <li><strong>Manufacturer</strong>: Register your products once - all resellers reference the same master data</li>
@@ -310,46 +481,46 @@ blockchain-info">
                     </section>
 
                     <section class="info-section">
-                        <h3>✨ Key Features</h3>
-                        <ul>
-                            <li><strong>Immutable Records</strong>: Product data cannot be altered once registered</li>
-                            <li><strong>Global Accessibility</strong>: Query from any system via standard APIs</li>
-                            <li><strong>Ownership Tracking</strong>: Clear ownership and transfer history on blockchain</li>
-                            <li><strong>Unique Identifiers</strong>: Blockchain addresses eliminate duplicate SKU confusion</li>
-                            <li><strong>Cross-Company Reference</strong>: Link your internal IDs to universal blockchain IDs</li>
-                        </ul>
-                    </section>
-
-                    <section class="info-section">
-                        <h3>📦 Material Attributes Stored</h3>
-                        <div class="attribute-grid">
-                            <div class="attribute-item">📝 Name & Description</div>
-                            <div class="attribute-item">🏷️ SKU / Material Code</div>
-                            <div class="attribute-item">📂 Category</div>
-                            <div class="attribute-item">🏭 Manufacturer</div>
-                            <div class="attribute-item">🌍 Country of Origin</div>
-                            <div class="attribute-item">📏 Unit of Measure</div>
-                            <div class="attribute-item">⚖️ Weight</div>
-                            <div class="attribute-item">📐 Dimensions</div>
-                            <div class="attribute-item">🔢 Barcode / GTIN</div>
-                            <div class="attribute-item">⚙️ Custom Attributes (JSON)</div>
-                        </div>
-                    </section>
-
-                    <section class="info-section">
                         <h3>🔗 ERP Integration</h3>
-                        <p>Your ERP/MRP system can query the Nexus blockchain API to import verified product data 
-                            using the Nexus API with any Nexus node, either locally or through url (as with api.distordia.com shown below):</p>
+                        <p>Your ERP/MRP system can query the Nexus blockchain API to import verified product data:</p>
                         <pre><code>POST https://api.distordia.com/register/list/assets:asset
 {
-  "where": "results.type=distordia-product"
+  "where": "results.distordia-type=product AND results.distordia-status=valid"
 }</code></pre>
                         <p>Each product returns complete master data including blockchain address for unique reference.
-                            To get details of a specific product by its blockchain address, use:
-                        </p>
+                            To get details of a specific product by its blockchain address:</p>
                         <pre><code>POST https://api.distordia.com/register/get/assets:asset
 {
   "address": "&lt;product_blockchain_address&gt;"
+}</code></pre>
+                    </section>
+
+                    <section class="info-section">
+                        <h3>📋 Example Asset JSON</h3>
+                        <pre><code>{
+  "owner": "a164ce40f952...",
+  "version": 1,
+  "created": 1766848496,
+  "modified": 1766848496,
+  "type": "OBJECT",
+  "form": "ASSET",
+  "distordia-type": "product",
+  "distordia-status": "valid",
+  "art-nr": "BV-DN25-TH",
+  "GTIN": "00012345678905",
+  "category": "Piping",
+  "subcategory": "Valves",
+  "GPC": "40161500",
+  "HSCode": "848180",
+  "description": "Ball Valve DN25 Threaded Brass",
+  "manufacturer": "Distordia",
+  "brand": "FlowMaster",
+  "origin": "DE",
+  "UOM": "EA",
+  "weight": 2320,
+  "hazardous": false,
+  "perishable": false,
+  "url": "distordia.com/products/bv-dn25"
 }</code></pre>
                     </section>
 

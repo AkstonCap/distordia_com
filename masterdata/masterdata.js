@@ -88,12 +88,72 @@ class ProductCatalogue {
         const descInput = document.getElementById('productDescription');
         if (descInput) {
             descInput.addEventListener('input', (e) => {
-                const charCount = document.querySelector('.char-count');
-                if (charCount) {
-                    charCount.textContent = `${e.target.value.length}/500`;
-                }
+                // Update character count if needed (now using regular input)
             });
         }
+
+        // Show/hide shelf life field based on perishable checkbox
+        const perishableCheckbox = document.getElementById('productPerishable');
+        const shelfLifeGroup = document.getElementById('shelfLifeGroup');
+        if (perishableCheckbox && shelfLifeGroup) {
+            perishableCheckbox.addEventListener('change', (e) => {
+                shelfLifeGroup.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
+
+        // Info tooltips in form
+        document.querySelectorAll('.info-tooltip').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showAttributeInfo(btn.dataset.tooltip);
+            });
+        });
+    }
+
+    showAttributeInfo(section) {
+        const info = {
+            identification: `<h4>🏷️ Identification Attributes</h4>
+                <p><strong>art-nr:</strong> Your internal article or part number. This becomes part of the asset name on the blockchain.</p>
+                <p><strong>GTIN:</strong> Global Trade Item Number (8-14 digits). This is the barcode number (EAN, UPC, etc.) assigned by GS1. Enables scanning and global identification.</p>
+                <p><strong>brand:</strong> The brand name if different from manufacturer. Useful when a manufacturer produces for multiple brands.</p>`,
+            classification: `<h4>📂 Classification Attributes</h4>
+                <p><strong>category/subcategory:</strong> Human-readable classification for browsing and filtering.</p>
+                <p><strong>GPC:</strong> GS1 Global Product Classification - an 8-digit code that provides standardized product categorization across industries. <a href="https://www.gs1.org/standards/gpc" target="_blank">Learn more →</a></p>
+                <p><strong>HSCode:</strong> Harmonized System code (6-10 digits) used internationally for customs and trade classification. Required for import/export.</p>`,
+            description: `<h4>📝 Product Information</h4>
+                <p><strong>description:</strong> A concise product description (max 100 characters). Should identify the product clearly.</p>
+                <p><strong>manufacturer:</strong> The manufacturer name or their GLN (Global Location Number) for standardized identification.</p>
+                <p><strong>origin:</strong> Country of origin using ISO 3166-1 alpha-2 codes (e.g., DE, US, CN). Important for trade compliance.</p>`,
+            physical: `<h4>⚖️ Physical Property Attributes</h4>
+                <p><strong>UOM:</strong> Unit of Measure using UN/CEFACT standard codes (EA=Each, KG=Kilogram, MTR=Meter, etc.). Enables accurate ordering and inventory.</p>
+                <p><strong>weight:</strong> Net weight per unit in grams. Essential for logistics and shipping calculations.</p>
+                <p><strong>hazardous:</strong> Indicates dangerous goods requiring special handling, storage, or transport.</p>
+                <p><strong>perishable:</strong> Temperature-sensitive products requiring cold chain management.</p>
+                <p><strong>shelflife:</strong> Number of days the product remains usable (for perishables).</p>`,
+            references: `<h4>🔗 External References</h4>
+                <p><strong>url:</strong> Link to extended product information (spec sheets, images, etc.) stored off-chain. Keeps the on-chain asset under 1KB.</p>
+                <p><strong>replaces:</strong> If this product supersedes another, enter the blockchain address of the old product for traceability.</p>`
+        };
+
+        const content = info[section] || 'Information not available.';
+        
+        // Show in a small popup or alert
+        const popup = document.createElement('div');
+        popup.className = 'attribute-info-popup';
+        popup.innerHTML = `
+            <div class="popup-content">
+                ${content}
+                <button class="popup-close">Close</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+        
+        popup.querySelector('.popup-close').addEventListener('click', () => {
+            popup.remove();
+        });
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) popup.remove();
+        });
     }
 
     async loadProducts() {
@@ -156,27 +216,39 @@ class ProductCatalogue {
         const description = product.description ? 
             `<p class="product-description">${this.escapeHtml(product.description)}</p>` : '';
 
+        // Build flags display
+        const flags = [];
+        if (product.hazardous) flags.push('<span class="flag hazardous">⚠️ Hazardous</span>');
+        if (product.perishable) flags.push('<span class="flag perishable">❄️ Perishable</span>');
+        const flagsHtml = flags.length > 0 ? `<div class="product-flags">${flags.join('')}</div>` : '';
+
         return `
             <div class="product-card" data-address="${product.address}">
                 <div class="product-header">
                     <div>
-                        <h3 class="product-title">${this.escapeHtml(product.name)}</h3>
-                        <div class="product-sku">${this.escapeHtml(product.sku)}</div>
+                        <h3 class="product-title">${this.escapeHtml(product.description || product.name || 'Unnamed Product')}</h3>
+                        <div class="product-sku">${this.escapeHtml(product['art-nr'] || product.sku || '')}</div>
                     </div>
                     ${badge}
                 </div>
-                ${description}
+                ${flagsHtml}
                 <div class="product-details">
-                    ${product.unit || product.weight ? `
+                    ${product.category ? `
                         <div class="product-detail-row">
-                            <span class="product-detail-label">Unit:</span>
-                            <span class="product-detail-value">${this.escapeHtml(product.unit || 'N/A')}${product.weight ? ` (${product.weight}g/unit)` : ''}</span>
+                            <span class="product-detail-label">Category:</span>
+                            <span class="product-detail-value">${this.escapeHtml(product.category)}${product.subcategory ? ' / ' + this.escapeHtml(product.subcategory) : ''}</span>
+                        </div>
+                    ` : ''}
+                    ${product.UOM ? `
+                        <div class="product-detail-row">
+                            <span class="product-detail-label">UOM:</span>
+                            <span class="product-detail-value">${this.escapeHtml(product.UOM)}${product.weight ? ` (${product.weight}g)` : ''}</span>
                         </div>
                     ` : ''}
                     ${product.manufacturer ? `
                         <div class="product-detail-row">
                             <span class="product-detail-label">Manufacturer:</span>
-                            <span class="product-detail-value">${this.escapeHtml(product.manufacturer)}</span>
+                            <span class="product-detail-value">${this.escapeHtml(product.manufacturer)}${product.brand ? ' / ' + this.escapeHtml(product.brand) : ''}</span>
                         </div>
                     ` : ''}
                     ${product.origin ? `
@@ -185,10 +257,10 @@ class ProductCatalogue {
                             <span class="product-detail-value">${this.escapeHtml(product.origin)}</span>
                         </div>
                     ` : ''}
-                    ${product.barcode ? `
+                    ${product.GTIN ? `
                         <div class="product-detail-row">
-                            <span class="product-detail-label">Barcode:</span>
-                            <span class="product-detail-value">${this.escapeHtml(product.barcode)}</span>
+                            <span class="product-detail-label">GTIN:</span>
+                            <span class="product-detail-value">${this.escapeHtml(product.GTIN)}</span>
                         </div>
                     ` : ''}
                 </div>
@@ -217,72 +289,121 @@ class ProductCatalogue {
         if (editBtn) editBtn.style.display = isOwner ? 'inline-block' : 'none';
         if (transferBtn) transferBtn.style.display = isOwner ? 'inline-block' : 'none';
 
+        // Build flags display
+        const flags = [];
+        if (product.hazardous) flags.push('<span class="flag hazardous">⚠️ Hazardous</span>');
+        if (product.perishable) flags.push('<span class="flag perishable">❄️ Perishable</span>');
+        const flagsHtml = flags.length > 0 ? `<div class="detail-flags">${flags.join(' ')}</div>` : '';
+
         content.innerHTML = `
             <div class="detail-grid">
                 <div class="detail-section detail-full">
-                    <h3>Product Information</h3>
+                    <h3>🏷️ Identification</h3>
                     <div class="detail-row">
-                        <span class="detail-label">Name:</span>
-                        <span class="detail-value">${this.escapeHtml(product.name)}</span>
+                        <span class="detail-label">Article Number:</span>
+                        <span class="detail-value">${this.escapeHtml(product['art-nr'] || product.sku || 'N/A')}</span>
                     </div>
+                    ${product.GTIN ? `
+                        <div class="detail-row">
+                            <span class="detail-label">GTIN:</span>
+                            <span class="detail-value">${this.escapeHtml(product.GTIN)}</span>
+                        </div>
+                    ` : ''}
+                    ${product.brand ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Brand:</span>
+                            <span class="detail-value">${this.escapeHtml(product.brand)}</span>
+                        </div>
+                    ` : ''}
                     <div class="detail-row">
-                        <span class="detail-label">SKU:</span>
-                        <span class="detail-value">${this.escapeHtml(product.sku)}</span>
+                        <span class="detail-label">Description:</span>
+                        <span class="detail-value">${this.escapeHtml(product.description || 'N/A')}</span>
                     </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📂 Classification</h3>
                     <div class="detail-row">
                         <span class="detail-label">Category:</span>
-                        <span class="detail-value">${this.escapeHtml(product.category)}</span>
+                        <span class="detail-value">${this.escapeHtml(product.category || 'N/A')}</span>
                     </div>
-                    ${product.description ? `
+                    ${product.subcategory ? `
                         <div class="detail-row">
-                            <span class="detail-label">Description:</span>
-                            <span class="detail-value">${this.escapeHtml(product.description)}</span>
+                            <span class="detail-label">Subcategory:</span>
+                            <span class="detail-value">${this.escapeHtml(product.subcategory)}</span>
+                        </div>
+                    ` : ''}
+                    ${product.GPC ? `
+                        <div class="detail-row">
+                            <span class="detail-label">GPC Code:</span>
+                            <span class="detail-value">${this.escapeHtml(product.GPC)}</span>
+                        </div>
+                    ` : ''}
+                    ${product.HSCode ? `
+                        <div class="detail-row">
+                            <span class="detail-label">HS Code:</span>
+                            <span class="detail-value">${this.escapeHtml(product.HSCode)}</span>
                         </div>
                     ` : ''}
                 </div>
 
                 <div class="detail-section">
-                    <h3>Product Details</h3>
-                    ${product.unit ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Unit:</span>
-                            <span class="detail-value">${this.escapeHtml(product.unit)}</span>
-                        </div>
-                    ` : ''}
-                    ${product.weight ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Weight per Unit:</span>
-                            <span class="detail-value">${product.weight} grams</span>
-                        </div>
-                    ` : ''}
-                    ${product.dimensions ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Dimensions:</span>
-                            <span class="detail-value">${this.escapeHtml(product.dimensions)}</span>
-                        </div>
-                    ` : ''}
-                    ${product.manufacturer ? `
-                        <div class="detail-row">
-                            <span class="detail-label">Manufacturer:</span>
-                            <span class="detail-value">${this.escapeHtml(product.manufacturer)}</span>
-                        </div>
-                    ` : ''}
+                    <h3>🏭 Manufacturer & Origin</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Manufacturer:</span>
+                        <span class="detail-value">${this.escapeHtml(product.manufacturer || 'N/A')}</span>
+                    </div>
                     ${product.origin ? `
                         <div class="detail-row">
-                            <span class="detail-label">Origin:</span>
+                            <span class="detail-label">Country of Origin:</span>
                             <span class="detail-value">${this.escapeHtml(product.origin)}</span>
                         </div>
                     ` : ''}
-                    ${product.barcode ? `
+                </div>
+
+                <div class="detail-section">
+                    <h3>⚖️ Physical Properties</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Unit of Measure:</span>
+                        <span class="detail-value">${this.escapeHtml(product.UOM || 'N/A')}</span>
+                    </div>
+                    ${product.weight ? `
                         <div class="detail-row">
-                            <span class="detail-label">Barcode:</span>
-                            <span class="detail-value">${this.escapeHtml(product.barcode)}</span>
+                            <span class="detail-label">Weight:</span>
+                            <span class="detail-value">${product.weight} grams</span>
+                        </div>
+                    ` : ''}
+                    ${flagsHtml}
+                    ${product.shelflife ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Shelf Life:</span>
+                            <span class="detail-value">${product.shelflife} days</span>
                         </div>
                     ` : ''}
                 </div>
 
                 <div class="detail-section">
-                    <h3>Blockchain Info</h3>
+                    <h3>🔗 References</h3>
+                    ${product.url ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Product URL:</span>
+                            <span class="detail-value"><a href="https://${this.escapeHtml(product.url)}" target="_blank">${this.escapeHtml(product.url)}</a></span>
+                        </div>
+                    ` : ''}
+                    ${product.replaces ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Replaces:</span>
+                            <span class="detail-value blockchain-address">${this.escapeHtml(product.replaces)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="detail-section detail-full">
+                    <h3>🔗 Blockchain Info</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value status-badge ${product['distordia-status'] || 'valid'}">${this.escapeHtml(product['distordia-status'] || 'valid')}</span>
+                    </div>
                     <div class="detail-row">
                         <span class="detail-label">Created:</span>
                         <span class="detail-value">${nexusAPI.formatDate(product.created)}</span>
@@ -294,6 +415,10 @@ class ProductCatalogue {
                     <div class="detail-row">
                         <span class="detail-label">Address:</span>
                         <span class="detail-value blockchain-address">${product.address}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Owner:</span>
+                        <span class="detail-value blockchain-address">${product.owner}</span>
                     </div>
                 </div>
             </div>
@@ -362,38 +487,56 @@ class ProductCatalogue {
         if (btnLoading) btnLoading.style.display = 'inline-flex';
 
         try {
-            // Collect form data
+            // Collect form data matching the new schema
             const productData = {
-                name: document.getElementById('productName').value,
-                sku: document.getElementById('productSKU').value,
-                category: document.getElementById('productCategory').value,
-                description: document.getElementById('productDescription').value,
-                manufacturer: document.getElementById('productManufacturer').value,
-                origin: document.getElementById('productOrigin').value,
-                barcode: document.getElementById('productBarcode').value,
-                unit: document.getElementById('productUnit').value,
-                weight: parseFloat(document.getElementById('productWeight').value) || 0,
-                dimensions: document.getElementById('productDimensions')?.value || ''
+                // Identification
+                'art-nr': document.getElementById('productArtNr').value.trim(),
+                'GTIN': document.getElementById('productGTIN').value.trim() || undefined,
+                'brand': document.getElementById('productBrand').value.trim() || undefined,
+                
+                // Classification
+                'category': document.getElementById('productCategory').value.trim(),
+                'subcategory': document.getElementById('productSubcategory').value.trim() || undefined,
+                'GPC': document.getElementById('productGPC').value.trim() || undefined,
+                'HSCode': document.getElementById('productHSCode').value.trim() || undefined,
+                
+                // Description
+                'description': document.getElementById('productDescription').value.trim(),
+                'manufacturer': document.getElementById('productManufacturer').value.trim(),
+                'origin': document.getElementById('productOrigin').value || undefined,
+                
+                // Physical Properties
+                'UOM': document.getElementById('productUOM').value,
+                'weight': parseInt(document.getElementById('productWeight').value) || undefined,
+                'hazardous': document.getElementById('productHazardous').checked || undefined,
+                'perishable': document.getElementById('productPerishable').checked || undefined,
+                'shelflife': parseInt(document.getElementById('productShelfLife').value) || undefined,
+                
+                // References
+                'url': document.getElementById('productURL').value.trim() || undefined,
+                'replaces': document.getElementById('productReplaces').value.trim() || undefined,
+                
+                // Distordia standard fields
+                'distordia-type': 'product',
+                'distordia-status': 'valid'
             };
 
-            // Parse additional attributes if provided
-            const attrsInput = document.getElementById('productAttributes').value;
-            if (attrsInput) {
-                try {
-                    productData.attributes = JSON.parse(attrsInput);
-                } catch (err) {
-                    throw new Error('Invalid JSON in additional attributes');
+            // Remove undefined values to save space
+            Object.keys(productData).forEach(key => {
+                if (productData[key] === undefined || productData[key] === '') {
+                    delete productData[key];
                 }
-            }
-
-            // Request PIN from user via Q-Wallet
-            // Note: Q-Wallet will handle PIN prompt automatically when transaction is sent
-            const result = await window.nexus.sendTransaction({
-                type: 'asset.create',
-                data: productData
             });
+            
+            // Convert booleans that are false to undefined (don't store)
+            if (productData.hazardous === false) delete productData.hazardous;
+            if (productData.perishable === false) delete productData.perishable;
 
-            if (result && result.txid) {
+            // Create product via Q-Wallet's executeBatchCalls
+            // This prompts the user for PIN approval
+            const result = await nexusAPI.createProduct(productData);
+
+            if (result && result.successfulCalls > 0) {
                 walletAuth.showSuccess('Product registered successfully on blockchain!');
                 this.closeModals();
                 // Reload products after a short delay
@@ -432,7 +575,8 @@ class ProductCatalogue {
     clearFilters() {
         this.currentFilters = { category: '', owner: '', search: '' };
         
-        document.getElementById('categoryFilter').value = '';
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) categoryFilter.value = '';
         document.getElementById('ownerFilter').value = '';
         document.getElementById('searchInput').value = '';
 
