@@ -175,6 +175,24 @@
                                     </div>
                                 </div>
 
+                                <!-- Account Selection -->
+                                <div class="account-selection" id="account-selection" style="display: none;">
+                                    <div class="form-row">
+                                        <label>Payment Account (From)</label>
+                                        <select id="from-account" class="account-select">
+                                            <option value="">Select payment account...</option>
+                                            <option value="default">default</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Receiving Account (To)</label>
+                                        <select id="to-account" class="account-select">
+                                            <option value="">Select receiving account...</option>
+                                            <option value="default">default</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <!-- Fill Button -->
                                 <button type="button" class="submit-trade-btn buy" id="fill-orders-btn" disabled>
                                     <span class="btn-text">Select Orders to Fill</span>

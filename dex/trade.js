@@ -1640,6 +1640,10 @@ function setupOrderBookClickHandlers() {
         const amount = parseFloat(spans[1].textContent.replace(/,/g, ''));
         const total = parseFloat(spans[2].textContent.replace(/,/g, ''));
         
+        // Get txids from data attribute
+        const txidsStr = row.getAttribute('data-txids') || '';
+        const txids = txidsStr ? txidsStr.split(',').filter(t => t.length > 0) : [];
+        
         if (isNaN(price) || isNaN(amount)) return;
         
         // Check if in Fill mode
@@ -1660,6 +1664,7 @@ function setupOrderBookClickHandlers() {
                     price: price,
                     amount: amount,
                     total: total,
+                    txids: txids,
                     row: row
                 });
                 row.classList.add('selected');
@@ -1707,6 +1712,7 @@ function clearSelectedOrders() {
 function updateSelectedOrdersDisplay() {
     const listContainer = document.getElementById('selected-orders-list');
     const summary = document.getElementById('fill-summary');
+    const accountSelection = document.getElementById('account-selection');
     const fillBtn = document.getElementById('fill-orders-btn');
     const btnText = fillBtn?.querySelector('.btn-text');
     
@@ -1715,6 +1721,7 @@ function updateSelectedOrdersDisplay() {
     if (inlineTrade.selectedOrders.length === 0) {
         listContainer.innerHTML = '<div class="no-orders-selected">No orders selected</div>';
         if (summary) summary.style.display = 'none';
+        if (accountSelection) accountSelection.style.display = 'none';
         if (fillBtn) fillBtn.disabled = true;
         if (btnText) btnText.textContent = 'Select Orders to Fill';
         return;
@@ -1753,6 +1760,12 @@ function updateSelectedOrdersDisplay() {
     document.getElementById('fill-avg-price').textContent = avgPrice.toFixed(8) + ' ' + quoteToken;
     
     if (summary) summary.style.display = 'block';
+    
+    // Show account selection
+    if (accountSelection) {
+        accountSelection.style.display = 'block';
+        loadUserAccounts();
+    }
     
     // Update button
     if (fillBtn) fillBtn.disabled = false;
@@ -1796,6 +1809,21 @@ async function executeSelectedOrders() {
         return;
     }
     
+    // Check if Q-Wallet is available
+    if (typeof window.nexus === 'undefined') {
+        showInlineError('Q-Wallet extension not found. Please install Q-Wallet.');
+        return;
+    }
+    
+    // Get selected accounts
+    const fromAccount = document.getElementById('from-account')?.value;
+    const toAccount = document.getElementById('to-account')?.value;
+    
+    if (!fromAccount || !toAccount) {
+        showInlineError('Please select both payment and receiving accounts');
+        return;
+    }
+    
     const fillBtn = document.getElementById('fill-orders-btn');
     const btnText = fillBtn?.querySelector('.btn-text');
     const originalText = btnText?.textContent;
@@ -1808,21 +1836,50 @@ async function executeSelectedOrders() {
     hideInlineError();
     
     try {
-        // For now, use the existing modal flow for execution
-        // Set up trade state based on first selected order type
-        const firstOrder = inlineTrade.selectedOrders[0];
-        tradeState.type = firstOrder.type === 'ask' ? 'buy' : 'sell';
-        tradeState.availableOrders = inlineTrade.selectedOrders.map(o => ({
-            price: o.price,
-            amount: o.amount,
-            total: o.total,
-            selected: true
-        }));
+        // Build batch API calls for executing all selected orders
+        // Each selected order may contain multiple txids if aggregated at same price
+        const calls = [];
         
-        // Open trade modal with selected orders
-        openTradeModal();
+        inlineTrade.selectedOrders.forEach(order => {
+            if (order.txids && order.txids.length > 0) {
+                // For each txid in the order (usually 1, but may be multiple if aggregated)
+                order.txids.forEach(txid => {
+                    calls.push({
+                        endpoint: 'market/execute/order',
+                        params: {
+                            txid: txid,
+                            from: fromAccount,
+                            to: toAccount
+                        }
+                    });
+                });
+            }
+        });
         
-        // The modal will handle the actual execution
+        if (calls.length === 0) {
+            throw new Error('No valid order IDs found. Orders may not have transaction data.');
+        }
+        
+        console.log('[InlineTrade] Executing orders via Q-Wallet batch call:', calls);
+        
+        // Execute all orders in one batch via Q-Wallet
+        const result = await window.nexus.executeBatchCalls(calls);
+        
+        console.log('[InlineTrade] Execution result:', result);
+        
+        if (result.successfulCalls > 0) {
+            showNotification(`Successfully executed ${result.successfulCalls} of ${result.totalCalls} orders`, 'success');
+            
+            // Clear selections and refresh order book
+            clearSelectedOrders();
+            setTimeout(() => {
+                if (currentPair) {
+                    loadOrderBook(currentPair.market);
+                }
+            }, 2000);
+        } else {
+            throw new Error('No orders were executed successfully');
+        }
         
     } catch (error) {
         console.error('[InlineTrade] Error executing orders:', error);
@@ -1832,6 +1889,46 @@ async function executeSelectedOrders() {
             fillBtn.disabled = false;
             if (btnText) btnText.textContent = originalText;
         }
+    }
+}
+
+// Load user accounts from Nexus blockchain
+async function loadUserAccounts() {
+    const fromSelect = document.getElementById('from-account');
+    const toSelect = document.getElementById('to-account');
+    
+    if (!fromSelect || !toSelect) return;
+    
+    // Check if Q-Wallet is connected
+    if (typeof window.nexus === 'undefined' || !window.nexus.isConnected) {
+        console.log('[Accounts] Q-Wallet not connected, using default accounts only');
+        return;
+    }
+    
+    try {
+        // Fetch user accounts via Q-Wallet
+        const accounts = await window.nexus.listAccounts();
+        console.log('[Accounts] Loaded accounts:', accounts);
+        
+        // Clear existing options except default
+        fromSelect.innerHTML = '<option value="">Select payment account...</option><option value="default">default</option>';
+        toSelect.innerHTML = '<option value="">Select receiving account...</option><option value="default">default</option>';
+        
+        // Add account options
+        if (Array.isArray(accounts)) {
+            accounts.forEach(account => {
+                const name = account.name || account.address || 'Unnamed Account';
+                const value = account.name || account.address;
+                const balance = account.balance ? ` (${account.balance.toFixed(4)} ${account.ticker || ''})` : '';
+                
+                const option = new Option(`${name}${balance}`, value);
+                fromSelect.add(option.cloneNode(true));
+                toSelect.add(option);
+            });
+        }
+    } catch (error) {
+        console.error('[Accounts] Error loading accounts:', error);
+        // Keep default options if loading fails
     }
 }
 

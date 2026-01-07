@@ -11,11 +11,16 @@ function aggregateOrdersByPrice(orders) {
             const existing = priceMap.get(priceKey);
             existing.amount += order.amount;
             existing.total += order.total;
+            // Collect multiple txids for aggregated orders
+            if (order.txid && !existing.txids.includes(order.txid)) {
+                existing.txids.push(order.txid);
+            }
         } else {
             priceMap.set(priceKey, {
                 price: order.price,
                 amount: order.amount,
-                total: order.total
+                total: order.total,
+                txids: order.txid ? [order.txid] : []
             });
         }
     });
@@ -245,7 +250,8 @@ async function loadOrderBook(pair) {
                     amount: adjustedAmount,
                     total: price * adjustedAmount,
                     timestamp: order.timestamp || 0,
-                    address: order.owner || order.address || ''
+                    address: order.owner || order.address || '',
+                    txid: order.txid || ''
                 };
             }).filter(o => o.price > 0 && o.amount > 0);
             
@@ -265,7 +271,8 @@ async function loadOrderBook(pair) {
                     amount: adjustedAmount,
                     total: price * adjustedAmount,
                     timestamp: order.timestamp || 0,
-                    address: order.owner || order.address || ''
+                    address: order.owner || order.address || '',
+                    txid: order.txid || ''
                 };
             }).filter(o => o.price > 0 && o.amount > 0);
             

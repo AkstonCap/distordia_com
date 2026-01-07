@@ -2217,6 +2217,58 @@
     color: var(--primary-color);
 }
 
+/* Account Selection */
+.account-selection {
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.account-selection .form-row {
+    margin-bottom: 1rem;
+}
+
+.account-selection .form-row:last-child {
+    margin-bottom: 0;
+}
+
+.account-selection label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.account-select {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.account-select:hover {
+    border-color: var(--primary-color);
+}
+
+.account-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.account-select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
 /* Responsive Trading Panel */
 @media (max-width: 768px) {
     .trading-panel {
