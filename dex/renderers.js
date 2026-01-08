@@ -8,11 +8,9 @@ function renderMarketPairs(pairs) {
     pairsList.innerHTML = pairs.map(pair => `
         <div class="pair-item" data-pair="${pair.pair}" onclick="selectPairByName('${pair.pair}')">
             <div class="pair-name">${pair.pair}</div>
-            <div class="pair-info">
-                <span class="pair-price">${formatPrice(pair.price)}</span>
-                <span class="pair-change ${pair.change24h >= 0 ? 'positive' : 'negative'}">
-                    ${pair.change24h >= 0 ? '+' : ''}${pair.change24h.toFixed(2)}%
-                </span>
+            <div class="pair-price">${formatPrice(pair.price)}</div>
+            <div class="pair-change ${pair.change24h >= 0 ? 'positive' : 'negative'}">
+                ${pair.change24h >= 0 ? '+' : ''}${pair.change24h.toFixed(2)}%
             </div>
         </div>
     `).join('');

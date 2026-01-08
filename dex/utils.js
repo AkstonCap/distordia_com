@@ -5,9 +5,9 @@ function formatPrice(price) {
     if (price === 0 || !price) return '0.00';
     
     if (price < 0.000001) {
-        return price.toExponential(4);
+        return price.toFixed(6);
     } else if (price < 0.01) {
-        return price.toFixed(8);
+        return price.toFixed(6);
     } else if (price < 1) {
         return price.toFixed(6);
     } else if (price < 100) {
@@ -29,22 +29,6 @@ function formatNumber(num) {
         return (num / 1000).toFixed(2) + 'K';
     }
     return num.toFixed(2);
-}
-
-// Format hash rate
-function formatHashRate(hashrate) {
-    if (!hashrate) return '0 H/s';
-    
-    if (hashrate >= 1000000000000) {
-        return (hashrate / 1000000000000).toFixed(2) + ' TH/s';
-    } else if (hashrate >= 1000000000) {
-        return (hashrate / 1000000000).toFixed(2) + ' GH/s';
-    } else if (hashrate >= 1000000) {
-        return (hashrate / 1000000).toFixed(2) + ' MH/s';
-    } else if (hashrate >= 1000) {
-        return (hashrate / 1000).toFixed(2) + ' KH/s';
-    }
-    return hashrate.toFixed(2) + ' H/s';
 }
 
 // Format time with date

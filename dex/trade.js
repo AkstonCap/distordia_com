@@ -1137,65 +1137,6 @@ async function executeTradesWithQWallet(orders) {
     return result;
 }
 
-// Execute trade using native Nexus session
-async function executeTradeWithSession(order, amount, price) {
-    const session = getSession();
-    if (!session) {
-        throw new Error('No active session');
-    }
-    
-    const orderTxid = order.txid;
-    if (!orderTxid) {
-        throw new Error('Order transaction ID not found');
-    }
-    
-    // Get selected accounts from dropdowns
-    const paymentAccount = document.getElementById('payment-account')?.value || 'default';
-    const receivalAccount = document.getElementById('receival-account')?.value || 'default';
-    
-    if (!paymentAccount || !receivalAccount) {
-        throw new Error('Please select both payment and receival accounts');
-    }
-    
-    console.log('[Trade] Using accounts:', { from: paymentAccount, to: receivalAccount });
-    
-    // Get PIN once for both trade and fee
-    const pin = prompt('Enter your PIN to execute the trade (including 1 DIST fee):');
-    if (!pin) {
-        throw new Error('PIN required to execute trade');
-    }
-    
-    // Temporarily cache PIN for fee collection
-    sessionStorage.setItem('temp_pin', pin);
-    
-    // Call market/execute endpoint
-    const endpoint = `${NEXUS_API_BASE}/market/execute/order`;
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            session: session.session,
-            pin: pin,
-            txid: orderTxid,
-            from: paymentAccount,
-            to: receivalAccount
-        })
-    });
-    
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || 'Failed to execute trade');
-    }
-    
-    const result = await response.json();
-    console.log('Trade executed via session:', result);
-    
-    // Update activity timestamp
-    updateActivity();
-    
-    return result;
-}
-
 // Show trade error
 function showTradeError(message) {
     const errorDiv = document.getElementById('trade-error');
@@ -1939,6 +1880,12 @@ async function createNewOrder() {
         return;
     }
     
+    // Check wallet connection
+    if (!window.nexus || typeof window.nexus.executeBatchCalls !== 'function') {
+        showInlineError('Please connect your Q-Wallet first');
+        return;
+    }
+    
     const price = parseFloat(document.getElementById('inline-price')?.value) || 0;
     const amount = parseFloat(document.getElementById('inline-amount')?.value) || 0;
     
@@ -1964,18 +1911,56 @@ async function createNewOrder() {
     hideInlineError();
     
     try {
-        // For now, alert that this feature requires further implementation
-        // In production, this would call market/create/bid or market/create/ask
+        // Get selected accounts from dropdowns
+        const paymentAccount = document.getElementById('payment-account')?.value || 'default';
+        const receivalAccount = document.getElementById('receival-account')?.value || 'default';
+        
+        if (!paymentAccount || !receivalAccount) {
+            throw new Error('Please select both payment and receival accounts');
+        }
+        
         const [baseToken, quoteToken] = currentPair.pair.split('/');
         const orderType = inlineTrade.createSide === 'bid' ? 'Bid' : 'Ask';
+        const endpoint = inlineTrade.createSide === 'bid' ? 'market/create/bid' : 'market/create/ask';
         
-        alert(`Creating ${orderType} Order:\n\nPair: ${currentPair.pair}\nPrice: ${price} ${quoteToken}\nAmount: ${amount} ${baseToken}\nTotal: ${(price * amount).toFixed(4)} ${quoteToken}\n\nThis will be submitted via Q-Wallet for approval.`);
+        console.log(`[InlineTrade] Creating ${orderType} order:`, {
+            market: currentPair.pair,
+            price,
+            amount,
+            from: paymentAccount,
+            to: receivalAccount
+        });
         
-        // TODO: Implement actual order creation via Q-Wallet
-        // const result = await window.nexus.request({
-        //     method: inlineTrade.createSide === 'bid' ? 'market/create/bid' : 'market/create/ask',
-        //     params: { ... }
-        // });
+        // Execute order creation via Q-Wallet
+        const result = await window.nexus.executeBatchCalls([{
+            endpoint: endpoint,
+            params: {
+                market: currentPair.pair,
+                price: price,
+                amount: amount,
+                from: paymentAccount,
+                to: receivalAccount
+            }
+        }]);
+        
+        console.log('[InlineTrade] Order creation result:', result);
+        
+        if (result.successfulCalls === 1) {
+            showInlineError(`${orderType} order created successfully!`);
+            // Clear the form
+            document.getElementById('inline-price').value = '';
+            document.getElementById('inline-amount').value = '';
+            updateInlineTotal();
+            
+            // Refresh order book after short delay
+            setTimeout(() => {
+                if (currentPair) {
+                    fetchOrderBook(currentPair.pair);
+                }
+            }, 2000);
+        } else {
+            throw new Error(`Failed to create ${orderType.toLowerCase()} order`);
+        }
         
     } catch (error) {
         console.error('[InlineTrade] Error creating order:', error);

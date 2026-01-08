@@ -106,9 +106,9 @@ async function fetchMarketPairs() {
                     console.log(`Failed to fetch executed orders for ${marketPair}: ${executedResponse.status}`);
                 }
                 
-                // Calculate timestamp for 24 hours ago (use current time if no recent orders)
+                // Calculate timestamp for 24 hours ago from NOW (not from last order)
                 const now = Math.floor(Date.now() / 1000);
-                const timestamp24hAgo = currentTimestamp > 0 ? currentTimestamp - (24 * 60 * 60) : now - (24 * 60 * 60);
+                const timestamp24hAgo = now - (24 * 60 * 60);
                 
                 // Fetch all executed orders (we'll filter in JavaScript since where clause may not work)
                 const ordersResponse = await fetch(API_ENDPOINTS.listExecuted, {
@@ -133,23 +133,26 @@ async function fetchMarketPairs() {
                     const orderAsks = data.result?.asks || [];
                     let allOrders = [...orderBids, ...orderAsks];
                     
-                    // Sort all orders by timestamp descending
+                    // Sort all orders by timestamp descending (newest first)
                     allOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                     
                     console.log(`Market ${marketPair}: Fetched ${allOrders.length} total executed orders`);
                     
-                    // Filter to only orders in the last 24 hours for volume
+                    // Filter to only orders in the last 24 hours
                     allOrders24h = allOrders.filter(order => (order.timestamp || 0) >= timestamp24hAgo);
                     
                     console.log(`Market ${marketPair}: ${allOrders24h.length} executed orders in last 24h`);
                     
                     // Find the oldest order within 24h window for price comparison
-                    // (closest to 24h ago, but still within the window)
+                    // Since array is sorted newest first, the last element is the oldest
                     const oldestOrder24h = allOrders24h.length > 0 ? allOrders24h[allOrders24h.length - 1] : null;
                     
+                    // For 24h change, compare current price with the oldest price in the 24h window
                     if (lastPrice > 0 && oldestOrder24h) {
                         const price24hAgo = calculatePriceFromOrder(oldestOrder24h, marketPair);
-                        console.log(`Market ${marketPair}: Price 24h ago = ${price24hAgo} (timestamp: ${new Date(oldestOrder24h.timestamp * 1000).toLocaleString()})`);
+                        const oldestTimestamp = oldestOrder24h.timestamp || 0;
+                        const hoursAgo = (now - oldestTimestamp) / 3600;
+                        console.log(`Market ${marketPair}: Price ${hoursAgo.toFixed(1)}h ago = ${price24hAgo} (timestamp: ${new Date(oldestTimestamp * 1000).toLocaleString()})`);
                         
                         if (price24hAgo > 0) {
                             change24h = ((lastPrice - price24hAgo) / price24hAgo) * 100;

@@ -150,10 +150,14 @@
 }
 
 .pair-item {
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .pair-item:hover {
@@ -168,22 +172,25 @@
 .pair-name {
     color: var(--text-primary);
     font-weight: bold;
-    font-size: 1rem;
-    margin-bottom: 0.3rem;
-}
-
-.pair-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    flex: 0 0 auto;
+    min-width: 80px;
 }
 
 .pair-price {
     color: var(--text-secondary);
+    font-size: 0.8rem;
+    flex: 1 1 auto;
+    text-align: right;
+    margin-right: 0.5rem;
 }
 
 .pair-change {
     font-weight: bold;
+    font-size: 0.8rem;
+    flex: 0 0 auto;
+    min-width: 50px;
+    text-align: right;
 }
 
 .pair-change.positive {
