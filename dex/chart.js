@@ -4,10 +4,14 @@ let priceChart = null;
 let chartData = {
     labels: [],
     prices: [],
-    volumes: []
+    volumes: [],
+    ohlc: [], // For candlestick data: [{x, o, h, l, c}]
+    timeMin: null,
+    timeMax: null
 };
 let chartInterval = '1y'; // Default interval
 let chartScaleType = 'logarithmic'; // Default scale type
+let chartType = 'line'; // 'line' or 'candlestick'
 
 // Initialize chart
 function initializeChart() {
@@ -236,8 +240,8 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
         const volume = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
         
         if (price > 0 && volume > 0) {
-            // Round timestamp to interval
-            const intervalKey = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
+            // Align timestamp to proper day/week boundary
+            const intervalKey = alignTimestamp(timestamp, interval);
             
             if (!grouped[intervalKey]) {
                 grouped[intervalKey] = {
@@ -258,30 +262,56 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
     const labels = [];
     const prices = [];
     const volumes = [];
+    const ohlc = []; // OHLC data for candlestick chart
     
-    // Start from the beginning of the first interval that contains startTimestamp
-    const firstIntervalStart = Math.floor(startTimestamp / intervalSeconds) * intervalSeconds;
-    const lastIntervalStart = Math.floor(endTimestamp / intervalSeconds) * intervalSeconds;
+    // Align start and end timestamps to proper boundaries
+    const firstIntervalStart = alignTimestamp(startTimestamp, interval);
+    const lastIntervalStart = alignTimestamp(endTimestamp, interval);
     
     let lastKnownPrice = null;
     
     for (let ts = firstIntervalStart; ts <= lastIntervalStart; ts += intervalSeconds) {
-        const interval = grouped[ts];
+        // Re-align each timestamp to ensure we stay on boundaries
+        const alignedTs = alignTimestamp(ts, interval);
+        const groupedInterval = grouped[alignedTs];
         
-        labels.push(formatChartTime(ts, chartInterval));
+        labels.push(formatChartTime(alignedTs, chartInterval));
         
-        if (interval && interval.prices.length > 0) {
+        if (groupedInterval && groupedInterval.prices.length > 0) {
             // Calculate average price for this interval
-            const avgPrice = interval.prices.reduce((sum, p) => sum + p, 0) / interval.prices.length;
-            const totalVolume = interval.volumes.reduce((sum, v) => sum + v, 0);
+            const avgPrice = groupedInterval.prices.reduce((sum, p) => sum + p, 0) / groupedInterval.prices.length;
+            const totalVolume = groupedInterval.volumes.reduce((sum, v) => sum + v, 0);
+            
+            // Calculate OHLC for candlestick
+            const open = groupedInterval.prices[0];
+            const close = groupedInterval.prices[groupedInterval.prices.length - 1];
+            const high = Math.max(...groupedInterval.prices);
+            const low = Math.min(...groupedInterval.prices);
             
             lastKnownPrice = avgPrice;
             prices.push(avgPrice);
             volumes.push(totalVolume);
+            ohlc.push({
+                x: alignedTs * 1000, // Convert to milliseconds for Chart.js
+                o: open,
+                h: high,
+                l: low,
+                c: close
+            });
         } else {
             // No data for this interval, use last known price or null
             prices.push(lastKnownPrice);
             volumes.push(0);
+            // For candlestick, create a flat candle if we have a last known price
+            if (lastKnownPrice !== null) {
+                ohlc.push({
+                    x: alignedTs * 1000,
+                    o: lastKnownPrice,
+                    h: lastKnownPrice,
+                    l: lastKnownPrice,
+                    c: lastKnownPrice
+                });
+            }
         }
     }
     
@@ -289,10 +319,12 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
         labels: labels.length,
         prices: prices.length,
         volumes: volumes.length,
-        priceRange: [Math.min(...prices.filter(p => p !== null)), Math.max(...prices.filter(p => p !== null))]
+        ohlc: ohlc.length,
+        priceRange: [Math.min(...prices.filter(p => p !== null)), Math.max(...prices.filter(p => p !== null))],
+        timeRange: [firstIntervalStart, lastIntervalStart]
     });
     
-    return { labels, prices, volumes };
+    return { labels, prices, volumes, ohlc, timeMin: firstIntervalStart * 1000, timeMax: lastIntervalStart * 1000 };
 }
 
 // Create empty time range for when no orders exist
@@ -301,17 +333,20 @@ function createEmptyTimeRange(startTimestamp, endTimestamp, interval) {
     const labels = [];
     const prices = [];
     const volumes = [];
+    const ohlc = [];
     
-    const firstIntervalStart = Math.floor(startTimestamp / intervalSeconds) * intervalSeconds;
-    const lastIntervalStart = Math.floor(endTimestamp / intervalSeconds) * intervalSeconds;
+    // Align to proper day/week boundaries
+    const firstIntervalStart = alignTimestamp(startTimestamp, interval);
+    const lastIntervalStart = alignTimestamp(endTimestamp, interval);
     
     for (let ts = firstIntervalStart; ts <= lastIntervalStart; ts += intervalSeconds) {
-        labels.push(formatChartTime(ts, chartInterval));
+        const alignedTs = alignTimestamp(ts, interval);
+        labels.push(formatChartTime(alignedTs, chartInterval));
         prices.push(null);
         volumes.push(0);
     }
     
-    return { labels, prices, volumes };
+    return { labels, prices, volumes, ohlc, timeMin: firstIntervalStart * 1000, timeMax: lastIntervalStart * 1000 };
 }
 
 // Get lookback period in seconds (how far back to fetch data)
@@ -326,33 +361,63 @@ function getLookbackSeconds(interval) {
 }
 
 // Get interval duration in seconds
+// Weekly candles for 1Y, daily candles for all smaller timeframes
 function getIntervalSeconds(interval) {
     const intervals = {
-        '1d': 3600,      // 1 hour intervals for 24h view
-        '1w': 21600,     // 6 hour intervals for 7d view
-        '1m': 86400,     // 1 day intervals for 30d view
-        '1y': 604800     // 1 week intervals for 365d view
+        '1d': 86400,     // 1 day intervals for 24h view (daily candles)
+        '1w': 86400,     // 1 day intervals for 7d view (daily candles)
+        '1m': 86400,     // 1 day intervals for 30d view (daily candles)
+        '1y': 604800     // 1 week intervals for 365d view (weekly candles)
     };
-    return intervals[interval] || 3600;
+    return intervals[interval] || 86400;
+}
+
+// Align timestamp to start of day (00:00 UTC)
+function alignToDay(timestamp) {
+    const date = new Date(timestamp * 1000);
+    date.setUTCHours(0, 0, 0, 0);
+    return Math.floor(date.getTime() / 1000);
+}
+
+// Align timestamp to start of week (Monday 00:00 UTC)
+function alignToWeek(timestamp) {
+    const date = new Date(timestamp * 1000);
+    date.setUTCHours(0, 0, 0, 0);
+    // Get day of week (0 = Sunday, 1 = Monday, etc.)
+    const dayOfWeek = date.getUTCDay();
+    // Calculate days to subtract to get to Monday (if Sunday, go back 6 days)
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    date.setUTCDate(date.getUTCDate() - daysToMonday);
+    return Math.floor(date.getTime() / 1000);
+}
+
+// Align timestamp based on interval type
+function alignTimestamp(timestamp, interval) {
+    if (interval === '1y') {
+        return alignToWeek(timestamp);
+    } else {
+        return alignToDay(timestamp);
+    }
 }
 
 // Format time for chart labels based on interval
+// Daily candles for timeframes < 1Y, weekly candles for 1Y
 function formatChartTime(timestamp, interval) {
     // Nexus timestamps are in seconds, convert to milliseconds for JavaScript Date
     const date = new Date(timestamp * 1000);
     
     if (interval === '1d') {
-        // Show hours for 24h view
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Show weekday for 1 day view (daily candle)
+        return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
     } else if (interval === '1w') {
-        // Show day and time for 7d view
+        // Show date for 7d view (daily candles)
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } else if (interval === '1m') {
-        // Show date for 30d view
+        // Show date for 30d view (daily candles)
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     } else if (interval === '1y') {
-        // Show month for 365d view
-        return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
+        // Show week/month for 365d view (weekly candles)
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
     return date.toLocaleString();
 }
@@ -363,9 +428,14 @@ function updateChartData(data, pair) {
         labels: data.labels.length,
         prices: data.prices.length,
         volumes: data.volumes.length,
+        ohlc: data.ohlc?.length || 0,
         pair: pair.pair,
-        interval: chartInterval
+        interval: chartInterval,
+        chartType: chartType
     });
+    
+    // Store data globally for chart type switching
+    chartData = data;
     
     if (!priceChart) {
         console.log('📊 [updateChartData] Chart not initialized, initializing now...');
@@ -397,10 +467,149 @@ function updateChartData(data, pair) {
             }
         };
         
-        // Update data
-        priceChart.data.labels = data.labels;
-        priceChart.data.datasets[0].data = data.prices;
-        priceChart.data.datasets[1].data = data.volumes;
+        // Update data based on chart type
+        if (chartType === 'candlestick' && data.ohlc && data.ohlc.length > 0) {
+            // Switch to candlestick mode
+            priceChart.data.labels = []; // Candlestick uses x values in data
+            priceChart.data.datasets[0].type = 'candlestick';
+            priceChart.data.datasets[0].data = data.ohlc;
+            priceChart.data.datasets[0].borderColor = undefined;
+            priceChart.data.datasets[0].backgroundColor = undefined;
+            priceChart.data.datasets[0].color = {
+                up: 'rgba(34, 197, 94, 1)',      // Green for bullish
+                down: 'rgba(239, 68, 68, 1)',   // Red for bearish
+                unchanged: 'rgba(156, 163, 175, 1)'
+            };
+            priceChart.data.datasets[0].borderWidth = 1;
+            priceChart.data.datasets[0].fill = false;
+            priceChart.data.datasets[0].tension = 0;
+            priceChart.data.datasets[0].pointRadius = 0;
+            
+            // Update x-axis for time scale
+            priceChart.options.scales.x.type = 'time';
+            priceChart.options.scales.x.time = {
+                unit: chartInterval === '1y' ? 'month' : 'day',
+                displayFormats: {
+                    day: 'MMM d',
+                    week: 'MMM d',
+                    month: 'MMM yyyy'
+                },
+                tooltipFormat: chartInterval === '1y' ? 'Week of MMM d, yyyy' : 'MMM d, yyyy'
+            };
+            priceChart.options.scales.x.adapters = {
+                date: {
+                    zone: 'UTC'
+                }
+            };
+            priceChart.options.scales.x.ticks = {
+                source: 'auto',
+                autoSkip: true,
+                maxTicksLimit: 12,
+                color: '#9ca3af',
+                font: {
+                    size: 11
+                },
+                maxRotation: 0
+            };
+            // Set explicit time bounds to show full range even without data
+            if (data.timeMin && data.timeMax) {
+                priceChart.options.scales.x.min = data.timeMin;
+                priceChart.options.scales.x.max = data.timeMax;
+                console.log('📊 [updateChartData] Set x-axis bounds:', {
+                    min: new Date(data.timeMin).toISOString(),
+                    max: new Date(data.timeMax).toISOString()
+                });
+            }
+            
+            // Volume data with matching x timestamps for time scale
+            priceChart.data.datasets[1].data = data.ohlc.map((candle, i) => ({
+                x: candle.x,
+                y: data.volumes[i] || 0
+            }));
+        } else {
+            // Line chart mode
+            priceChart.data.labels = data.labels;
+            priceChart.data.datasets[0].type = 'line';
+            priceChart.data.datasets[0].data = data.prices;
+            priceChart.data.datasets[0].borderColor = 'rgb(99, 102, 241)';
+            priceChart.data.datasets[0].backgroundColor = 'rgba(99, 102, 241, 0.1)';
+            priceChart.data.datasets[0].borderWidth = 2;
+            priceChart.data.datasets[0].fill = true;
+            priceChart.data.datasets[0].tension = 0.4;
+            priceChart.data.datasets[0].pointRadius = 0;
+            priceChart.data.datasets[0].color = undefined;
+            
+            // Reset x-axis to category - fully clean up time scale properties
+            priceChart.options.scales.x.type = 'category';
+            delete priceChart.options.scales.x.time;
+            delete priceChart.options.scales.x.adapters;
+            delete priceChart.options.scales.x.min;
+            delete priceChart.options.scales.x.max;
+            // Reset ticks to default for category scale
+            priceChart.options.scales.x.ticks = {
+                color: '#9ca3af',
+                font: {
+                    size: 11
+                }
+            };
+            
+            // Volume data as simple array for category scale
+            priceChart.data.datasets[1].data = data.volumes;
+        }
+        
+        // Calculate price bounds for y-axis scaling
+        let priceValues = [];
+        
+        if (chartType === 'candlestick' && data.ohlc && data.ohlc.length > 0) {
+            // For candlestick, extract all high and low values
+            data.ohlc.forEach(candle => {
+                if (candle && candle.h > 0) priceValues.push(candle.h);
+                if (candle && candle.l > 0) priceValues.push(candle.l);
+            });
+        } else if (data.prices) {
+            // For line chart, use simple values
+            priceValues = data.prices.filter(p => p !== null && p > 0);
+        }
+        
+        // Apply scale bounds
+        if (priceValues.length > 0) {
+            const minPrice = Math.min(...priceValues);
+            const maxPrice = Math.max(...priceValues);
+            
+            // Handle single trade or flat price case
+            if (minPrice === maxPrice) {
+                // Use ±10% of the price value
+                priceChart.options.scales.y.min = minPrice * 0.9;
+                priceChart.options.scales.y.max = maxPrice * 1.1;
+            } else if (chartScaleType === 'logarithmic') {
+                const logMin = Math.log10(minPrice);
+                const logMax = Math.log10(maxPrice);
+                const logRange = logMax - logMin;
+                const buffer = logRange * 0.1;
+                
+                priceChart.options.scales.y.min = Math.pow(10, logMin - buffer);
+                priceChart.options.scales.y.max = Math.pow(10, logMax + buffer);
+            } else {
+                // For linear scale, add 10% buffer
+                const priceRange = maxPrice - minPrice;
+                const buffer = priceRange * 0.1;
+                
+                priceChart.options.scales.y.min = Math.max(0, minPrice - buffer);
+                priceChart.options.scales.y.max = maxPrice + buffer;
+            }
+            
+            console.log('📊 [updateChartData] Y-axis bounds:', {
+                minPrice,
+                maxPrice,
+                scaleType: chartScaleType,
+                yMin: priceChart.options.scales.y.min,
+                yMax: priceChart.options.scales.y.max
+            });
+        } else {
+            // No valid price data, remove explicit bounds
+            delete priceChart.options.scales.y.min;
+            delete priceChart.options.scales.y.max;
+        }
         
         console.log('📊 [updateChartData] Chart updated successfully');
         
@@ -487,34 +696,75 @@ function toggleChartScale() {
     if (priceChart && priceChart.options.scales.y) {
         priceChart.options.scales.y.type = chartScaleType;
         
-        // For logarithmic scale, add buffer by calculating min/max with padding
-        if (chartScaleType === 'logarithmic') {
-            const priceData = priceChart.data.datasets[0].data.filter(p => p !== null && p > 0);
+        // Calculate price bounds
+        let priceValues = [];
+        
+        // Handle both line chart (simple values) and candlestick (OHLC objects)
+        const data = priceChart.data.datasets[0].data;
+        if (chartType === 'candlestick') {
+            // For candlestick, extract all high and low values
+            data.forEach(candle => {
+                if (candle && candle.h > 0) priceValues.push(candle.h);
+                if (candle && candle.l > 0) priceValues.push(candle.l);
+            });
+        } else {
+            // For line chart, use simple values
+            priceValues = data.filter(p => p !== null && p > 0);
+        }
+        
+        if (priceValues.length > 0) {
+            const minPrice = Math.min(...priceValues);
+            const maxPrice = Math.max(...priceValues);
             
-            if (priceData.length > 0) {
-                const minPrice = Math.min(...priceData);
-                const maxPrice = Math.max(...priceData);
-                
-                // Add ~10% buffer on log scale by adjusting the range
+            // Handle single trade or flat price case
+            if (minPrice === maxPrice) {
+                // Use ±10% of the price value
+                priceChart.options.scales.y.min = minPrice * 0.9;
+                priceChart.options.scales.y.max = maxPrice * 1.1;
+            } else if (chartScaleType === 'logarithmic') {
+                // Add ~10% buffer on log scale
                 const logMin = Math.log10(minPrice);
                 const logMax = Math.log10(maxPrice);
                 const logRange = logMax - logMin;
-                const buffer = logRange * 0.1; // 10% buffer
+                const buffer = logRange * 0.1;
                 
-                // Calculate buffered min/max
-                const bufferedMin = Math.pow(10, logMin - buffer);
-                const bufferedMax = Math.pow(10, logMax + buffer);
+                priceChart.options.scales.y.min = Math.pow(10, logMin - buffer);
+                priceChart.options.scales.y.max = Math.pow(10, logMax + buffer);
+            } else {
+                // For linear scale, add 10% buffer
+                const priceRange = maxPrice - minPrice;
+                const buffer = priceRange * 0.1;
                 
-                priceChart.options.scales.y.min = bufferedMin;
-                priceChart.options.scales.y.max = bufferedMax;
+                priceChart.options.scales.y.min = Math.max(0, minPrice - buffer);
+                priceChart.options.scales.y.max = maxPrice + buffer;
             }
         } else {
-            // For linear scale, use grace percentage or remove explicit min/max
             delete priceChart.options.scales.y.min;
             delete priceChart.options.scales.y.max;
         }
         
         priceChart.update();
+    }
+}
+
+// Toggle chart type between line and candlestick
+function toggleChartType() {
+    chartType = chartType === 'line' ? 'candlestick' : 'line';
+    
+    // Update button text and active state
+    const toggleBtn = document.getElementById('chart-type-toggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = chartType === 'line' ? 'Candles' : 'Line';
+        toggleBtn.classList.toggle('active', chartType === 'candlestick');
+    }
+    
+    console.log('[toggleChartType] Switched to:', chartType);
+    
+    // Reload chart with current pair if data exists
+    if (currentPair && chartData.labels.length > 0) {
+        updateChartData(chartData, currentPair);
+    } else if (currentPair) {
+        loadChart(currentPair);
     }
 }
 
@@ -530,6 +780,14 @@ document.addEventListener('DOMContentLoaded', () => {
             scaleToggle.addEventListener('click', toggleChartScale);
             // Set button text to reflect current scale (log is default, so show "Linear" option)
             scaleToggle.textContent = 'Linear';
+        }
+        
+        // Setup chart type toggle button
+        const chartTypeToggle = document.getElementById('chart-type-toggle');
+        if (chartTypeToggle) {
+            chartTypeToggle.addEventListener('click', toggleChartType);
+            // Set button text to show alternative option (line is default, so show "Candles")
+            chartTypeToggle.textContent = 'Candles';
         }
     }, 100);
 });

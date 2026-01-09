@@ -255,7 +255,8 @@
 }
 
 .chart-interval,
-.chart-scale-toggle {
+.chart-scale-toggle,
+.chart-type-toggle {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
@@ -272,14 +273,22 @@
     border-color: var(--primary-color);
 }
 
-.chart-scale-toggle {
+.chart-scale-toggle,
+.chart-type-toggle {
     min-width: 60px;
 }
 
-.chart-scale-toggle:hover {
+.chart-scale-toggle:hover,
+.chart-type-toggle:hover {
     background: rgba(99, 102, 241, 0.1);
     border-color: var(--primary-color);
     color: var(--primary-color);
+}
+
+.chart-type-toggle.active {
+    background: var(--primary-color);
+    color: var(--bg-dark);
+    border-color: var(--primary-color);
 }
 
 .chart-container {

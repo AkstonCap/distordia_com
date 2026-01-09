@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="dex.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -106,6 +109,7 @@
                                 <button class="chart-interval" data-interval="1m">1M</button>
                                 <button class="chart-interval active" data-interval="1y">1Y</button>
                                 <div class="chart-divider"></div>
+                                <button class="chart-type-toggle" id="chart-type-toggle">Candles</button>
                                 <button class="chart-scale-toggle" id="scale-toggle">Log</button>
                             </div>
                         </div>
