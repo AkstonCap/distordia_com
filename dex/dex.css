@@ -254,9 +254,7 @@
     margin: 0 0.25rem;
 }
 
-.chart-interval,
-.chart-scale-toggle,
-.chart-type-toggle {
+.chart-interval {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
@@ -273,22 +271,53 @@
     border-color: var(--primary-color);
 }
 
-.chart-scale-toggle,
-.chart-type-toggle {
-    min-width: 60px;
+/* Segmented toggle groups */
+.chart-toggle-group {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
 }
 
-.chart-scale-toggle:hover,
-.chart-type-toggle:hover {
+.chart-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 36px;
+    height: 32px;
+}
+
+.chart-toggle-btn:first-child {
+    border-right: 1px solid var(--border-color);
+}
+
+.chart-toggle-btn:hover:not(.active) {
     background: rgba(99, 102, 241, 0.1);
-    border-color: var(--primary-color);
     color: var(--primary-color);
 }
 
-.chart-type-toggle.active {
+.chart-toggle-btn.active {
     background: var(--primary-color);
     color: var(--bg-dark);
-    border-color: var(--primary-color);
+}
+
+.chart-toggle-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.chart-toggle-btn .toggle-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .chart-container {
@@ -297,19 +326,20 @@
     position: relative;
     min-height: 400px;
     max-height: 600px;
-    height: 100%;
+    height: 450px;
 }
 
 .chart-placeholder {
     display: none; /* Hidden by default, shown when no data */
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: calc(100% - 2rem);
     color: var(--text-secondary);
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
     background: var(--bg-darker);
     border-radius: 10px;
 }

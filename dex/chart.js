@@ -11,7 +11,7 @@ let chartData = {
 };
 let chartInterval = '1y'; // Default interval
 let chartScaleType = 'logarithmic'; // Default scale type
-let chartType = 'line'; // 'line' or 'candlestick'
+let chartType = 'candlestick'; // 'line' or 'candlestick'
 
 // Initialize chart
 function initializeChart() {
@@ -446,7 +446,7 @@ function updateChartData(data, pair) {
         // Make sure canvas is visible
         const canvas = document.getElementById('price-chart');
         if (canvas) {
-            canvas.style.display = 'block';
+            canvas.style.visibility = 'visible';
         }
         
         // Hide any placeholder
@@ -625,10 +625,10 @@ function showChartPlaceholder(pair) {
     const chartContainer = document.getElementById('price-chart')?.parentElement;
     if (!chartContainer) return;
     
-    // Hide canvas, show message
+    // Hide canvas (use visibility to preserve layout), show message
     const canvas = document.getElementById('price-chart');
     if (canvas) {
-        canvas.style.display = 'none';
+        canvas.style.visibility = 'hidden';
     }
     
     let placeholder = chartContainer.querySelector('.chart-placeholder');
@@ -682,14 +682,42 @@ function updateChartInterval(interval) {
     }
 }
 
-// Toggle chart scale between logarithmic and linear
-function toggleChartScale() {
-    chartScaleType = chartScaleType === 'linear' ? 'logarithmic' : 'linear';
+// Set chart type (line or candlestick)
+function setChartType(newType) {
+    if (chartType === newType) return;
     
-    // Update button text
-    const toggleBtn = document.getElementById('scale-toggle');
-    if (toggleBtn) {
-        toggleBtn.textContent = chartScaleType === 'linear' ? 'Log' : 'Linear';
+    chartType = newType;
+    
+    // Update active state on buttons
+    const group = document.getElementById('chart-type-group');
+    if (group) {
+        group.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === newType);
+        });
+    }
+    
+    console.log('[setChartType] Switched to:', chartType);
+    
+    // Reload chart with current pair if data exists
+    if (currentPair && chartData.labels.length > 0) {
+        updateChartData(chartData, currentPair);
+    } else if (currentPair) {
+        loadChart(currentPair);
+    }
+}
+
+// Toggle chart scale between logarithmic and linear
+function setChartScale(newScale) {
+    if (chartScaleType === newScale) return;
+    
+    chartScaleType = newScale;
+    
+    // Update active state on buttons
+    const group = document.getElementById('scale-toggle-group');
+    if (group) {
+        group.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === newScale);
+        });
     }
     
     // Update chart scale
@@ -702,13 +730,11 @@ function toggleChartScale() {
         // Handle both line chart (simple values) and candlestick (OHLC objects)
         const data = priceChart.data.datasets[0].data;
         if (chartType === 'candlestick') {
-            // For candlestick, extract all high and low values
             data.forEach(candle => {
                 if (candle && candle.h > 0) priceValues.push(candle.h);
                 if (candle && candle.l > 0) priceValues.push(candle.l);
             });
         } else {
-            // For line chart, use simple values
             priceValues = data.filter(p => p !== null && p > 0);
         }
         
@@ -716,13 +742,10 @@ function toggleChartScale() {
             const minPrice = Math.min(...priceValues);
             const maxPrice = Math.max(...priceValues);
             
-            // Handle single trade or flat price case
             if (minPrice === maxPrice) {
-                // Use ±10% of the price value
                 priceChart.options.scales.y.min = minPrice * 0.9;
                 priceChart.options.scales.y.max = maxPrice * 1.1;
             } else if (chartScaleType === 'logarithmic') {
-                // Add ~10% buffer on log scale
                 const logMin = Math.log10(minPrice);
                 const logMax = Math.log10(maxPrice);
                 const logRange = logMax - logMin;
@@ -731,7 +754,6 @@ function toggleChartScale() {
                 priceChart.options.scales.y.min = Math.pow(10, logMin - buffer);
                 priceChart.options.scales.y.max = Math.pow(10, logMax + buffer);
             } else {
-                // For linear scale, add 10% buffer
                 const priceRange = maxPrice - minPrice;
                 const buffer = priceRange * 0.1;
                 
@@ -747,47 +769,26 @@ function toggleChartScale() {
     }
 }
 
-// Toggle chart type between line and candlestick
-function toggleChartType() {
-    chartType = chartType === 'line' ? 'candlestick' : 'line';
-    
-    // Update button text and active state
-    const toggleBtn = document.getElementById('chart-type-toggle');
-    if (toggleBtn) {
-        toggleBtn.textContent = chartType === 'line' ? 'Candles' : 'Line';
-        toggleBtn.classList.toggle('active', chartType === 'candlestick');
-    }
-    
-    console.log('[toggleChartType] Switched to:', chartType);
-    
-    // Reload chart with current pair if data exists
-    if (currentPair && chartData.labels.length > 0) {
-        updateChartData(chartData, currentPair);
-    } else if (currentPair) {
-        loadChart(currentPair);
-    }
-}
-
 // Initialize chart when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     // Wait a bit for other modules to load
     setTimeout(() => {
         initializeChart();
         
-        // Setup scale toggle button and set initial text
-        const scaleToggle = document.getElementById('scale-toggle');
-        if (scaleToggle) {
-            scaleToggle.addEventListener('click', toggleChartScale);
-            // Set button text to reflect current scale (log is default, so show "Linear" option)
-            scaleToggle.textContent = 'Linear';
+        // Setup chart type toggle group
+        const chartTypeGroup = document.getElementById('chart-type-group');
+        if (chartTypeGroup) {
+            chartTypeGroup.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => setChartType(btn.dataset.value));
+            });
         }
         
-        // Setup chart type toggle button
-        const chartTypeToggle = document.getElementById('chart-type-toggle');
-        if (chartTypeToggle) {
-            chartTypeToggle.addEventListener('click', toggleChartType);
-            // Set button text to show alternative option (line is default, so show "Candles")
-            chartTypeToggle.textContent = 'Candles';
+        // Setup scale toggle group
+        const scaleToggleGroup = document.getElementById('scale-toggle-group');
+        if (scaleToggleGroup) {
+            scaleToggleGroup.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => setChartScale(btn.dataset.value));
+            });
         }
     }, 100);
 });

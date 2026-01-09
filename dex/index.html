@@ -109,8 +109,31 @@
                                 <button class="chart-interval" data-interval="1m">1M</button>
                                 <button class="chart-interval active" data-interval="1y">1Y</button>
                                 <div class="chart-divider"></div>
-                                <button class="chart-type-toggle" id="chart-type-toggle">Candles</button>
-                                <button class="chart-scale-toggle" id="scale-toggle">Log</button>
+                                <div class="chart-toggle-group" id="chart-type-group">
+                                    <button class="chart-toggle-btn" data-value="line" title="Line Chart">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="22 12 18 8 13 13 9 9 2 16"></polyline>
+                                        </svg>
+                                    </button>
+                                    <button class="chart-toggle-btn active" data-value="candlestick" title="Candlestick Chart">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="9" y1="2" x2="9" y2="6"></line>
+                                            <rect x="6" y="6" width="6" height="10" rx="1" fill="currentColor"></rect>
+                                            <line x1="9" y1="16" x2="9" y2="22"></line>
+                                            <line x1="17" y1="4" x2="17" y2="8"></line>
+                                            <rect x="14" y="8" width="6" height="8" rx="1"></rect>
+                                            <line x1="17" y1="16" x2="17" y2="20"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="chart-toggle-group" id="scale-toggle-group">
+                                    <button class="chart-toggle-btn" data-value="linear" title="Linear Scale">
+                                        <span class="toggle-label">Lin</span>
+                                    </button>
+                                    <button class="chart-toggle-btn active" data-value="logarithmic" title="Logarithmic Scale">
+                                        <span class="toggle-label">Log</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="chart-container">
