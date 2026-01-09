@@ -12,6 +12,16 @@ let chartData = {
 let chartInterval = '1y'; // Default interval
 let chartScaleType = 'logarithmic'; // Default scale type
 let chartType = 'candlestick'; // 'line' or 'candlestick'
+let candleSize = 'large'; // 'small' or 'large' - determines candle duration within each timespan
+
+// Candle size options for each timespan
+// Format: { small: [seconds, label], large: [seconds, label] }
+const CANDLE_SIZES = {
+    '1d': { small: [900, '15m'], large: [3600, '1h'] },      // 15 min or 1 hour
+    '1w': { small: [3600, '1h'], large: [14400, '4h'] },     // 1 hour or 4 hours
+    '1m': { small: [14400, '4h'], large: [86400, '1d'] },    // 4 hours or 1 day
+    '1y': { small: [86400, '1d'], large: [604800, '1w'] }    // 1 day or 1 week
+};
 
 // Initialize chart
 function initializeChart() {
@@ -75,7 +85,46 @@ function initializeChart() {
                     padding: 12,
                     displayColors: true,
                     callbacks: {
+                        title: function(tooltipItems) {
+                            if (tooltipItems.length === 0) return '';
+                            const item = tooltipItems[0];
+                            // For candlestick with time scale, format the date nicely
+                            if (item.raw && typeof item.raw === 'object' && item.raw.x) {
+                                const date = new Date(item.raw.x);
+                                const intervalSeconds = getIntervalSeconds(chartInterval);
+                                if (intervalSeconds >= 604800) {
+                                    // Weekly candles
+                                    return 'Week of ' + date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                                } else if (intervalSeconds >= 86400) {
+                                    // Daily candles
+                                    return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+                                } else {
+                                    // Hourly or smaller candles
+                                    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + 
+                                           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                }
+                            }
+                            return item.label || '';
+                        },
                         label: function(context) {
+                            const raw = context.raw;
+                            
+                            // Handle candlestick OHLC data
+                            if (raw && typeof raw === 'object' && 'o' in raw) {
+                                const lines = [];
+                                lines.push('Open: ' + formatPrice(raw.o));
+                                lines.push('High: ' + formatPrice(raw.h));
+                                lines.push('Low: ' + formatPrice(raw.l));
+                                lines.push('Close: ' + formatPrice(raw.c));
+                                return lines;
+                            }
+                            
+                            // Handle volume bar with {x, y} format
+                            if (raw && typeof raw === 'object' && 'y' in raw && !('o' in raw)) {
+                                return 'Volume: ' + formatNumber(raw.y);
+                            }
+                            
+                            // Handle line chart and simple volume values
                             let label = context.dataset.label || '';
                             if (label) {
                                 label += ': ';
@@ -360,16 +409,34 @@ function getLookbackSeconds(interval) {
     return lookbacks[interval] || 86400;
 }
 
-// Get interval duration in seconds
-// Weekly candles for 1Y, daily candles for all smaller timeframes
+// Get interval duration in seconds based on timespan and candle size
 function getIntervalSeconds(interval) {
-    const intervals = {
-        '1d': 86400,     // 1 day intervals for 24h view (daily candles)
-        '1w': 86400,     // 1 day intervals for 7d view (daily candles)
-        '1m': 86400,     // 1 day intervals for 30d view (daily candles)
-        '1y': 604800     // 1 week intervals for 365d view (weekly candles)
-    };
-    return intervals[interval] || 86400;
+    const sizes = CANDLE_SIZES[interval];
+    if (sizes) {
+        return sizes[candleSize][0];
+    }
+    return 3600; // Default 1 hour
+}
+
+// Align timestamp to 15 minute boundary
+function alignTo15Min(timestamp) {
+    const seconds = 900; // 15 minutes
+    return Math.floor(timestamp / seconds) * seconds;
+}
+
+// Align timestamp to 1 hour boundary
+function alignToHour(timestamp) {
+    const date = new Date(timestamp * 1000);
+    date.setUTCMinutes(0, 0, 0);
+    return Math.floor(date.getTime() / 1000);
+}
+
+// Align timestamp to 4 hour boundary
+function alignTo4Hour(timestamp) {
+    const date = new Date(timestamp * 1000);
+    const hour = Math.floor(date.getUTCHours() / 4) * 4;
+    date.setUTCHours(hour, 0, 0, 0);
+    return Math.floor(date.getTime() / 1000);
 }
 
 // Align timestamp to start of day (00:00 UTC)
@@ -391,35 +458,45 @@ function alignToWeek(timestamp) {
     return Math.floor(date.getTime() / 1000);
 }
 
-// Align timestamp based on interval type
+// Align timestamp based on interval type and candle size
 function alignTimestamp(timestamp, interval) {
-    if (interval === '1y') {
-        return alignToWeek(timestamp);
-    } else {
+    const intervalSeconds = getIntervalSeconds(interval);
+    
+    // Use appropriate alignment based on candle size
+    if (intervalSeconds === 900) {
+        return alignTo15Min(timestamp);
+    } else if (intervalSeconds === 3600) {
+        return alignToHour(timestamp);
+    } else if (intervalSeconds === 14400) {
+        return alignTo4Hour(timestamp);
+    } else if (intervalSeconds === 86400) {
         return alignToDay(timestamp);
+    } else if (intervalSeconds === 604800) {
+        return alignToWeek(timestamp);
     }
+    return alignToHour(timestamp);
 }
 
-// Format time for chart labels based on interval
-// Daily candles for timeframes < 1Y, weekly candles for 1Y
+// Format time for chart labels based on candle size
 function formatChartTime(timestamp, interval) {
-    // Nexus timestamps are in seconds, convert to milliseconds for JavaScript Date
     const date = new Date(timestamp * 1000);
+    const intervalSeconds = getIntervalSeconds(interval);
     
-    if (interval === '1d') {
-        // Show weekday for 1 day view (daily candle)
-        return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-    } else if (interval === '1w') {
-        // Show date for 7d view (daily candles)
+    // Format based on candle duration
+    if (intervalSeconds <= 3600) {
+        // 15 min or 1 hour candles - show time
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (intervalSeconds === 14400) {
+        // 4 hour candles - show day and time
+        return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + 
+               date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (intervalSeconds === 86400) {
+        // Daily candles - show date
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    } else if (interval === '1m') {
-        // Show date for 30d view (daily candles)
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    } else if (interval === '1y') {
-        // Show week/month for 365d view (weekly candles)
+    } else {
+        // Weekly candles - show date
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
-    return date.toLocaleString();
 }
 
 // Update chart with new data
@@ -485,16 +562,33 @@ function updateChartData(data, pair) {
             priceChart.data.datasets[0].tension = 0;
             priceChart.data.datasets[0].pointRadius = 0;
             
+            // Determine x-axis unit based on candle size
+            const intervalSeconds = getIntervalSeconds(chartInterval);
+            let timeUnit = 'hour';
+            let tooltipFmt = 'MMM d, HH:mm';
+            
+            if (intervalSeconds >= 604800) {
+                timeUnit = 'month';
+                tooltipFmt = 'Week of MMM d, yyyy';
+            } else if (intervalSeconds >= 86400) {
+                timeUnit = 'week';
+                tooltipFmt = 'MMM d, yyyy';
+            } else if (intervalSeconds >= 14400) {
+                timeUnit = 'day';
+                tooltipFmt = 'MMM d, HH:mm';
+            }
+            
             // Update x-axis for time scale
             priceChart.options.scales.x.type = 'time';
             priceChart.options.scales.x.time = {
-                unit: chartInterval === '1y' ? 'month' : 'day',
+                unit: timeUnit,
                 displayFormats: {
+                    hour: 'HH:mm',
                     day: 'MMM d',
                     week: 'MMM d',
                     month: 'MMM yyyy'
                 },
-                tooltipFormat: chartInterval === '1y' ? 'Week of MMM d, yyyy' : 'MMM d, yyyy'
+                tooltipFormat: tooltipFmt
             };
             priceChart.options.scales.x.adapters = {
                 date: {
@@ -673,12 +767,48 @@ function updateChartInterval(interval) {
         }
     });
     
+    // Update candle size labels for the new interval
+    updateCandleSizeLabels();
+    
     // Reload chart with new interval
     if (currentPair) {
         console.log('[updateChartInterval] Calling loadChart with:', currentPair.pair);
         loadChart(currentPair);
     } else {
         console.warn('[updateChartInterval] No currentPair, cannot reload');
+    }
+}
+
+// Update candle size button labels based on current interval
+function updateCandleSizeLabels() {
+    const sizes = CANDLE_SIZES[chartInterval];
+    if (sizes) {
+        const smallLabel = document.getElementById('candle-small-label');
+        const largeLabel = document.getElementById('candle-large-label');
+        if (smallLabel) smallLabel.textContent = sizes.small[1];
+        if (largeLabel) largeLabel.textContent = sizes.large[1];
+    }
+}
+
+// Set candle size (small or large)
+function setCandleSize(newSize) {
+    if (candleSize === newSize) return;
+    
+    candleSize = newSize;
+    
+    // Update active state on buttons
+    const group = document.getElementById('candle-size-group');
+    if (group) {
+        group.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === newSize);
+        });
+    }
+    
+    console.log('[setCandleSize] Switched to:', candleSize, '(' + getIntervalSeconds(chartInterval) + 's)');
+    
+    // Reload chart with current pair
+    if (currentPair) {
+        loadChart(currentPair);
     }
 }
 
@@ -774,6 +904,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait a bit for other modules to load
     setTimeout(() => {
         initializeChart();
+        
+        // Initialize candle size labels for default interval
+        updateCandleSizeLabels();
+        
+        // Setup candle size toggle group
+        const candleSizeGroup = document.getElementById('candle-size-group');
+        if (candleSizeGroup) {
+            candleSizeGroup.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => setCandleSize(btn.dataset.value));
+            });
+        }
         
         // Setup chart type toggle group
         const chartTypeGroup = document.getElementById('chart-type-group');

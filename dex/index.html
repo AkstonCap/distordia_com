@@ -109,6 +109,15 @@
                                 <button class="chart-interval" data-interval="1m">1M</button>
                                 <button class="chart-interval active" data-interval="1y">1Y</button>
                                 <div class="chart-divider"></div>
+                                <div class="chart-toggle-group" id="candle-size-group">
+                                    <button class="chart-toggle-btn" data-value="small" title="Smaller candles">
+                                        <span class="toggle-label" id="candle-small-label">1d</span>
+                                    </button>
+                                    <button class="chart-toggle-btn active" data-value="large" title="Larger candles">
+                                        <span class="toggle-label" id="candle-large-label">1w</span>
+                                    </button>
+                                </div>
+                                <div class="chart-divider"></div>
                                 <div class="chart-toggle-group" id="chart-type-group">
                                     <button class="chart-toggle-btn" data-value="line" title="Line Chart">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
