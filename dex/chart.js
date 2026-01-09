@@ -116,11 +116,17 @@ function initializeChart() {
                                 lines.push('High: ' + formatPrice(raw.h));
                                 lines.push('Low: ' + formatPrice(raw.l));
                                 lines.push('Close: ' + formatPrice(raw.c));
+                                if (raw.v !== undefined) {
+                                    lines.push('Volume: ' + formatNumber(raw.v));
+                                }
                                 return lines;
                             }
                             
-                            // Handle volume bar with {x, y} format
+                            // Skip volume bar tooltip when in candlestick mode (volume shown in candle tooltip)
                             if (raw && typeof raw === 'object' && 'y' in raw && !('o' in raw)) {
+                                if (chartType === 'candlestick') {
+                                    return null; // Hide duplicate volume
+                                }
                                 return 'Volume: ' + formatNumber(raw.y);
                             }
                             
@@ -345,7 +351,8 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
                 o: open,
                 h: high,
                 l: low,
-                c: close
+                c: close,
+                v: totalVolume // Store volume with the candle
             });
         } else {
             // No data for this interval, use last known price or null
@@ -358,7 +365,8 @@ function processChartData(orders, marketPair, interval, startTimestamp, endTimes
                     o: lastKnownPrice,
                     h: lastKnownPrice,
                     l: lastKnownPrice,
-                    c: lastKnownPrice
+                    c: lastKnownPrice,
+                    v: 0 // No volume for flat candle
                 });
             }
         }
@@ -615,10 +623,10 @@ function updateChartData(data, pair) {
                 });
             }
             
-            // Volume data with matching x timestamps for time scale
-            priceChart.data.datasets[1].data = data.ohlc.map((candle, i) => ({
+            // Volume data with matching x timestamps for time scale - use volume stored in candle
+            priceChart.data.datasets[1].data = data.ohlc.map(candle => ({
                 x: candle.x,
-                y: data.volumes[i] || 0
+                y: candle.v || 0
             }));
         } else {
             // Line chart mode
