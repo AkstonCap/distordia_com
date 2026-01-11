@@ -251,20 +251,28 @@ The DEX is a pure frontend application:
 
 ⚠️ **Important Notes:**
 
-1. **Display Only**: This interface displays market data but does not execute trades
-2. **No Wallet Integration**: No private keys or wallet connections
-3. **Read-Only API**: Only fetches data, does not submit transactions
-4. **Live Data**: All data is fetched directly from Nexus blockchain API
+1. **Q-Wallet Required**: Trading requires Q-Wallet browser extension for authentication
+2. **No Private Keys Stored**: All signing is done via Q-Wallet - no keys are stored in the app
+3. **Live Blockchain Data**: All data is fetched directly from Nexus blockchain API
+4. **Trading Fee**: 1 DIST token per 24-hour trading session
+
+## Authentication
+
+The DEX uses **Q-Wallet only** for authentication:
+- No username/password login
+- No session management
+- Connect via Q-Wallet browser extension
+- Q-Wallet handles PIN entry for transaction signing
 
 ## Future Enhancements
 
 Potential features for future development:
 
+- [x] Trade execution interface (with wallet integration)
 - [ ] TradingView chart integration
 - [ ] WebSocket real-time updates
 - [ ] Advanced chart indicators
 - [ ] Price alerts and notifications
-- [ ] Trade execution interface (with wallet integration)
 - [ ] Historical data analysis
 - [ ] Multi-language support
 - [ ] Dark/Light theme toggle

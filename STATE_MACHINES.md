@@ -10,17 +10,20 @@ stateDiagram-v2
     
     Disconnected --> CheckingWallet: Page Load
     CheckingWallet --> WalletNotFound: No Q-Wallet
-    CheckingWallet --> LoggedOut: Q-Wallet Found
+    CheckingWallet --> WalletFound: Q-Wallet Found
     
     WalletNotFound --> [*]: Show Install Prompt
     
-    LoggedOut --> LoginPrompt: Click Login
-    LoginPrompt --> Authenticating: Enter Credentials
-    Authenticating --> LoggedOut: Auth Failed
-    Authenticating --> Authenticated: Auth Success
+    WalletFound --> CheckingConnection: Check Existing Connection
+    CheckingConnection --> Connected: Already Connected
+    CheckingConnection --> Disconnected: Not Connected
     
-    Authenticated --> SelectingPair: Browse Pairs
-    Authenticated --> ViewingOrderBook: Pair Selected
+    Disconnected --> ConnectingWallet: Click Connect Wallet
+    ConnectingWallet --> Disconnected: Connection Denied
+    ConnectingWallet --> Connected: Wallet Connected
+    
+    Connected --> SelectingPair: Browse Pairs
+    Connected --> ViewingOrderBook: Pair Selected
     
     ViewingOrderBook --> SelectingPair: Change Pair
     ViewingOrderBook --> PlacingOrder: Click Buy/Sell
@@ -31,17 +34,13 @@ stateDiagram-v2
     SubmittingOrder --> ViewingOrderBook: Order Success
     SubmittingOrder --> PlacingOrder: Order Failed
     
-    Authenticated --> CheckingActivity: User Activity
-    CheckingActivity --> Authenticated: Activity Detected
-    CheckingActivity --> LoggedOut: Timeout (3min)
+    Connected --> Disconnecting: Click Disconnect
+    Disconnecting --> Disconnected: Wallet Disconnected
     
-    Authenticated --> LoggingOut: Click Logout
-    LoggingOut --> LoggedOut: Session Terminated
-    
-    note right of Authenticated
-        Activity monitoring active
-        Session timeout: 3 minutes
-        Refreshes every 10s
+    note right of Connected
+        Q-Wallet handles authentication
+        No session timeout
+        Fee: 1 DIST per 24 hours
     end note
     
     note right of ViewingOrderBook
@@ -72,16 +71,11 @@ stateDiagram-v2
     
     BrowsingProducts --> CheckingAuth: Click Add Product
     CheckingAuth --> WalletPrompt: Not Connected
-    CheckingAuth --> SessionPrompt: Wallet Connected, No Session
-    CheckingAuth --> CreatingProduct: Authenticated
+    CheckingAuth --> CreatingProduct: Wallet Connected
     
     WalletPrompt --> ConnectingWallet: Connect Q-Wallet
     ConnectingWallet --> WalletPrompt: Connection Failed
-    ConnectingWallet --> SessionPrompt: Wallet Connected
-    
-    SessionPrompt --> AuthenticatingSession: Enter Credentials
-    AuthenticatingSession --> SessionPrompt: Auth Failed
-    AuthenticatingSession --> CreatingProduct: Session Created
+    ConnectingWallet --> CreatingProduct: Wallet Connected
     
     CreatingProduct --> ValidatingProduct: Fill Form
     ValidatingProduct --> CreatingProduct: Validation Failed
@@ -95,14 +89,14 @@ stateDiagram-v2
     RefreshingProducts --> BrowsingProducts: Updated
     
     note right of CheckingAuth
-        Dual authentication:
-        1. Q-Wallet connection
-        2. Nexus session (user/pin)
+        Q-Wallet authentication only
+        Fee: 1 DIST per 24 hours
     end note
     
     note right of CreatingAsset
         Creates NFT on blockchain
         with product metadata
+        Q-Wallet prompts for PIN
     end note
 ```
 
@@ -160,7 +154,8 @@ stateDiagram-v2
     
     note right of Connected
         Wallet persists across refresh
-        Uses sessionStorage
+        Uses browser sessionStorage
+        for connection state only
     end note
     
     note right of CreatingAsset
@@ -375,12 +370,11 @@ stateDiagram-v2
    - Persist connection state
    - Listen for disconnect events
 
-2. **Authentication Pattern** (DEX, Masterdata)
-   - Wallet connection + Session creation
-   - Username/password or username/pin
-   - Session timeout monitoring
-   - Activity tracking
-   - Automatic logout on timeout
+2. **Authentication Pattern** (DEX, Masterdata, Social, Fantasy Football)
+   - Q-Wallet browser extension connection
+   - No username/password login
+   - Q-Wallet handles PIN for transactions
+   - Wallet connection persists across refresh
 
 3. **Data Loading Pattern** (All apps)
    - Initial load on page mount

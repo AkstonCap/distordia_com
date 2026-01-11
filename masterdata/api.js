@@ -6,8 +6,6 @@
 class NexusAPI {
     constructor(baseURL = 'https://api.distordia.com') {
         this.baseURL = baseURL;
-        this.session = null;
-        this.username = null;
     }
 
     /**
@@ -154,17 +152,30 @@ class NexusAPI {
     }
 
     /**
-     * List products owned by a specific user
+     * List products owned by the connected wallet user
+     * Uses Q-Wallet to authenticate
      */
-    async listUserProducts(session, pin) {
-        const params = {
-            session: session,
-            pin: pin
-        };
+    async listUserProducts() {
+        // Check if Q-Wallet is available
+        if (typeof window.nexus === 'undefined') {
+            throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
+        }
 
         try {
-            const result = await this.request('assets/list/asset', params);
-            return result.result || [];
+            // Use Q-Wallet's executeBatchCalls to list assets
+            const result = await window.nexus.executeBatchCalls([
+                {
+                    endpoint: 'assets/list/asset',
+                    params: {}
+                }
+            ]);
+
+            if (result.successfulCalls === 0) {
+                console.warn('No assets found or failed to list assets');
+                return [];
+            }
+
+            return result.results?.[0]?.result || [];
         } catch (error) {
             console.error('Error listing user products:', error);
             return [];

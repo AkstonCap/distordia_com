@@ -155,9 +155,9 @@ function updateTradeButtonVisibility() {
         return;
     }
     
-    // Check if q-wallet is connected OR if native session is logged in
+    // Check if Q-Wallet is connected
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnectedCheck) || (typeof isLoggedIn === 'function' && isLoggedIn());
+    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
     
     // Also check if a pair is selected
     const hasPairSelected = currentPair !== null;
@@ -192,13 +192,13 @@ function openTradeModal() {
         return;
     }
     
-    // Check if wallet is connected
+    // Check if Q-Wallet is connected
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    const isWalletConnected = (typeof window.nexus !== 'undefined' && walletConnectedCheck) || (typeof isLoggedIn === 'function' && isLoggedIn());
+    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
     
     if (!isWalletConnected) {
         // Prompt user to connect wallet
-        showNotification('Please connect your wallet or login to trade', 'warning');
+        showNotification('Please connect your Q-Wallet to trade', 'warning');
         
         // Try to trigger wallet connection
         const connectBtn = document.getElementById('connectWalletBtn');
@@ -1012,10 +1012,10 @@ async function executeTrade() {
     try {
         hideTradeError();
         
-        // Check if using q-wallet or native session
+        // Check if Q-Wallet is connected
         const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
         if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
-            // Use q-wallet batch calls to execute all orders at once
+            // Use Q-Wallet batch calls to execute all orders at once
             await executeTradesWithQWallet(enabledOrders);
             
             showNotification(`Successfully executed ${enabledOrders.length} order(s)!`, 'success');
@@ -1026,49 +1026,8 @@ async function executeTrade() {
                 loadOrderBook(currentPair);
                 fetchRecentTrades(currentPair.pair);
             }
-        } else if (typeof isLoggedIn === 'function' && isLoggedIn()) {
-            // Use native Nexus session - execute one by one
-            let successCount = 0;
-            let failCount = 0;
-            
-            for (const order of enabledOrders) {
-                try {
-                    await executeTradeWithSession(order, order.amountTaken, order.price);
-                    successCount++;
-                } catch (error) {
-                    console.error(`Failed to execute order at ${order.price}:`, error);
-                    failCount++;
-                }
-            }
-            
-            // Collect DIST token fee after successful trades
-            if (successCount > 0) {
-                try {
-                    await collectTradeFee();
-                    console.log('Trade fee collected successfully');
-                } catch (feeError) {
-                    console.warn('Failed to collect trade fee:', feeError);
-                    showNotification(`${successCount} order(s) executed, but fee collection failed: ${feeError.message}`, 'warning');
-                }
-            }
-            
-            // Show results
-            if (successCount > 0 && failCount === 0) {
-                showNotification(`Successfully executed ${successCount} order(s)!`, 'success');
-                closeTradeModal();
-            } else if (successCount > 0 && failCount > 0) {
-                showNotification(`Executed ${successCount} order(s), ${failCount} failed`, 'warning');
-            } else {
-                throw new Error('All orders failed to execute');
-            }
-            
-            // Refresh order book and trades
-            if (currentPair) {
-                loadOrderBook(currentPair);
-                fetchRecentTrades(currentPair.pair);
-            }
         } else {
-            showTradeError('Please connect your wallet or login first');
+            showTradeError('Please connect your Q-Wallet first');
             return;
         }
         
@@ -1175,14 +1134,12 @@ function onPairSelected() {
 
 // Collect DIST token trading fee
 async function collectTradeFee() {
-    // Check if using q-wallet or native session
+    // Use Q-Wallet to collect fee
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
     if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
         return await collectTradeFeeWithQWallet();
-    } else if (typeof isLoggedIn === 'function' && isLoggedIn()) {
-        return await collectTradeFeeWithSession();
     } else {
-        throw new Error('No active wallet or session');
+        throw new Error('Q-Wallet not connected');
     }
 }
 
@@ -1206,50 +1163,7 @@ async function collectTradeFeeWithQWallet() {
     }
 }
 
-// Collect trade fee using native Nexus session
-async function collectTradeFeeWithSession() {
-    const session = getSession();
-    if (!session) {
-        throw new Error('No active session for fee collection');
-    }
-    
-    try {
-        // Debit DIST tokens from user's account to DIST account
-        const response = await fetch(API_ENDPOINTS.debitToken, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                session: session.session,
-                pin: sessionStorage.getItem('temp_pin'), // Use cached PIN from trade execution
-                from: `default:${TRADE_FEE.token}`, // User's DIST token account
-                to: TRADE_FEE.recipient, // DIST fee recipient account
-                amount: TRADE_FEE.amount,
-                reference: Date.now() // Use timestamp as reference
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || 'Fee debit failed');
-        }
-        
-        const result = await response.json();
-        console.log('Trade fee collected via session:', result);
-        
-        // Update activity timestamp
-        if (typeof updateActivity === 'function') {
-            updateActivity();
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('Session fee collection error:', error);
-        throw new Error(`Fee collection failed: ${error.message}`);
-    } finally {
-        // Clear cached PIN
-        sessionStorage.removeItem('temp_pin');
-    }
-}
+
 // ====================================
 // INLINE TRADING PANEL
 // ====================================

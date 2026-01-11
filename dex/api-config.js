@@ -23,11 +23,7 @@ const API_ENDPOINTS = {
     
     // Finance API - token transfers
     debitToken: `${NEXUS_API_BASE}/finance/debit/token`,
-    debitAccount: `${NEXUS_API_BASE}/finance/debit/account`,
-    
-    // Sessions API - authentication
-    sessionCreate: `${NEXUS_API_BASE}/sessions/create/local`,
-    sessionTerminate: `${NEXUS_API_BASE}/sessions/terminate/local`
+    debitAccount: `${NEXUS_API_BASE}/finance/debit/account`
 };
 
 // Trading fee configuration

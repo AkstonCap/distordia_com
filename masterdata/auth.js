@@ -7,8 +7,6 @@ class WalletAuth {
     constructor() {
         this.connected = false;
         this.account = null;
-        this.username = null;
-        this.session = null;
         this.initEventListeners();
         this.checkConnection();
     }
@@ -127,8 +125,6 @@ class WalletAuth {
         // Clear local state
         this.connected = false;
         this.account = null;
-        this.username = null;
-        this.session = null;
         this.updateUI();
         this.onConnectionChange(false);
         this.showInfo('Wallet disconnected');

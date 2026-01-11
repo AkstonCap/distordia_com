@@ -31,7 +31,8 @@ See `Nexus API docs/` for full documentation. Most used:
 - **Market**: `market/list/order`, `market/list/bid`, `market/list/ask`, `market/list/executed` - DEX trading
 - **Assets**: `assets/get/asset`, `assets/list/asset` - NFT data
 - **Register**: `register/list/assets`, `register/list/names` - public blockchain queries
-- **Sessions**: `sessions/create/local`, `sessions/terminate/local` - user authentication
+
+**Note**: All user authentication is done via Q-Wallet browser extension. No session-based login is used.
 
 ### API Configuration Convention
 
@@ -66,7 +67,7 @@ window.nexus.on('accountsChanged', handleAccountChange);
 window.nexus.on('disconnect', handleDisconnect);
 ```
 
-**Files**: Each wallet-enabled app has `auth.js` with connection logic. See [social/auth.js](social/auth.js) for minimal implementation, [dex/auth.js](dex/auth.js) for session-based approach.
+**Files**: Each wallet-enabled app has `auth.js` with connection logic. See [social/auth.js](social/auth.js) for minimal implementation, [dex/auth.js](dex/auth.js) for utility functions.
 
 ## Project Structure & Patterns
 
@@ -111,7 +112,7 @@ function selectPair(pair) {
 DEX app splits functionality into modules:
 - [dex/api-config.js](dex/api-config.js) - endpoint configuration
 - [dex/api.js](dex/api.js) - API fetch functions
-- [dex/auth.js](dex/auth.js) - wallet/session management
+- [dex/auth.js](dex/auth.js) - utility functions (notifications, mobile detection)
 - [dex/state.js](dex/state.js) - global state
 - [dex/market-pairs.js](dex/market-pairs.js) - pair list rendering
 - [dex/renderers.js](dex/renderers.js) - order book/chart rendering
@@ -239,7 +240,6 @@ Apps with complex API logic use class-based wrappers (see [masterdata/api.js](ma
 class NexusAPI {
     constructor(baseURL = 'https://api.distordia.com') {
         this.baseURL = baseURL;
-        this.session = null;
     }
     
     async request(endpoint, params = {}, method = 'POST') {
@@ -287,10 +287,9 @@ Nexus market orders have complex structure. See [dex/utils.js](dex/utils.js) `ca
 
 ### Masterdata (`/masterdata/`)
 - **Purpose**: Create and manage product NFTs (catalog/inventory system)
-- **Authentication**: Requires Q-Wallet connection AND Nexus session (username/pin)
-- **Dual Auth Pattern**: Both `window.nexus.connect()`
-- **Asset Creation**: `assets/create/asset` with JSON product data
-- **See**: [masterdata/api.js](masterdata/api.js) for session-based API wrapper
+- **Authentication**: Requires Q-Wallet connection only
+- **Asset Creation**: `assets/create/asset` with JSON product data via Q-Wallet
+- **See**: [masterdata/api.js](masterdata/api.js) for Q-Wallet API wrapper
 
 ### Swap (`/swap/`)
 - **Purpose**: Cross-chain bridge between Solana (USDC) and Nexus (USDD)

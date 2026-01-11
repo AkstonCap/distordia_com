@@ -229,7 +229,7 @@ Due to the 1KB asset limit, the following should be stored in private company sy
 ### 🔐 Wallet Authentication
 - Secure authentication via Q-Wallet browser extension
 - Connect/disconnect wallet functionality
-- Session management
+- No username/password login required
 
 ### 📦 Master Data Management
 - **Register Materials**: Create blockchain-based master data records
@@ -295,8 +295,8 @@ masterdata/
 ### Modules
 
 #### auth.js - Wallet Authentication
-- Handles Q-Wallet connection
-- Manages wallet state and user sessions
+- Handles Q-Wallet connection and disconnection
+- Manages wallet connection state
 - Provides UI feedback for connection status
 
 #### api.js - Nexus API
