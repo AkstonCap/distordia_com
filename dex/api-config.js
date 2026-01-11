@@ -26,9 +26,24 @@ const API_ENDPOINTS = {
     debitAccount: `${NEXUS_API_BASE}/finance/debit/account`
 };
 
-// Trading fee configuration
-const TRADE_FEE = {
-    amount: 1.0,           // 1 DIST token per trade
-    token: 'DIST',         // DIST token
-    recipient: 'DIST'      // Account name to receive fees
+// Q-Wallet batch execution fee structure (in NXS)
+// Fees are automatically handled by Q-Wallet executeBatchCalls
+const BATCH_FEE_STRUCTURE = {
+    freeLimit: 1,           // First call is free
+    baseFee: 0.01,          // 0.01 NXS per tier (2-10, 11-20, etc.)
+    tierSize: 10,           // Calls per tier
+    congestionFee: 0.01     // ~0.01 NXS per call (Nexus network fee)
 };
+
+// Calculate estimated fee for batch calls
+function calculateBatchFee(callCount) {
+    if (callCount <= BATCH_FEE_STRUCTURE.freeLimit) {
+        return 0;
+    }
+    // Service fee tiers: 2-10 = 0.01, 11-20 = 0.02, etc.
+    const tier = Math.ceil((callCount - 1) / BATCH_FEE_STRUCTURE.tierSize);
+    const serviceFee = tier * BATCH_FEE_STRUCTURE.baseFee;
+    // Congestion fee applies to all calls when multiple calls made within 10 seconds
+    const congestionFee = callCount * BATCH_FEE_STRUCTURE.congestionFee;
+    return serviceFee + congestionFee;
+}

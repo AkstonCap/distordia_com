@@ -254,7 +254,7 @@ The DEX is a pure frontend application:
 1. **Q-Wallet Required**: Trading requires Q-Wallet browser extension for authentication
 2. **No Private Keys Stored**: All signing is done via Q-Wallet - no keys are stored in the app
 3. **Live Blockchain Data**: All data is fetched directly from Nexus blockchain API
-4. **Trading Fee**: 1 DIST token per 24-hour trading session
+4. **Network Fees**: Fees are charged in NXS - 1 order free, ~0.01 NXS per additional order
 
 ## Authentication
 

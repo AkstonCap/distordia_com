@@ -465,6 +465,9 @@ function findMatchingOrders() {
     
     document.getElementById('trade-total-value').textContent = estimatedReceived.toFixed(6);
     
+    // Update fee display based on number of orders
+    updateFeeDisplay(selectedOrders.length);
+    
     // Update orders list to highlight selected orders
     // For buy: show how much quote currency was spent vs requested
     // For sell: show how much base currency was sold vs requested
@@ -1078,9 +1081,9 @@ async function executeTradesWithQWallet(orders) {
         });
     }
     
-    // Add DIST fee payment (1 DIST token)
-    // Note: executeBatchCalls already charges DIST fee, but we may need additional fee
-    // Check with the team if this is needed
+    // Calculate estimated fee for user info
+    const estimatedFee = calculateBatchFee(calls.length);
+    console.log(`[Trade] Executing ${calls.length} orders, estimated fee: ${estimatedFee} NXS`);
     
     console.log('[Trade] Executing batch calls:', calls);
     
@@ -1132,35 +1135,21 @@ function onPairSelected() {
     }
 }
 
-// Collect DIST token trading fee
-async function collectTradeFee() {
-    // Use Q-Wallet to collect fee
-    const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    if (typeof window.qWallet !== 'undefined' && walletConnectedCheck) {
-        return await collectTradeFeeWithQWallet();
+// Calculate and display estimated network fee for batch operations
+function updateFeeDisplay(orderCount) {
+    const feeEstimate = calculateBatchFee(orderCount);
+    const fillFeeEl = document.getElementById('fill-fee-estimate');
+    const tradeFeeEl = document.getElementById('trade-fee-display');
+    
+    let feeText;
+    if (orderCount <= 1) {
+        feeText = 'Free for 1 order';
     } else {
-        throw new Error('Q-Wallet not connected');
+        feeText = `~${feeEstimate.toFixed(2)} NXS (${orderCount} orders)`;
     }
-}
-
-// Collect trade fee using Q-Wallet
-async function collectTradeFeeWithQWallet() {
-    try {
-        // Use Q-Wallet to send DIST tokens
-        const result = await window.qWallet.sendTransaction({
-            from: 'default',
-            to: TRADE_FEE.recipient,
-            amount: TRADE_FEE.amount,
-            token: TRADE_FEE.token,
-            reference: `Trade fee for ${currentPair ? currentPair.pair : 'trade'}`
-        });
-        
-        console.log('Trade fee collected via Q-Wallet:', result);
-        return result;
-    } catch (error) {
-        console.error('Q-Wallet fee collection error:', error);
-        throw new Error(`Fee collection failed: ${error.message}`);
-    }
+    
+    if (fillFeeEl) fillFeeEl.textContent = feeText;
+    if (tradeFeeEl) tradeFeeEl.textContent = feeText;
 }
 
 
@@ -1613,6 +1602,18 @@ function updateSelectedOrdersDisplay() {
     document.getElementById('fill-total-amount').textContent = totalAmount.toFixed(4);
     document.getElementById('fill-total-cost').textContent = totalCost.toFixed(4);
     document.getElementById('fill-avg-price').textContent = avgPrice.toFixed(8) + ' ' + quoteToken;
+    
+    // Update fee display based on order count
+    const feeEstimateEl = document.getElementById('fill-fee-estimate');
+    if (feeEstimateEl) {
+        const orderCount = inlineTrade.selectedOrders.length;
+        if (orderCount <= 1) {
+            feeEstimateEl.textContent = 'Free for 1 order';
+        } else {
+            const estimatedFee = calculateBatchFee(orderCount);
+            feeEstimateEl.textContent = `~${estimatedFee.toFixed(2)} NXS (${orderCount} orders)`;
+        }
+    }
     
     if (summary) summary.style.display = 'block';
     
