@@ -36,7 +36,7 @@ const nexusAPI = {
     async createAsset(assetData) {
         try {
             // Check if Q-Wallet is available
-            if (typeof window.nexus === 'undefined') {
+            if (typeof window.qWallet === 'undefined') {
                 throw new Error('Q-Wallet not detected');
             }
             

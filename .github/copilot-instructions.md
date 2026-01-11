@@ -53,18 +53,18 @@ Apps requiring user transactions use Q-Wallet browser extension (like MetaMask f
 
 ```javascript
 // 1. Check if installed
-if (typeof window.nexus === 'undefined') {
+if (typeof window.qWallet === 'undefined') {
     showWalletInstallPrompt();
     return;
 }
 
 // 2. Connect (triggers user approval)
-const accounts = await window.nexus.connect();
+const accounts = await window.qWallet.connect();
 const userAddress = accounts[0];
 
 // 3. Setup event listeners for disconnect/account changes
-window.nexus.on('accountsChanged', handleAccountChange);
-window.nexus.on('disconnect', handleDisconnect);
+window.qWallet.on('accountsChanged', handleAccountChange);
+window.qWallet.on('disconnect', handleDisconnect);
 ```
 
 **Files**: Each wallet-enabled app has `auth.js` with connection logic. See [social/auth.js](social/auth.js) for minimal implementation, [dex/auth.js](dex/auth.js) for utility functions.
@@ -309,5 +309,5 @@ Nexus market orders have complex structure. See [dex/utils.js](dex/utils.js) `ca
 1. **NXS divisibility**: 1 NXS = 1,000,000 base units. Always check `contract.ticker` and divide by 1e6 for NXS amounts.
 2. **API always POST**: Even GET-like operations use POST method.
 3. **Script load order**: In multi-file apps, dependencies must load before dependents (config → API → state → logic).
-4. **Q-Wallet async**: Wait for `window.nexus` injection with timeout loop (see `auth.js` files).
+4. **Q-Wallet async**: Wait for `window.qWallet` injection with timeout loop (see `auth.js` files).
 5. **Data in .result**: Nexus API wraps response data in `{ result: {...} }` object.

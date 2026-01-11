@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Initialize wallet connection
 async function initializeWallet() {
     // 1. Check if Q-Wallet is installed
-    if (typeof window.nexus === 'undefined') {
+    if (typeof window.qWallet === 'undefined') {
         console.warn('Q-Wallet not detected');
         showWalletInstallPrompt();
         return;
@@ -90,7 +90,7 @@ async function initializeWallet() {
 
     // 2. Check if already connected
     try {
-        const accounts = await window.nexus.getAccounts();
+        const accounts = await window.qWallet.getAccounts();
         if (accounts.length > 0) {
             console.log('Already connected to wallet:', accounts[0]);
             userAddress = accounts[0];
@@ -107,10 +107,10 @@ async function initializeWallet() {
     if (connectBtn) {
         connectBtn.addEventListener('click', async () => {
             console.log('Connect button clicked');
-            console.log('window.nexus exists:', typeof window.nexus !== 'undefined');
+            console.log('window.qWallet exists:', typeof window.qWallet !== 'undefined');
             try {
-                console.log('Calling window.nexus.connect()...');
-                const accounts = await window.nexus.connect();
+                console.log('Calling window.qWallet.connect()...');
+                const accounts = await window.qWallet.connect();
                 console.log('connect() returned:', accounts);
                 if (accounts && accounts.length > 0) {
                     userAddress = accounts[0];
@@ -202,7 +202,7 @@ async function getWalletBalance() {
     }
 
     try {
-        const balance = await window.nexus.getBalance('default');
+        const balance = await window.qWallet.getBalance('default');
         console.log('Wallet balance:', balance, 'NXS');
         return balance;
     } catch (error) {
@@ -932,7 +932,7 @@ async function buyPlayerFromMarket(orderId) {
         
         // Request transaction through Q-Wallet
         // The wallet will show a popup asking user to confirm and enter PIN
-        const result = await window.nexus.sendTransaction({
+        const result = await window.qWallet.sendTransaction({
             api: 'market/execute/order',
             params: {
                 txid: orderId
@@ -978,7 +978,7 @@ async function listPlayerForSale(localName, price) {
         const priceInSatoshis = Math.floor(price * 1000000);
         
         // Request transaction through Q-Wallet
-        const result = await window.nexus.sendTransaction({
+        const result = await window.qWallet.sendTransaction({
             api: 'market/create/order',
             params: {
                 name_from: ASSET_NAMESPACE,

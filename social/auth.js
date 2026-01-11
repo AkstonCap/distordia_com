@@ -2,7 +2,7 @@
 
 // Check if Q-Wallet extension is installed
 function isQWalletInstalled() {
-    return typeof window.nexus !== 'undefined';
+    return typeof window.qWallet !== 'undefined';
 }
 
 // Setup Q-Wallet event listeners (call this after Q-Wallet is detected)
@@ -12,7 +12,7 @@ function setupQWalletListeners() {
     }
     
     // Listen for account changes
-    window.nexus.on('accountsChanged', (accounts) => {
+    window.qWallet.on('accountsChanged', (accounts) => {
         console.log('Accounts changed:', accounts);
         if (accounts && accounts.length > 0) {
             const address = accounts[0];
@@ -28,7 +28,7 @@ function setupQWalletListeners() {
     });
     
     // Listen for disconnection
-    window.nexus.on('disconnect', () => {
+    window.qWallet.on('disconnect', () => {
         console.log('Wallet disconnected');
         if (typeof disconnectWallet === 'function') {
             disconnectWallet();

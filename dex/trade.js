@@ -157,7 +157,7 @@ function updateTradeButtonVisibility() {
     
     // Check if Q-Wallet is connected
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
+    const isWalletConnected = typeof window.qWallet !== 'undefined' && walletConnectedCheck;
     
     // Also check if a pair is selected
     const hasPairSelected = currentPair !== null;
@@ -194,7 +194,7 @@ function openTradeModal() {
     
     // Check if Q-Wallet is connected
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
+    const isWalletConnected = typeof window.qWallet !== 'undefined' && walletConnectedCheck;
     
     if (!isWalletConnected) {
         // Prompt user to connect wallet
@@ -864,7 +864,7 @@ async function loadAccountDropdowns() {
         
         // Check if using q-wallet
         const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-        if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
+        if (typeof window.qWallet !== 'undefined' && walletConnectedCheck) {
             // Use q-wallet to get accounts
             accounts = await fetchAccountsFromQWallet();
         } else {
@@ -889,8 +889,8 @@ async function loadAccountDropdowns() {
 // Fetch accounts from Q-Wallet
 async function fetchAccountsFromQWallet() {
     try {
-        // Use window.nexus.listAccounts() to get all accounts including token accounts
-        const accounts = await window.nexus.listAccounts();
+        // Use window.qWallet.listAccounts() to get all accounts including token accounts
+        const accounts = await window.qWallet.listAccounts();
         
         console.log('[Trade] Q-Wallet accounts:', accounts);
         
@@ -1014,7 +1014,7 @@ async function executeTrade() {
         
         // Check if Q-Wallet is connected
         const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-        if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
+        if (typeof window.qWallet !== 'undefined' && walletConnectedCheck) {
             // Use Q-Wallet batch calls to execute all orders at once
             await executeTradesWithQWallet(enabledOrders);
             
@@ -1085,7 +1085,7 @@ async function executeTradesWithQWallet(orders) {
     console.log('[Trade] Executing batch calls:', calls);
     
     // Execute all calls in one batch
-    const result = await window.nexus.executeBatchCalls(calls);
+    const result = await window.qWallet.executeBatchCalls(calls);
     
     console.log('[Trade] Batch execution result:', result);
     
@@ -1114,7 +1114,7 @@ function hideTradeError() {
 }
 
 // Listen for wallet connection events (if q-wallet provides them)
-if (typeof window.nexus !== 'undefined') {
+if (typeof window.qWallet !== 'undefined') {
     // Check connection on page load
     window.addEventListener('load', () => {
         setTimeout(updateTradeButtonVisibility, 500);
@@ -1136,7 +1136,7 @@ function onPairSelected() {
 async function collectTradeFee() {
     // Use Q-Wallet to collect fee
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    if (typeof window.nexus !== 'undefined' && walletConnectedCheck) {
+    if (typeof window.qWallet !== 'undefined' && walletConnectedCheck) {
         return await collectTradeFeeWithQWallet();
     } else {
         throw new Error('Q-Wallet not connected');
@@ -1147,7 +1147,7 @@ async function collectTradeFee() {
 async function collectTradeFeeWithQWallet() {
     try {
         // Use Q-Wallet to send DIST tokens
-        const result = await window.nexus.sendTransaction({
+        const result = await window.qWallet.sendTransaction({
             from: 'default',
             to: TRADE_FEE.recipient,
             amount: TRADE_FEE.amount,
@@ -1291,7 +1291,7 @@ function updateTradingPanelOverlay() {
     if (!overlay) return;
     
     const walletConnectedCheck = typeof walletConnected !== 'undefined' ? walletConnected : false;
-    const isWalletConnected = typeof window.nexus !== 'undefined' && walletConnectedCheck;
+    const isWalletConnected = typeof window.qWallet !== 'undefined' && walletConnectedCheck;
     
     if (isWalletConnected) {
         overlay.classList.add('hidden');
@@ -1402,8 +1402,8 @@ async function loadUserBalance() {
     
     try {
         // Try to get balance from Q-Wallet
-        if (typeof window.nexus !== 'undefined') {
-            const accounts = await window.nexus.listAccounts();
+        if (typeof window.qWallet !== 'undefined') {
+            const accounts = await window.qWallet.listAccounts();
             if (accounts) {
                 // Find the relevant token account
                 const tokenAccount = accounts.find(acc => 
@@ -1665,7 +1665,7 @@ async function executeSelectedOrders() {
     }
     
     // Check if Q-Wallet is available
-    if (typeof window.nexus === 'undefined') {
+    if (typeof window.qWallet === 'undefined') {
         showInlineError('Q-Wallet extension not found. Please install Q-Wallet.');
         return;
     }
@@ -1718,7 +1718,7 @@ async function executeSelectedOrders() {
         console.log('[InlineTrade] Executing orders via Q-Wallet batch call:', calls);
         
         // Execute all orders in one batch via Q-Wallet
-        const result = await window.nexus.executeBatchCalls(calls);
+        const result = await window.qWallet.executeBatchCalls(calls);
         
         console.log('[InlineTrade] Execution result:', result);
         
@@ -1755,14 +1755,14 @@ async function loadUserAccounts() {
     if (!fromSelect || !toSelect) return;
     
     // Check if Q-Wallet is connected
-    if (typeof window.nexus === 'undefined' || !window.nexus.isConnected) {
+    if (typeof window.qWallet === 'undefined' || !window.qWallet.isConnected) {
         console.log('[Accounts] Q-Wallet not connected, using default accounts only');
         return;
     }
     
     try {
         // Fetch user accounts via Q-Wallet
-        const accounts = await window.nexus.listAccounts();
+        const accounts = await window.qWallet.listAccounts();
         console.log('[Accounts] Loaded accounts:', accounts);
         
         // Clear existing options except default
@@ -1795,7 +1795,7 @@ async function createNewOrder() {
     }
     
     // Check wallet connection
-    if (!window.nexus || typeof window.nexus.executeBatchCalls !== 'function') {
+    if (!window.qWallet || typeof window.qWallet.executeBatchCalls !== 'function') {
         showInlineError('Please connect your Q-Wallet first');
         return;
     }
@@ -1846,7 +1846,7 @@ async function createNewOrder() {
         });
         
         // Execute order creation via Q-Wallet
-        const result = await window.nexus.executeBatchCalls([{
+        const result = await window.qWallet.executeBatchCalls([{
             endpoint: endpoint,
             params: {
                 market: currentPair.pair,

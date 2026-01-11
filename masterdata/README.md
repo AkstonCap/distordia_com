@@ -368,7 +368,7 @@ const productData = {
 };
 
 // Via Q-Wallet
-const result = await window.nexus.sendTransaction({
+const result = await window.qWallet.sendTransaction({
     type: 'asset.create',
     data: productData,
     name: `product-${productData['art-nr']}`

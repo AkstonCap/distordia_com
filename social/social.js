@@ -80,19 +80,19 @@ async function checkWalletConnection() {
     const checkInterval = 100;
     let waited = 0;
     
-    while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+    while (typeof window.qWallet === 'undefined' && waited < maxWaitTime) {
         await new Promise(resolve => setTimeout(resolve, checkInterval));
         waited += checkInterval;
     }
     
-    if (typeof window.nexus === 'undefined') {
+    if (typeof window.qWallet === 'undefined') {
         console.warn('Q-Wallet not detected after waiting');
         return;
     }
     
     // Check if already connected from previous session
     try {
-        const accounts = await window.nexus.getAccounts();
+        const accounts = await window.qWallet.getAccounts();
         if (accounts && accounts.length > 0) {
             console.log('Already connected to wallet:', accounts[0]);
             isConnected = true;
@@ -125,12 +125,12 @@ async function connectWallet() {
         const checkInterval = 100;
         let waited = 0;
         
-        while (typeof window.nexus === 'undefined' && waited < maxWaitTime) {
+        while (typeof window.qWallet === 'undefined' && waited < maxWaitTime) {
             await new Promise(resolve => setTimeout(resolve, checkInterval));
             waited += checkInterval;
         }
         
-        if (typeof window.nexus === 'undefined') {
+        if (typeof window.qWallet === 'undefined') {
             alert('Q-Wallet not detected. Please install the Q-Wallet browser extension.');
             console.error('Q-Wallet not detected');
             return;
@@ -144,7 +144,7 @@ async function connectWallet() {
             validitySeconds: 24 * 60 * 60 // 24 hours
         };
         
-        const accounts = await window.nexus.connectWithFee(feeConfig);
+        const accounts = await window.qWallet.connectWithFee(feeConfig);
         
         if (accounts && accounts.length > 0) {
             isConnected = true;
@@ -172,8 +172,8 @@ async function disconnectWallet() {
     
     try {
         // Call Q-Wallet disconnect method
-        if (typeof window.nexus !== 'undefined' && window.nexus.disconnect) {
-            await window.nexus.disconnect();
+        if (typeof window.qWallet !== 'undefined' && window.qWallet.disconnect) {
+            await window.qWallet.disconnect();
             console.log('Q-Wallet disconnected via API');
         }
     } catch (error) {

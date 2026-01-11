@@ -87,14 +87,14 @@ class NexusAPI {
         if (productData.replaces) assetParams.replaces = productData.replaces;
 
         // Check if Q-Wallet is available
-        if (typeof window.nexus === 'undefined') {
+        if (typeof window.qWallet === 'undefined') {
             throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
         }
 
         try {
             // Use Q-Wallet's executeBatchCalls to create the asset
             // This prompts the user for PIN approval
-            const result = await window.nexus.executeBatchCalls([
+            const result = await window.qWallet.executeBatchCalls([
                 {
                     endpoint: 'assets/create/asset',
                     params: assetParams
@@ -157,13 +157,13 @@ class NexusAPI {
      */
     async listUserProducts() {
         // Check if Q-Wallet is available
-        if (typeof window.nexus === 'undefined') {
+        if (typeof window.qWallet === 'undefined') {
             throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
         }
 
         try {
             // Use Q-Wallet's executeBatchCalls to list assets
-            const result = await window.nexus.executeBatchCalls([
+            const result = await window.qWallet.executeBatchCalls([
                 {
                     endpoint: 'assets/list/asset',
                     params: {}
@@ -196,13 +196,13 @@ class NexusAPI {
         };
 
         // Check if Q-Wallet is available
-        if (typeof window.nexus === 'undefined') {
+        if (typeof window.qWallet === 'undefined') {
             throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
         }
 
         try {
             // Use Q-Wallet's executeBatchCalls to update the asset
-            const result = await window.nexus.executeBatchCalls([
+            const result = await window.qWallet.executeBatchCalls([
                 {
                     endpoint: 'assets/update/asset',
                     params: updateParams
@@ -226,13 +226,13 @@ class NexusAPI {
      */
     async transferProduct(address, recipient) {
         // Check if Q-Wallet is available
-        if (typeof window.nexus === 'undefined') {
+        if (typeof window.qWallet === 'undefined') {
             throw new Error('Q-Wallet extension not found. Please install Q-Wallet.');
         }
 
         try {
             // Use Q-Wallet's executeBatchCalls to transfer the asset
-            const result = await window.nexus.executeBatchCalls([
+            const result = await window.qWallet.executeBatchCalls([
                 {
                     endpoint: 'assets/transfer/asset',
                     params: {

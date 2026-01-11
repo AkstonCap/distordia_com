@@ -52,7 +52,7 @@ When clicking the trade button, a modal opens with the following features:
 
 #### Q-Wallet Integration
 When connected via Q-Wallet:
-- Executes trades through the `window.nexus.executeMarketOrder()` API
+- Executes trades through the `window.qWallet.executeMarketOrder()` API
 - User will be prompted to approve the transaction in Q-Wallet
 - Requires PIN confirmation in the Q-Wallet extension
 
