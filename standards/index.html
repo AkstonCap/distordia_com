@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Distordia Asset Standards - Open specifications for blockchain-native masterdata, content verification, social posts, and more.">
+    <title>Asset Standards | Distordia Labs</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="standards.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                <span class="logo-text">DISTORDIA</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#">dApps ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="../q-wallet/index.html" class="dropdown-item">Q-Wallet Plugin</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-header">Projects</span>
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="https://github.com/AkstonCap/swapService" target="_blank" class="dropdown-item">swapService</a>
+                        <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="dropdown-item">q-mobile</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="index.html" class="active">Standards</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="standards-hero">
+        <div class="container">
+            <div class="hero-banner">
+                <h1>Distordia Asset Standards</h1>
+                <p class="hero-description">
+                    Open specifications for blockchain-native assets. These standards define how data is structured, 
+                    verified, and indexed across Distordia protocols — enabling interoperability, canonical truth, 
+                    and agent-readable schemas.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Standards Overview -->
+    <section class="standards-section">
+        <div class="container">
+            <!-- Core Principles -->
+            <div class="principles-card">
+                <h2>Core Principles</h2>
+                <div class="principles-grid">
+                    <div class="principle">
+                        <div class="principle-icon">📐</div>
+                        <h3>Open Standards</h3>
+                        <p>All asset schemas are publicly documented. Anyone can create compliant assets without permission.</p>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-icon">🔗</div>
+                        <h3>Namespace-Centric</h3>
+                        <p>Assets are registered under verified namespaces. Trust propagates from namespace verification to all registered objects.</p>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-icon">🤖</div>
+                        <h3>Agent-Readable</h3>
+                        <p>Schemas are designed for both human and AI agent consumption. Structured JSON enables automated processing.</p>
+                    </div>
+                    <div class="principle">
+                        <div class="principle-icon">⚡</div>
+                        <h3>On-Chain First</h3>
+                        <p>Core metadata lives on-chain (≤1KB). Extended data linked via URLs. Immutable and universally addressable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Attributes -->
+            <div class="standard-card">
+                <div class="standard-header">
+                    <div class="standard-icon">🏷️</div>
+                    <div>
+                        <h2>Common Attributes</h2>
+                        <span class="standard-badge required">All Asset Types</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    All Distordia-standard assets include these identifying attributes for type detection and lifecycle management.
+                </p>
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Required Attributes</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Values</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia-type</code></td>
+                                <td>string</td>
+                                <td>Asset type identifier</td>
+                                <td><code>product</code>, <code>distordia-post</code>, <code>content</code>, etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>distordia-status</code></td>
+                                <td>string</td>
+                                <td>Lifecycle/verification status</td>
+                                <td>Type-specific (see each standard)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>System Attributes (Auto-Generated by Nexus)</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>address</code></td>
+                                <td>string</td>
+                                <td>Unique blockchain identifier (genesis address)</td>
+                            </tr>
+                            <tr>
+                                <td><code>owner</code></td>
+                                <td>string</td>
+                                <td>Owner's blockchain address (genesis ID)</td>
+                            </tr>
+                            <tr>
+                                <td><code>created</code></td>
+                                <td>integer</td>
+                                <td>Unix timestamp of creation</td>
+                            </tr>
+                            <tr>
+                                <td><code>modified</code></td>
+                                <td>integer</td>
+                                <td>Unix timestamp of last modification</td>
+                            </tr>
+                            <tr>
+                                <td><code>version</code></td>
+                                <td>integer</td>
+                                <td>Asset version (increments on update)</td>
+                            </tr>
+                            <tr>
+                                <td><code>type</code></td>
+                                <td>string</td>
+                                <td>Always <code>"OBJECT"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>form</code></td>
+                                <td>string</td>
+                                <td>Always <code>"ASSET"</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Product/Masterdata Standard -->
+            <div class="standard-card" id="masterdata">
+                <div class="standard-header">
+                    <div class="standard-icon">📦</div>
+                    <div>
+                        <h2>Product / Masterdata</h2>
+                        <span class="standard-badge">distordia-type: product</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    Global master data registry for products and materials. Replace fragmented ERP-specific data 
+                    with a single source of truth. Based on GS1, UN/CEFACT, and ISO standards.
+                </p>
+                
+                <div class="use-case">
+                    <strong>Use Case:</strong> Register a product once on-chain. All supply chain participants 
+                    reference the same blockchain address instead of maintaining duplicate master data.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Distordia Attributes</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia-type</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Always <code>"product"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>distordia-status</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td><code>valid</code>, <code>discontinued</code>, <code>recalled</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Identification</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Standard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>art-nr</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Internal article/part number</td>
+                                <td>Max 50 chars</td>
+                            </tr>
+                            <tr>
+                                <td><code>GTIN</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Global Trade Item Number (barcode)</td>
+                                <td>GS1 (8-14 digits)</td>
+                            </tr>
+                            <tr>
+                                <td><code>brand</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Brand name</td>
+                                <td>Max 50 chars</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Classification</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Standard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>category</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Product category</td>
+                                <td>Max 50 chars</td>
+                            </tr>
+                            <tr>
+                                <td><code>subcategory</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>More specific classification</td>
+                                <td>Max 50 chars</td>
+                            </tr>
+                            <tr>
+                                <td><code>GPC</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>GS1 Global Product Classification</td>
+                                <td>8-digit code</td>
+                            </tr>
+                            <tr>
+                                <td><code>HSCode</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Harmonized System code for trade</td>
+                                <td>6-10 digits</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Description</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Standard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>description</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Concise product description</td>
+                                <td>Max 100 chars</td>
+                            </tr>
+                            <tr>
+                                <td><code>manufacturer</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Manufacturer name or GLN</td>
+                                <td>Free text or 13-digit GLN</td>
+                            </tr>
+                            <tr>
+                                <td><code>origin</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Country of origin</td>
+                                <td>ISO 3166-1 alpha-2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Physical Properties</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Standard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>UOM</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Base unit of measure</td>
+                                <td>UN/CEFACT codes (EA, PC, KG, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td><code>weight</code></td>
+                                <td></td>
+                                <td>integer</td>
+                                <td>Net weight per unit</td>
+                                <td>Grams</td>
+                            </tr>
+                            <tr>
+                                <td><code>hazardous</code></td>
+                                <td></td>
+                                <td>boolean</td>
+                                <td>Dangerous goods flag</td>
+                                <td>true/false</td>
+                            </tr>
+                            <tr>
+                                <td><code>perishable</code></td>
+                                <td></td>
+                                <td>boolean</td>
+                                <td>Temperature-sensitive</td>
+                                <td>true/false</td>
+                            </tr>
+                            <tr>
+                                <td><code>shelflife</code></td>
+                                <td></td>
+                                <td>integer</td>
+                                <td>Shelf life (if perishable)</td>
+                                <td>Days</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>References</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>url</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Link to extended product info (without https://)</td>
+                            </tr>
+                            <tr>
+                                <td><code>replaces</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Blockchain address of superseded product</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia-type": "product",
+    "distordia-status": "valid",
+    "art-nr": "BV-DN25-TH",
+    "GTIN": "00012345678905",
+    "category": "Piping",
+    "subcategory": "Valves",
+    "GPC": "40161500",
+    "HSCode": "848180",
+    "description": "Ball Valve DN25 Threaded Brass",
+    "manufacturer": "Distordia",
+    "brand": "FlowMaster",
+    "origin": "DE",
+    "UOM": "EA",
+    "weight": 2320,
+    "hazardous": false,
+    "perishable": false,
+    "url": "distordia.com/products/bv-dn25"
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Content Verification Standard -->
+            <div class="standard-card" id="content">
+                <div class="standard-header">
+                    <div class="standard-icon">✓</div>
+                    <div>
+                        <h2>Content Verification</h2>
+                        <span class="standard-badge">distordia: content</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    On-chain content provenance and attestation. Register web content, articles, or media 
+                    with verifiable authorship and timestamps. Enables content verification lookup by URL.
+                </p>
+
+                <div class="use-case">
+                    <strong>Use Case:</strong> Content creators register articles/pages on-chain. Anyone can verify 
+                    authenticity by checking if a URL has a corresponding blockchain registration under a verified namespace.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Schema</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Always <code>"content"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>url</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Full URL of the content being registered</td>
+                            </tr>
+                            <tr>
+                                <td><code>Title</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Content title</td>
+                            </tr>
+                            <tr>
+                                <td><code>Author</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Author name or identifier</td>
+                            </tr>
+                            <tr>
+                                <td><code>Description</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Brief content description</td>
+                            </tr>
+                            <tr>
+                                <td><code>contentHash</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>SHA-256 hash of content for integrity verification</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia": "content",
+    "url": "https://example.com/article/blockchain-future",
+    "Title": "The Future of Blockchain Technology",
+    "Author": "Jane Smith",
+    "Description": "An analysis of emerging blockchain trends",
+    "contentHash": "a3b8c9d2e1f4..."
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Social Posts Standard -->
+            <div class="standard-card" id="social">
+                <div class="standard-header">
+                    <div class="standard-icon">💬</div>
+                    <div>
+                        <h2>Social Posts</h2>
+                        <span class="standard-badge">distordia-type: distordia-post</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    Decentralized social media posts stored permanently on the Nexus blockchain. 
+                    True content ownership with no central authority able to censor or delete posts.
+                </p>
+
+                <div class="use-case">
+                    <strong>Use Case:</strong> Create Twitter/X-like posts that are permanently stored on-chain. 
+                    Posts can be filtered by namespace (official vs user) and are immutably timestamped.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Schema</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia-type</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Always <code>"distordia-post"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>distordia-status</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td><code>official</code> (from verified namespace) or <code>user-post</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>Text</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Post content</td>
+                            </tr>
+                            <tr>
+                                <td><code>Creator's namespace</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Namespace of the post creator</td>
+                            </tr>
+                            <tr>
+                                <td><code>Quoted address</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Address of quoted/replied-to post (0 if none)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia-type": "distordia-post",
+    "distordia-status": "official",
+    "Text": "Announcing our new masterdata protocol! Register products once, reference everywhere. #blockchain #supplychain",
+    "Creator's namespace": "distordia",
+    "Quoted address": 0
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Fantasy Football Standard -->
+            <div class="standard-card" id="player">
+                <div class="standard-header">
+                    <div class="standard-icon">⚽</div>
+                    <div>
+                        <h2>Fantasy Football Players</h2>
+                        <span class="standard-badge">standard: distordia.player.v1</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    NFT player assets for blockchain-based fantasy football. Players are registered as tokens 
+                    with metadata including real-world stats, attributes, and rarity levels.
+                </p>
+
+                <div class="use-case">
+                    <strong>Use Case:</strong> Create tradeable player NFTs with on-chain stats that update 
+                    based on real-world performance. Players can be bought, sold, and used in fantasy leagues.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Naming Convention</span>
+                    </div>
+                    <div class="naming-format">
+                        <p><strong>Local Name:</strong> <code>player.{league}.{team}.{playerid}</code></p>
+                        <p><strong>Namespace:</strong> <code>distordia:player.{league}.{team}.{playerid}</code></p>
+                        <p class="example-text">Example: <code>distordia:player.epl.mancity.haaland</code></p>
+                    </div>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Schema</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>standard</code></td>
+                                <td>string</td>
+                                <td>Always <code>"distordia.player.v1"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>player</code></td>
+                                <td>object</td>
+                                <td>Player identification (id, name, realWorldId, nationality, birthDate)</td>
+                            </tr>
+                            <tr>
+                                <td><code>team</code></td>
+                                <td>object</td>
+                                <td>Team data (id, name, league, leagueName)</td>
+                            </tr>
+                            <tr>
+                                <td><code>position</code></td>
+                                <td>string</td>
+                                <td><code>GK</code>, <code>DEF</code>, <code>MID</code>, <code>FWD</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>attributes</code></td>
+                                <td>object</td>
+                                <td>Player ratings (overall, pace, shooting, passing, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td><code>rarity</code></td>
+                                <td>string</td>
+                                <td><code>common</code>, <code>rare</code>, <code>epic</code>, <code>legendary</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>season</code></td>
+                                <td>string</td>
+                                <td>Season identifier (e.g., "2024-2025")</td>
+                            </tr>
+                            <tr>
+                                <td><code>stats</code></td>
+                                <td>object</td>
+                                <td>Performance stats (goals, assists, appearances, points)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h4>Rarity Levels</h4>
+                        <ul>
+                            <li><strong>Common:</strong> Rating 60-74 (50%)</li>
+                            <li><strong>Rare:</strong> Rating 75-84 (30%)</li>
+                            <li><strong>Epic:</strong> Rating 85-89 (15%)</li>
+                            <li><strong>Legendary:</strong> Rating 90+ (5%)</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h4>Supported Leagues</h4>
+                        <ul>
+                            <li><code>epl</code> - Premier League</li>
+                            <li><code>laliga</code> - La Liga</li>
+                            <li><code>bundesliga</code> - Bundesliga</li>
+                            <li><code>seriea</code> - Serie A</li>
+                            <li><code>ligue1</code> - Ligue 1</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "standard": "distordia.player.v1",
+    "player": {
+        "id": "haaland",
+        "name": "Erling Haaland",
+        "realWorldId": "1100",
+        "nationality": "Norway",
+        "birthDate": "2000-07-21"
+    },
+    "team": {
+        "id": "mancity",
+        "name": "Manchester City",
+        "league": "epl",
+        "leagueName": "Premier League"
+    },
+    "position": "FWD",
+    "attributes": {
+        "overall": 91,
+        "pace": 89,
+        "shooting": 94,
+        "passing": 75,
+        "dribbling": 80,
+        "defending": 45,
+        "physical": 88
+    },
+    "rarity": "legendary",
+    "season": "2024-2025",
+    "stats": {
+        "goals": 0,
+        "assists": 0,
+        "cleanSheets": 0,
+        "appearances": 0,
+        "weekPoints": 0,
+        "totalPoints": 0
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Verification Tiers -->
+            <div class="standard-card" id="verification">
+                <div class="standard-header">
+                    <div class="standard-icon">🔐</div>
+                    <div>
+                        <h2>Namespace Verification Tiers</h2>
+                        <span class="standard-badge governance">Governance</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    Distordia verifies namespaces — not individual assets. Trust propagates from namespace 
+                    verification to all registered objects. Verification is tiered to match risk and use case.
+                </p>
+
+                <div class="tiers-grid">
+                    <div class="tier-card tier-l0">
+                        <div class="tier-header">
+                            <span class="tier-level">L0</span>
+                            <h4>Verified Agent</h4>
+                        </div>
+                        <p>Automated, low/no stake. Cryptographic proofs + behavioral monitoring. For pseudonymous, swarm, or ephemeral agents.</p>
+                        <div class="tier-features">
+                            <span>🤖 AI-driven validation</span>
+                            <span>⚡ High-velocity</span>
+                        </div>
+                    </div>
+                    <div class="tier-card tier-l1">
+                        <div class="tier-header">
+                            <span class="tier-level">L1</span>
+                            <h4>Verified Individual</h4>
+                        </div>
+                        <p>Automated verification, pseudonymous, low stake. Basic agent delegation proofs.</p>
+                        <div class="tier-features">
+                            <span>👤 Individual</span>
+                            <span>🔑 Pseudonymous</span>
+                        </div>
+                    </div>
+                    <div class="tier-card tier-l2">
+                        <div class="tier-header">
+                            <span class="tier-level">L2</span>
+                            <h4>Verified Organization</h4>
+                        </div>
+                        <p>Higher stake. Domain, DAO, or organizational proofs. Canonical indexing enabled.</p>
+                        <div class="tier-features">
+                            <span>🏢 Organization</span>
+                            <span>📇 Canonical</span>
+                        </div>
+                    </div>
+                    <div class="tier-card tier-l3">
+                        <div class="tier-header">
+                            <span class="tier-level">L3</span>
+                            <h4>Verified Enterprise</h4>
+                        </div>
+                        <p>High stake. Legal entity verification. SLA and arbitration agreements. Enterprise-grade governance.</p>
+                        <div class="tier-features">
+                            <span>⚖️ Legal Entity</span>
+                            <span>📋 SLA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Access -->
+            <div class="standard-card" id="api">
+                <div class="standard-header">
+                    <div class="standard-icon">🔌</div>
+                    <div>
+                        <h2>API Access</h2>
+                        <span class="standard-badge">Developer</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    All Distordia-standard assets are queryable via the Nexus blockchain REST API. 
+                    Use standard Nexus endpoints with attribute filtering.
+                </p>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Query Products</span>
+                    </div>
+                    <pre><code>POST https://api.distordia.com/register/list/assets:asset
+{
+    "where": "results.distordia-type=product",
+    "limit": 100
+}</code></pre>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Query Social Posts</span>
+                    </div>
+                    <pre><code>POST https://api.distordia.com/register/list/assets:asset
+{
+    "where": "results.distordia-type=distordia-post",
+    "limit": 100
+}</code></pre>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Verify Content by URL</span>
+                    </div>
+                    <pre><code>// Fetch all content assets and filter client-side
+POST https://api.distordia.com/register/list/assets:asset
+{
+    "limit": 1000
+}
+
+// Then filter: asset.distordia === 'content' && asset.url === targetUrl</code></pre>
+                </div>
+
+                <div class="api-note">
+                    <strong>Note:</strong> All Nexus API calls use POST method. See 
+                    <a href="https://github.com/AkstonCap/distordia_com/tree/main/Nexus%20API%20docs" target="_blank">
+                        Nexus API docs
+                    </a> for full documentation.
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
+                    <span class="footer-logo-text">DISTORDIA</span>
+                </div>
+                <p>&copy; 2026 Distordia Labs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="standards.js"></script>
+</body>
+</html>
