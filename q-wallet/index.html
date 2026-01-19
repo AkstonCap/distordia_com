@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Q-Wallet - Browser extension for seamless Nexus blockchain integration. Connect dApps, sign transactions, and manage your assets securely.">
+    <meta name="keywords" content="Q-Wallet, Nexus blockchain, browser extension, Web3 wallet, dApp integration, cryptocurrency wallet">
+    <title>Q-Wallet | Nexus Browser Extension</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="q-wallet.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="../index.html#use">Products ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="index.html" class="dropdown-item active">Q-Wallet Plugin</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="../index.html#projects">Projects ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="https://github.com/AkstonCap/swapService" target="_blank" class="dropdown-item">swapService</a>
+                        <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="dropdown-item">q-mobile</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="../index.html#modules">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-icon">🔐</div>
+                <h1 class="hero-title">Q-Wallet</h1>
+                <p class="hero-subtitle">Your Gateway to the Nexus Blockchain</p>
+                <p class="hero-description">
+                    A powerful browser extension that seamlessly connects you to the Nexus ecosystem. 
+                    Sign transactions, manage assets, and interact with dApps — all from your browser.
+                </p>
+                <div class="hero-cta">
+                    <a href="https://github.com/AkstonCap/q-wallet" target="_blank" class="btn btn-primary">
+                        <span class="btn-icon">⬇️</span> View on GitHub
+                    </a>
+                    <a href="#features" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="section-title">Why Q-Wallet?</h2>
+            <p class="section-intro">
+                Built for the agent-native economy, Q-Wallet provides secure, seamless access to Nexus blockchain 
+                applications with enterprise-grade security.
+            </p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Seamless dApp Integration</h3>
+                    <p>
+                        Connect to any Nexus-powered dApp with a single click. Q-Wallet injects a standard API 
+                        that developers can easily integrate, just like MetaMask for Ethereum.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✍️</div>
+                    <h3>Secure Transaction Signing</h3>
+                    <p>
+                        Review and approve transactions directly in the extension. Your private keys never leave 
+                        your device — all signing happens locally with user confirmation.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Quantum-Resistant Security</h3>
+                    <p>
+                        Built on Nexus's quantum-resistant signature schemes. Your assets are protected against 
+                        both current and future cryptographic threats.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💼</div>
+                    <h3>Asset Management</h3>
+                    <p>
+                        View your NXS balance, tokens, and NFTs in one place. Track your portfolio and manage 
+                        multiple accounts with ease.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Agent-Ready</h3>
+                    <p>
+                        Designed for the agent-native economy. Q-Wallet supports programmatic interactions 
+                        for AI agents while maintaining user sovereignty over approvals.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Open Source</h3>
+                    <p>
+                        Fully open source and auditable. Trust is built through transparency — review the code, 
+                        contribute improvements, and verify security yourself.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works-section">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Install the Extension</h3>
+                        <p>Download Q-Wallet from GitHub and install it in your browser. Available for Chrome and Chromium-based browsers.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Connect Your Account</h3>
+                        <p>Create a new Nexus account or import an existing one. Your credentials are encrypted and stored locally.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Visit a dApp</h3>
+                        <p>Navigate to any Nexus-powered dApp like the DEX, Masterdata, or Social. The dApp will detect Q-Wallet automatically.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Approve & Transact</h3>
+                        <p>When a dApp requests a transaction, Q-Wallet prompts you to review and approve. You stay in control.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- For Developers Section -->
+    <section id="developers" class="developers-section">
+        <div class="container">
+            <h2 class="section-title">For Developers</h2>
+            <p class="section-intro">
+                Integrate Q-Wallet into your dApp with just a few lines of code. Our API follows familiar Web3 patterns.
+            </p>
+            <div class="code-example">
+                <div class="code-header">
+                    <span class="code-lang">JavaScript</span>
+                    <span class="code-title">Basic Integration</span>
+                </div>
+                <pre class="code-block"><code>// Check if Q-Wallet is installed
+if (typeof window.qWallet === 'undefined') {
+    alert('Please install Q-Wallet to continue');
+    return;
+}
+
+// Connect to the wallet
+const accounts = await window.qWallet.connect();
+const userAddress = accounts[0];
+
+// Listen for account changes
+window.qWallet.on('accountsChanged', (accounts) => {
+    console.log('Account changed:', accounts[0]);
+});
+
+// Request a transaction
+const result = await window.qWallet.request({
+    method: 'nexus_sendTransaction',
+    params: { /* transaction details */ }
+});</code></pre>
+            </div>
+            <div class="developer-cta">
+                <a href="https://github.com/AkstonCap/q-wallet" target="_blank" class="btn btn-primary">
+                    📚 View Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Get Started?</h2>
+                <p>Download Q-Wallet and start exploring the Nexus ecosystem today.</p>
+                <a href="https://github.com/AkstonCap/q-wallet" target="_blank" class="btn btn-primary btn-large">
+                    <span class="btn-icon">⬇️</span> Get Q-Wallet on GitHub
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
+                    <span class="footer-logo-text">DISTORDIA</span>
+                </div>
+                <p>&copy; 2026 Distordia Labs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="q-wallet.js"></script>
+</body>
+</html>
