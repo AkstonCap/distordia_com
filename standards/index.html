@@ -108,11 +108,11 @@
                     </div>
                 </div>
                 <p class="standard-description">
-                    All Distordia-standard assets include these identifying attributes for type detection and lifecycle management.
+                    All Distordia-standard assets on Nexus include these identifying attributes for type detection and lifecycle management.
                 </p>
                 <div class="schema-block">
                     <div class="schema-header">
-                        <span>Required Attributes</span>
+                        <span>Required Distordia Attributes</span>
                     </div>
                     <table class="schema-table">
                         <thead>
@@ -235,7 +235,7 @@
                                 <td><code>distordia-status</code></td>
                                 <td>✓</td>
                                 <td>string</td>
-                                <td><code>valid</code>, <code>discontinued</code>, <code>recalled</code></td>
+                                <td><code>valid</code>, <code>discontinued</code>, <code>recalled</code>, <code>pre-order</code>, <code>to be discontinued</code></td>
                             </tr>
                         </tbody>
                     </table>
@@ -257,8 +257,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code>art-nr</code></td>
+                                <td><code>nexus-address</code></td>
                                 <td>✓</td>
+                                <td>string</td>
+                                <td>Asset's unique Nexus blockchain address restated here to become visible in register queries, to be used as a global reference art.nr.</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><code>art-nr</code></td>
+                                <td></td>
                                 <td>string</td>
                                 <td>Internal article/part number</td>
                                 <td>Max 50 chars</td>
@@ -460,6 +467,7 @@
                     <pre><code>{
     "distordia-type": "product",
     "distordia-status": "valid",
+    "nexus-address": "abc123def456ghi789jkl012mno345pqr678stu90vwx",
     "art-nr": "BV-DN25-TH",
     "GTIN": "00012345678905",
     "category": "Piping",
@@ -485,7 +493,7 @@
                     <div class="standard-icon">✓</div>
                     <div>
                         <h2>Content Verification</h2>
-                        <span class="standard-badge">distordia: content</span>
+                        <span class="standard-badge">distordia-type: content</span>
                     </div>
                 </div>
                 <p class="standard-description">
@@ -513,7 +521,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code>distordia</code></td>
+                                <td><code>distordia-type</code></td>
                                 <td>✓</td>
                                 <td>string</td>
                                 <td>Always <code>"content"</code></td>
@@ -558,7 +566,7 @@
                         <button class="copy-btn" onclick="copyExample(this)">Copy</button>
                     </div>
                     <pre><code>{
-    "distordia": "content",
+    "distordia-type": "content",
     "url": "https://example.com/article/blockchain-future",
     "Title": "The Future of Blockchain Technology",
     "Author": "Jane Smith",
@@ -605,7 +613,7 @@
                                 <td><code>distordia-type</code></td>
                                 <td>✓</td>
                                 <td>string</td>
-                                <td>Always <code>"distordia-post"</code></td>
+                                <td><code>"distordia-post"</code>, <code>"distordia-quote"</code>, <code>"post"</code> or <code>"quote"</code> </td>
                             </tr>
                             <tr>
                                 <td><code>distordia-status</code></td>
@@ -650,7 +658,7 @@
                 </div>
             </div>
 
-            <!-- Fantasy Football Standard -->
+            <!-- Fantasy Football Standard - HIDDEN: Needs more work before release
             <div class="standard-card" id="player">
                 <div class="standard-header">
                     <div class="standard-icon">⚽</div>
@@ -802,6 +810,7 @@
 }</code></pre>
                 </div>
             </div>
+            END Fantasy Football Standard -->
 
             <!-- Verification Tiers -->
             <div class="standard-card" id="verification">
@@ -875,7 +884,8 @@
                     </div>
                 </div>
                 <p class="standard-description">
-                    All Distordia-standard assets are queryable via the Nexus blockchain REST API. 
+                    All Distordia-standard assets are queryable via the Nexus blockchain REST API from any Nexus public node either in CLI or url endpoint.
+                    For instance using https://api.distordia.com as shown below. 
                     Use standard Nexus endpoints with attribute filtering.
                 </p>
 
@@ -885,8 +895,10 @@
                     </div>
                     <pre><code>POST https://api.distordia.com/register/list/assets:asset
 {
-    "where": "results.distordia-type=product",
-    "limit": 100
+    "where": "results.distordia-type=product AND results.distordia-status=valid",
+    "limit": 100,
+    "sort": "manufacturer",
+    "order": "asc"
 }</code></pre>
                 </div>
 
@@ -896,8 +908,10 @@
                     </div>
                     <pre><code>POST https://api.distordia.com/register/list/assets:asset
 {
-    "where": "results.distordia-type=distordia-post",
-    "limit": 100
+    "where": "results.distordia-type=distordia-post AND results.distordia-status=official",
+    "limit": 100,
+    "sort": "modified",
+    "order": "desc"
 }</code></pre>
                 </div>
 
@@ -908,6 +922,7 @@
                     <pre><code>// Fetch all content assets and filter client-side
 POST https://api.distordia.com/register/list/assets:asset
 {
+    "where": "results.distordia-type=content AND results.url=targetUrl",
     "limit": 1000
 }
 
