@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Q-Mobile - Native mobile wallet for the Nexus blockchain. Manage your assets, sign transactions, and interact with dApps on the go.">
+    <meta name="keywords" content="Q-Mobile, Nexus blockchain, mobile wallet, iOS, Android, cryptocurrency wallet, mobile dApp">
+    <title>Q-Mobile | Nexus Mobile Wallet</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="q-mobile.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#">dApps ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="../q-wallet/index.html" class="dropdown-item">Q-Wallet Plugin</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-header">Projects</span>
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="index.html" class="dropdown-item active">Q-Mobile</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="../standards/index.html">Standards</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-icon">📱</div>
+                <h1 class="hero-title">Q-Mobile</h1>
+                <p class="hero-subtitle">Nexus Blockchain in Your Pocket</p>
+                <p class="hero-description">
+                    A native mobile wallet that brings the full power of the Nexus blockchain to your smartphone. 
+                    Manage assets, sign transactions, and interact with dApps — anywhere, anytime.
+                </p>
+                <div class="hero-cta">
+                    <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="btn btn-primary">
+                        <span class="btn-icon">⬇️</span> View on GitHub
+                    </a>
+                    <a href="#features" class="btn btn-secondary">Learn More</a>
+                </div>
+                <div class="platform-badges">
+                    <span class="badge badge-ios">🍎 iOS</span>
+                    <span class="badge badge-android">🤖 Android</span>
+                    <span class="badge badge-dev">🚧 In Development</span>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="section-title">Mobile-First Features</h2>
+            <p class="section-intro">
+                Q-Mobile is designed from the ground up for mobile users, with a focus on security, 
+                usability, and seamless integration with the Nexus ecosystem.
+            </p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3>Native Wallet</h3>
+                    <p>
+                        Full-featured Nexus wallet with support for NXS, tokens, and NFTs. 
+                        Send, receive, and manage your digital assets with an intuitive mobile interface.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Biometric Security</h3>
+                    <p>
+                        Protect your wallet with Face ID, Touch ID, or fingerprint authentication. 
+                        Your private keys are encrypted and stored securely in the device's secure enclave.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📲</div>
+                    <h3>QR Code Scanning</h3>
+                    <p>
+                        Quickly scan addresses and payment requests with the built-in QR scanner. 
+                        No more copy-pasting long blockchain addresses.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Push Notifications</h3>
+                    <p>
+                        Stay informed with real-time notifications for incoming transactions, 
+                        price alerts, and dApp activity. Never miss an important update.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>dApp Browser</h3>
+                    <p>
+                        Built-in Web3 browser for accessing Nexus dApps directly from the app. 
+                        Browse DEX, Masterdata, Social, and more without leaving Q-Mobile.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Sync with Q-Wallet</h3>
+                    <p>
+                        Seamlessly sync your accounts between Q-Mobile and the Q-Wallet browser extension. 
+                        Your wallet follows you across all your devices.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section id="comparison" class="comparison-section">
+        <div class="container">
+            <h2 class="section-title">Q-Wallet vs Q-Mobile</h2>
+            <p class="section-intro">
+                Both wallets provide secure access to the Nexus blockchain, optimized for different use cases.
+            </p>
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-header">
+                        <span class="comparison-icon">🔌</span>
+                        <h3>Q-Wallet</h3>
+                        <span class="comparison-badge">Browser Extension</span>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>✓ Desktop browser integration</li>
+                        <li>✓ Seamless dApp injection</li>
+                        <li>✓ Developer-friendly API</li>
+                        <li>✓ Multi-tab support</li>
+                        <li>✓ Ideal for trading & development</li>
+                    </ul>
+                    <a href="../q-wallet/index.html" class="btn btn-secondary">Learn More</a>
+                </div>
+                <div class="comparison-card featured">
+                    <div class="comparison-header">
+                        <span class="comparison-icon">📱</span>
+                        <h3>Q-Mobile</h3>
+                        <span class="comparison-badge">Native Mobile App</span>
+                    </div>
+                    <ul class="comparison-list">
+                        <li>✓ iOS & Android native</li>
+                        <li>✓ Biometric authentication</li>
+                        <li>✓ QR code scanning</li>
+                        <li>✓ Push notifications</li>
+                        <li>✓ Ideal for on-the-go access</li>
+                    </ul>
+                    <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="btn btn-primary">View on GitHub</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section id="roadmap" class="roadmap-section">
+        <div class="container">
+            <h2 class="section-title">Development Roadmap</h2>
+            <div class="roadmap-timeline">
+                <div class="roadmap-item completed">
+                    <div class="roadmap-marker"></div>
+                    <div class="roadmap-content">
+                        <span class="roadmap-phase">Phase 1</span>
+                        <h3>Core Wallet</h3>
+                        <p>Basic wallet functionality: account creation, NXS transfers, balance display</p>
+                    </div>
+                </div>
+                <div class="roadmap-item in-progress">
+                    <div class="roadmap-marker"></div>
+                    <div class="roadmap-content">
+                        <span class="roadmap-phase">Phase 2</span>
+                        <h3>Token & NFT Support</h3>
+                        <p>Full support for Nexus tokens and NFT assets with metadata display</p>
+                    </div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-marker"></div>
+                    <div class="roadmap-content">
+                        <span class="roadmap-phase">Phase 3</span>
+                        <h3>dApp Browser</h3>
+                        <p>Integrated Web3 browser with injection API for dApp interaction</p>
+                    </div>
+                </div>
+                <div class="roadmap-item">
+                    <div class="roadmap-marker"></div>
+                    <div class="roadmap-content">
+                        <span class="roadmap-phase">Phase 4</span>
+                        <h3>Cross-Device Sync</h3>
+                        <p>Encrypted sync between Q-Mobile and Q-Wallet browser extension</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Follow Development Progress</h2>
+                <p>Q-Mobile is actively being developed. Star the repo to stay updated on releases.</p>
+                <a href="https://github.com/AkstonCap/q-mobile" target="_blank" class="btn btn-primary btn-large">
+                    <span class="btn-icon">⭐</span> Star on GitHub
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
+                    <span class="footer-logo-text">DISTORDIA</span>
+                </div>
+                <p>&copy; 2026 Distordia Labs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="q-mobile.js"></script>
+</body>
+</html>
