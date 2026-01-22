@@ -815,6 +815,127 @@
             </div>
             END Fantasy Football Standard -->
 
+            <!-- NexGo Taxi Standard -->
+            <div class="standard-card" id="nexgo">
+                <div class="standard-header">
+                    <div class="standard-icon">🚕</div>
+                    <div>
+                        <h2>NexGo Taxi</h2>
+                        <span class="standard-badge">distordia-type: nexgo-taxi</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    Decentralized taxi service position broadcasting. Drivers register their vehicle and broadcast 
+                    real-time GPS coordinates and availability status on-chain, enabling passengers to find nearby taxis.
+                </p>
+
+                <div class="use-case">
+                    <strong>Use Case:</strong> Taxi drivers broadcast their position and status (available/occupied) 
+                    on-chain. Passengers query nearby available taxis without relying on centralized ride-hailing platforms.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Schema</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia-type</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Always <code>"nexgo-taxi"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>vehicle-id</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Unique vehicle registration/license plate</td>
+                            </tr>
+                            <tr>
+                                <td><code>vehicle-type</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Vehicle category: <code>sedan</code>, <code>suv</code>, <code>van</code>, <code>luxury</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>status</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>Current availability: <code>available</code> or <code>occupied</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>latitude</code></td>
+                                <td>✓</td>
+                                <td>number</td>
+                                <td>GPS latitude coordinate (decimal degrees)</td>
+                            </tr>
+                            <tr>
+                                <td><code>longitude</code></td>
+                                <td>✓</td>
+                                <td>number</td>
+                                <td>GPS longitude coordinate (decimal degrees)</td>
+                            </tr>
+                            <tr>
+                                <td><code>driver</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>Driver display name or identifier</td>
+                            </tr>
+                            <tr>
+                                <td><code>capacity</code></td>
+                                <td></td>
+                                <td>number</td>
+                                <td>Maximum passenger capacity</td>
+                            </tr>
+                            <tr>
+                                <td><code>features</code></td>
+                                <td></td>
+                                <td>array</td>
+                                <td>Vehicle features: <code>["wheelchair", "pet-friendly", "child-seat"]</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="naming-block">
+                    <div class="naming-header">
+                        <span>Asset Naming Convention</span>
+                    </div>
+                    <pre><code>nexgo-taxi-{vehicle-id}
+
+Examples:
+nexgo-taxi-ABC1234
+nexgo-taxi-XY789ZZ</code></pre>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia-type": "nexgo-taxi",
+    "vehicle-id": "ABC-1234",
+    "vehicle-type": "sedan",
+    "status": "available",
+    "latitude": 62.4722,
+    "longitude": 6.1495,
+    "driver": "Ålesund Taxi 1",
+    "capacity": 4,
+    "features": ["pet-friendly"]
+}</code></pre>
+                </div>
+            </div>
+
             <!-- Verification Tiers -->
             <div class="standard-card" id="verification">
                 <div class="standard-header">
