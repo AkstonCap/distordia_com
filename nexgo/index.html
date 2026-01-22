@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NexGo - Decentralized taxi hiring service on Nexus blockchain">
+    <title>NexGo | Decentralized Taxi Service</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="nexgo.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#">dApps ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="../q-wallet/index.html" class="dropdown-item">Q-Wallet Plugin</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-header">Projects</span>
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="../q-mobile/index.html" class="dropdown-item">Q-Mobile</a>
+                        <a href="../verification/index.html" class="dropdown-item">Verification</a>
+                        <a href="index.html" class="dropdown-item active">NexGo</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="../standards/index.html">Standards</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="auth-controls">
+                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <div id="walletInfo" class="wallet-info" style="display: none;">
+                    <span id="walletAddress" class="wallet-address"></span>
+                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+                </div>
+            </div>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero nexgo-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>🚕 NexGo</h1>
+                <p class="subtitle">Decentralized Taxi Hiring on Nexus Blockchain</p>
+                <p class="description">Find nearby available taxis in real-time. Drivers post their position and status on-chain for transparent, trustless ride matching.</p>
+                <button id="infoBtn" class="btn-info">ℹ️ How it Works</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="nexgo-main">
+        <div class="container">
+            <!-- Mode Toggle -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="passengerModeBtn" data-mode="passenger">
+                    🧑 Passenger
+                </button>
+                <button class="mode-btn" id="driverModeBtn" data-mode="driver">
+                    🚗 Driver
+                </button>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-section">
+                <div class="map-header">
+                    <h2 id="mapTitle">Nearby Taxis</h2>
+                    <div class="map-controls">
+                        <button id="locateMeBtn" class="btn btn-secondary">📍 My Location</button>
+                        <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div id="map" class="map-container"></div>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <span class="legend-marker available"></span>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker occupied"></span>
+                        <span>Occupied</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker user"></span>
+                        <span>Your Location</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passenger Panel -->
+            <div class="panel passenger-panel" id="passengerPanel">
+                <h3>Available Taxis Near You</h3>
+                <div class="taxi-list" id="taxiList">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Finding nearby taxis...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Panel -->
+            <div class="panel driver-panel" id="driverPanel" style="display: none;">
+                <h3>Driver Dashboard</h3>
+                
+                <div class="driver-status-card" id="driverStatusCard">
+                    <div class="status-header">
+                        <span class="status-label">Your Status</span>
+                        <span class="status-badge" id="currentStatus">Not Broadcasting</span>
+                    </div>
+                    
+                    <div class="driver-form">
+                        <div class="form-group">
+                            <label for="vehicleId">Vehicle ID / License Plate</label>
+                            <input type="text" id="vehicleId" placeholder="e.g., ABC-1234">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vehicleType">Vehicle Type</label>
+                            <select id="vehicleType">
+                                <option value="sedan">Sedan (4 passengers)</option>
+                                <option value="suv">SUV (6 passengers)</option>
+                                <option value="van">Van (8 passengers)</option>
+                                <option value="luxury">Luxury</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Status</label>
+                            <div class="status-toggle">
+                                <button class="status-option active" data-status="available" id="statusAvailable">
+                                    ✅ Available
+                                </button>
+                                <button class="status-option" data-status="occupied" id="statusOccupied">
+                                    🚫 Occupied
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="driver-actions">
+                            <button id="startBroadcastBtn" class="btn btn-primary">
+                                📡 Start Broadcasting
+                            </button>
+                            <button id="stopBroadcastBtn" class="btn btn-danger" style="display: none;">
+                                ⏹️ Stop Broadcasting
+                            </button>
+                        </div>
+                        
+                        <div class="location-info" id="locationInfo">
+                            <p><strong>Your Location:</strong></p>
+                            <p id="currentLocation">Waiting for GPS...</p>
+                            <p id="lastUpdate" class="text-muted"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🚕</div>
+                    <div class="stat-value" id="totalTaxis">-</div>
+                    <div class="stat-label">Active Drivers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="availableTaxis">-</div>
+                    <div class="stat-label">Available Now</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🌍</div>
+                    <div class="stat-value" id="totalCities">-</div>
+                    <div class="stat-label">Cities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⛓️</div>
+                    <div class="stat-value" id="onChainUpdates">-</div>
+                    <div class="stat-label">On-Chain Updates</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚕 How NexGo Works</h2>
+                <button class="modal-close" onclick="closeInfoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>For Passengers</h3>
+                    <ol>
+                        <li><strong>Allow Location Access</strong> - Let the app detect your position</li>
+                        <li><strong>View Nearby Taxis</strong> - See available drivers on the map</li>
+                        <li><strong>Choose a Driver</strong> - Select based on distance, vehicle type, or rating</li>
+                        <li><strong>Request Ride</strong> - Send ride request via blockchain transaction</li>
+                    </ol>
+                </div>
+                
+                <div class="info-section">
+                    <h3>For Drivers</h3>
+                    <ol>
+                        <li><strong>Connect Q-Wallet</strong> - Authenticate with your Nexus wallet</li>
+                        <li><strong>Set Vehicle Info</strong> - Enter your vehicle details</li>
+                        <li><strong>Start Broadcasting</strong> - Your position updates on-chain every 30 seconds</li>
+                        <li><strong>Accept Rides</strong> - Receive and accept ride requests</li>
+                    </ol>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Blockchain Benefits</h3>
+                    <ul>
+                        <li>✅ <strong>Transparent</strong> - All taxi positions verifiable on-chain</li>
+                        <li>✅ <strong>Trustless</strong> - No central authority controlling the marketplace</li>
+                        <li>✅ <strong>Immutable</strong> - Ride history permanently recorded</li>
+                        <li>✅ <strong>Low Fees</strong> - No middleman taking large commissions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="nexgo.js"></script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+/* NexGo Taxi Service Styles */
+
+/* Hero Section */
+.nexgo-hero {
+    background: linear-gradient(135deg, rgba(10, 10, 15, 0.95), rgba(26, 26, 46, 0.9)),
+                url('../images/taxi-bg.jpg') center/cover no-repeat;
+    padding: 8rem 0 4rem;
+    text-align: center;
+}
+
+.nexgo-hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.nexgo-hero .subtitle {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.nexgo-hero .description {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+/* Main Content */
+.nexgo-main {
+    padding: 3rem 0;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mode-btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.mode-btn.active {
+    background: var(--gradient-1);
+    border-color: transparent;
+    color: white;
+}
+
+/* Map Section */
+.map-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.map-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.map-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.map-container {
+    height: 400px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1a1a2e;
+}
+
+.map-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.legend-marker {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.legend-marker.available {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.legend-marker.occupied {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.legend-marker.user {
+    background: var(--primary-color);
+    box-shadow: 0 0 8px rgba(255, 107, 53, 0.5);
+}
+
+/* Panels */
+.panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.panel h3 {
+    margin: 0 0 1.5rem;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+/* Taxi List (Passenger View) */
+.taxi-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.taxi-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.taxi-card:hover {
+    border-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.taxi-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 107, 53, 0.1);
+    border-radius: 10px;
+}
+
+.taxi-info {
+    flex: 1;
+}
+
+.taxi-info h4 {
+    margin: 0 0 0.3rem;
+    font-size: 1rem;
+}
+
+.taxi-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.taxi-distance {
+    text-align: right;
+}
+
+.taxi-distance .distance {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.taxi-distance .time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.taxi-status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.taxi-status.available {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.taxi-status.occupied {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+/* Driver Panel */
+.driver-status-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.status-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+.status-badge.broadcasting {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.driver-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.8rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.status-toggle {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-option {
+    flex: 1;
+    padding: 1rem;
+    background: var(--bg-dark);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-option:hover {
+    border-color: var(--primary-color);
+}
+
+.status-option.active[data-status="available"] {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+.status-option.active[data-status="occupied"] {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.driver-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.driver-actions .btn {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+.location-info {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.location-info p {
+    margin: 0.3rem 0;
+    font-size: 0.9rem;
+}
+
+.text-muted {
+    color: var(--text-secondary);
+    font-size: 0.8rem !important;
+}
+
+/* Stats Section */
+.stats-section {
+    padding: 3rem 0;
+    background: rgba(255, 107, 53, 0.05);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.3rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: var(--primary-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.info-section {
+    margin-bottom: 2rem;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-section h3 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.info-section ol,
+.info-section ul {
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.info-section li {
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--gradient-1);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-info {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-info:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Leaflet Custom Markers */
+.taxi-marker {
+    background: none;
+    border: none;
+}
+
+.marker-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.marker-icon.available {
+    background: #22c55e;
+}
+
+.marker-icon.occupied {
+    background: #ef4444;
+}
+
+.marker-icon.user {
+    background: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .nexgo-hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .nexgo-hero .subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .mode-toggle {
+        flex-direction: column;
+    }
+    
+    .mode-btn {
+        width: 100%;
+    }
+    
+    .map-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .map-controls {
+        width: 100%;
+    }
+    
+    .map-controls .btn {
+        flex: 1;
+    }
+    
+    .map-legend {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .status-toggle {
+        flex-direction: column;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .driver-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

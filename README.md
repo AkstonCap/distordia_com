@@ -33,6 +33,7 @@ A multi-app static website for Distordia Labs - blockchain-powered dApps built o
 | **Social** | On-chain social media - posts stored as blockchain assets | `/social/` |
 | **Q-Mobile** | Mobile wallet app information and features | `/q-mobile/` |
 | **Verification** | Namespace verification system with tiered DIST staking | `/verification/` |
+| **NexGo** | Decentralized taxi service with real-time GPS positioning | `/nexgo/` |
 | **Fantasy Football** | NFT-based fantasy football with real match scoring | `/fantasyfootball/` |
 | **Ship Engineering** | AI-powered ship design research showcase | `/ship-engineering/` |
 
@@ -60,6 +61,7 @@ distordia_com/
 ├── q-mobile/               # Mobile wallet info
 ├── verification/           # Namespace verification
 │   └── daemon/             # Python processing daemon
+├── nexgo/                  # Decentralized taxi service
 ├── fantasyfootball/        # NFT fantasy football
 ├── ship-engineering/       # AI ship research
 ├── standards/              # Blockchain standards
