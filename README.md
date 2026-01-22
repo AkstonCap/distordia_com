@@ -1,159 +1,119 @@
-# Distordia Crypto Lab Website
+# Distordia Labs Website
 
-A modern, responsive website for Distordia - a cutting-edge cryptographic research laboratory.
+A multi-app static website for Distordia Labs - blockchain-powered dApps built on the Nexus blockchain.
 
-## 🌐 Live Preview
+## 🌐 Live Site
 
-Simply open `index.html` in your web browser to view the website.
+**[distordia.com](https://distordia.com)**
 
 ## ✨ Features
 
-- **Modern Design**: Dark-themed UI with orange gradient accents matching the Distordia brand
-- **Custom Branding**: Uses official Distordia logo throughout the site
+- **Modern Design**: Dark-themed UI with orange gradient accents
 - **Fully Responsive**: Optimized for desktop, tablet, and mobile devices
-- **Interactive Animations**: Smooth scrolling, parallax effects, and particle animations
-- **DEX Marketplace**: Full-featured decentralized exchange interface for Nexus.io blockchain
-- **Fantasy Football**: NFT-based fantasy football game combining blockchain assets with real football data
-- **Sections Include**:
-  - Hero section with glitch effect
-  - About the lab
-  - Research areas
-  - Featured projects
-  - Contact information
-  - DEX trading interface (`/dex/`)
-  - Fantasy Football game (`/fantasyfootball/`)
+- **No Build Tools**: Pure vanilla JavaScript - open HTML files directly
+- **Nexus Blockchain Integration**: All apps communicate with Nexus blockchain via REST API
+- **Q-Wallet Integration**: Web3 authentication via Q-Wallet browser extension
 
-## 🚀 Getting Started
+## 🚀 dApps & Projects
 
-### Local Development
+### Core dApps
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/distordia_com.git
-   cd distordia_com
-   ```
+| App | Description | Path |
+|-----|-------------|------|
+| **DEX** | Decentralized exchange with order books, trading pairs, and charts | `/dex/` |
+| **Master Data** | Product catalog NFT management system | `/masterdata/` |
+| **Q-Wallet Plugin** | Browser extension info and installation page | `/q-wallet/` |
 
-2. Open `index.html` in your browser:
-   - Double-click the file, or
-   - Use a local server (recommended):
-     ```bash
-     # Using Python
-     python -m http.server 8000
-     
-     # Using Node.js
-     npx serve
-     ```
+### Projects
 
-3. Navigate to `http://localhost:8000` in your browser
+| Project | Description | Path |
+|---------|-------------|------|
+| **Stablecoin Bridge** | Cross-chain swap between USDC (Solana) and USDD (Nexus) | `/swap/` |
+| **Content Verification** | Verify content provenance via blockchain registration | `/content-verification/` |
+| **Social** | On-chain social media - posts stored as blockchain assets | `/social/` |
+| **Q-Mobile** | Mobile wallet app information and features | `/q-mobile/` |
+| **Verification** | Namespace verification system with tiered DIST staking | `/verification/` |
+| **Fantasy Football** | NFT-based fantasy football with real match scoring | `/fantasyfootball/` |
+| **Ship Engineering** | AI-powered ship design research showcase | `/ship-engineering/` |
+
+### Documentation
+
+| Resource | Description | Path |
+|----------|-------------|------|
+| **Standards** | Asset naming conventions and blockchain standards | `/standards/` |
+| **Nexus API Docs** | Complete Nexus blockchain API reference | `/docs/Nexus API docs/` |
+| **Q-Wallet Docs** | dApp integration guide for Q-Wallet | `/docs/q-wallet docs/` |
 
 ## 📁 Project Structure
 
 ```
 distordia_com/
-├── images/
-│   ├── distordia-stor-medtekst-bred.png  # Wide logo with text
-│   ├── distordia-stor-medtekst.png       # Logo with text
-│   └── logo-utentekst.png                # Icon only
-├── dex/
-│   ├── index.html      # DEX marketplace page
-│   ├── dex.css         # DEX-specific styling
-│   ├── dex.js          # Market data API integration
-│   └── README.md       # DEX documentation
-├── fantasyfootball/
-│   ├── index.html      # Fantasy football game page
-│   ├── fantasy.css     # Football-themed styling
-│   ├── fantasy.js      # Game logic and NFT integration
-│   └── README.md       # Fantasy football documentation
-├── index.html          # Main HTML file
-├── styles.css          # CSS styling
-├── script.js           # JavaScript interactivity
-└── README.md           # This file
+├── index.html              # Landing page
+├── styles.css              # Shared styles
+├── script.js               # Landing page scripts
+├── dex/                    # Decentralized exchange
+├── masterdata/             # Product catalog NFTs
+├── q-wallet/               # Wallet plugin info
+├── swap/                   # Cross-chain bridge
+├── content-verification/   # Content provenance
+├── social/                 # On-chain social media
+├── q-mobile/               # Mobile wallet info
+├── verification/           # Namespace verification
+│   └── daemon/             # Python processing daemon
+├── fantasyfootball/        # NFT fantasy football
+├── ship-engineering/       # AI ship research
+├── standards/              # Blockchain standards
+├── docs/                   # API documentation
+└── images/                 # Shared assets
 ```
 
-## 🎨 Customization
+## 🛠️ Local Development
 
-### Colors
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/distordia_com.git
+cd distordia_com
 
-Edit the CSS variables in `styles.css` to change the color scheme:
+# Serve with Python
+python -m http.server 8000
 
-```css
-:root {
-    --primary-color: #FF6B35;      /* Orange */
-    --secondary-color: #FF8C42;     /* Light Orange */
-    --accent-color: #FFA577;        /* Soft Orange */
-    --bg-dark: #0a0a0f;            /* Dark background */
-    --bg-card: #1a1a2e;            /* Card background */
+# Or with Node.js
+npx serve
+
+# Navigate to http://localhost:8000
+```
+
+## 🔗 Blockchain Integration
+
+### API Endpoint
+All apps connect to `https://api.distordia.com` (Nexus node).
+
+### Request Pattern
+```javascript
+const response = await fetch('https://api.distordia.com/system/get/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+});
+const data = await response.json();
+const info = data.result;
+```
+
+### Q-Wallet Connection
+```javascript
+if (typeof window.qWallet !== 'undefined') {
+    const accounts = await window.qWallet.connect();
+    const userAddress = accounts[0];
 }
 ```
 
-### Content
+## 🎨 Tech Stack
 
-- Update company information in `index.html`
-- Modify research areas, projects, and contact details
-- Add your own logo/branding
-
-## 🛠️ Technologies Used
-
-- **HTML5**: Semantic markup
-- **CSS3**: Modern styling with gradients, animations, and flexbox/grid
-- **JavaScript**: Interactive features and animations
-- **Nexus.io API**: Real-time blockchain data for DEX marketplace
-- **No frameworks required**: Pure vanilla JavaScript
-
-## 🔗 Subsite: DEX Marketplace
-
-The `/dex/` subsite provides a full-featured decentralized exchange interface:
-
-### Features
-- **Real-time Market Data**: Live prices from Nexus.io blockchain
-- **Order Book Display**: Live bid/ask orders with depth visualization
-- **Trading Pairs**: NXS/BTC, NXS/USD, NXS/ETH, and more
-- **Price Charts**: Interactive charts with multiple time intervals
-- **Network Statistics**: Block height, hash rate, 24h volume
-- **Auto-refresh**: Data updates every 10 seconds
-
-### Access
-- Navigate to `/dex/` from the main site
-- Or directly: `http://localhost:8000/dex/`
-
-### API Integration
-Connects to Nexus.io blockchain API endpoints for live market data. Includes fallback demo data for development and when API is unavailable.
-
-See `/dex/README.md` for detailed documentation.
-
-## ⚽ Subsite: Fantasy Football
-
-The `/fantasyfootball/` subsite combines blockchain NFT assets with real-world football performance:
-
-### Features
-- **NFT Player Assets**: Own football player assets on Nexus.io blockchain
-- **Real-time Scoring**: Points based on actual match performance (goals, assists, clean sheets)
-- **Team Formation**: Build your squad with 1 GK, 4 DEF, 4 MID, 2 FWD
-- **Live Leaderboard**: Compete with other asset holders globally
-- **Marketplace**: Buy, sell, and trade player assets
-- **Match Integration**: Live match data updates player scores in real-time
-
-### Scoring System
-Points are awarded based on real football performance:
-- **Goals**: 10 points (GK/DEF), 8 points (MID), 6 points (FWD)
-- **Assists**: 6 points (all positions)
-- **Clean Sheet**: 8 points (GK/DEF), 2 points (MID)
-- **Yellow Card**: -2 points
-- **Red Card**: -5 points
-- **Match appearances**: +2 points
-
-### Access
-- Navigate to `/fantasyfootball/` from the main site
-- Or directly: `http://localhost:8000/fantasyfootball/`
-
-### How It Works
-1. Own NFT assets representing football players on Nexus blockchain
-2. Form your 11-player team from your owned assets
-3. Earn points as your players perform in real matches
-4. Climb the leaderboard and compete globally
-5. Trade assets in the marketplace to improve your team
-
-See `/fantasyfootball/README.md` for detailed documentation.
+- **HTML5/CSS3**: Semantic markup with modern styling
+- **Vanilla JavaScript**: No frameworks, no build tools
+- **Nexus Blockchain API**: Real-time blockchain data
+- **Q-Wallet**: Browser extension for Web3 authentication
+- **Python** (daemon only): Verification processing script
 
 ## 📱 Browser Support
 
@@ -164,25 +124,22 @@ See `/fantasyfootball/README.md` for detailed documentation.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to:
-
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+MIT License
 
 ## 📧 Contact
 
-Distordia Crypto Lab
-- Email: contact@distordia.com
-- GitHub: [@distordia](https://github.com/distordia)
-- Twitter: [@distordia](https://twitter.com/distordia)
+**Distordia Labs**
+- Website: [distordia.com](https://distordia.com)
+- GitHub: [@AkstonCap](https://github.com/AkstonCap)
 
 ---
 
-⧈ Built with passion for cryptographic research and innovation
+⧈ Built on Nexus blockchain
