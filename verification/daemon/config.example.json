@@ -1,0 +1,14 @@
+{
+    "node_url": "http://localhost:8080",
+    "check_interval": 300,
+    "distordia_namespace": "distordia",
+    "asset_max_entries": 50,
+    "tier_thresholds": {
+        "L0": 1,
+        "L1": 1000,
+        "L2": 10000,
+        "L3": 100000
+    },
+    "log_file": "verification_daemon.log",
+    "log_level": "INFO"
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Manager - Distordia Labs</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="verification.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html#home">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#">dApps ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="../q-wallet/index.html" class="dropdown-item">Q-Wallet Plugin</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-header">Projects</span>
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="../q-mobile/index.html" class="dropdown-item">Q-Mobile</a>
+                        <a href="index.html" class="dropdown-item active">Verification</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="../standards/index.html">Standards</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="auth-controls">
+                <button id="connectWallet" class="connect-wallet-btn">Connect Wallet</button>
+            </div>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="verification-app">
+        <!-- Hero Section -->
+        <section class="verification-hero">
+            <div class="container">
+                <h1>Namespace Verification</h1>
+                <p>View verified Distordia namespaces and their DIST holdings. Connect your wallet to submit verification or dispute requests.</p>
+                <div class="wallet-status" id="walletStatus">
+                    <span class="status-indicator disconnected"></span>
+                    <span>Connect wallet to submit requests</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Overview -->
+        <section class="tier-overview">
+            <div class="container">
+                <h2>Verification Tiers</h2>
+                <div class="tier-cards">
+                    <div class="tier-card tier-l0">
+                        <div class="tier-header">
+                            <span class="tier-badge">L0</span>
+                            <span class="tier-name">Unverified</span>
+                        </div>
+                        <div class="tier-requirement">No DIST required</div>
+                        <div class="tier-count" id="l0Count">-</div>
+                    </div>
+                    <div class="tier-card tier-l1">
+                        <div class="tier-header">
+                            <span class="tier-badge">L1</span>
+                            <span class="tier-name">Basic</span>
+                        </div>
+                        <div class="tier-requirement">1,000 DIST</div>
+                        <div class="tier-count" id="l1Count">-</div>
+                    </div>
+                    <div class="tier-card tier-l2">
+                        <div class="tier-header">
+                            <span class="tier-badge">L2</span>
+                            <span class="tier-name">Verified</span>
+                        </div>
+                        <div class="tier-requirement">10,000 DIST</div>
+                        <div class="tier-count" id="l2Count">-</div>
+                    </div>
+                    <div class="tier-card tier-l3">
+                        <div class="tier-header">
+                            <span class="tier-badge">L3</span>
+                            <span class="tier-name">Premium</span>
+                        </div>
+                        <div class="tier-requirement">100,000 DIST</div>
+                        <div class="tier-count" id="l3Count">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verification Actions -->
+        <section class="verification-actions">
+            <div class="container">
+                <div class="actions-grid">
+                    <!-- Check Namespace -->
+                    <div class="action-panel">
+                        <h3>Check Namespace</h3>
+                        <p>Verify a namespace's DIST holdings and current verification status.</p>
+                        <div class="form-group">
+                            <label for="checkNamespace">Namespace</label>
+                            <input type="text" id="checkNamespace" placeholder="e.g., mycompany" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" id="checkBtn">Check Status</button>
+                        
+                        <div class="check-result" id="checkResult" style="display: none;">
+                            <div class="result-header">
+                                <span class="result-namespace" id="resultNamespace">-</span>
+                                <span class="result-tier" id="resultTier">-</span>
+                            </div>
+                            <div class="result-details">
+                                <div class="result-row">
+                                    <span>Genesis ID:</span>
+                                    <span id="resultGenesis" class="mono">-</span>
+                                </div>
+                                <div class="result-row">
+                                    <span>DIST Balance:</span>
+                                    <span id="resultBalance">-</span>
+                                </div>
+                                <div class="result-row">
+                                    <span>Pending Penalties:</span>
+                                    <span id="resultPenalties">-</span>
+                                </div>
+                                <div class="result-row">
+                                    <span>Effective Balance:</span>
+                                    <span id="resultEffective">-</span>
+                                </div>
+                                <div class="result-row">
+                                    <span>Current Status:</span>
+                                    <span id="resultStatus">-</span>
+                                </div>
+                                <div class="result-row">
+                                    <span>Eligible Tier:</span>
+                                    <span id="resultEligible">-</span>
+                                </div>
+                            </div>
+                            <div class="result-actions" id="resultActions" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
+                                    <label for="requestTierSelect">Request Tier</label>
+                                    <select id="requestTierSelect" class="form-input"></select>
+                                </div>
+                                <button class="btn btn-success" id="requestVerificationBtn">Submit Verification Request</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disputes & Penalties -->
+                    <div class="action-panel">
+                        <h3>Submit Dispute Request</h3>
+                        <p>Submit a dispute against verified namespaces. Disputes are reviewed and processed by the verification daemon.</p>
+                        <div class="form-group">
+                            <label for="disputeNamespace">Target Namespace</label>
+                            <input type="text" id="disputeNamespace" placeholder="e.g., badactor" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="penaltyAmount">Penalty Amount (DIST)</label>
+                            <input type="number" id="penaltyAmount" placeholder="e.g., 500" class="form-input" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="disputeReason">Reason</label>
+                            <textarea id="disputeReason" placeholder="Describe the violation..." class="form-input" rows="3"></textarea>
+                        </div>
+                        <button class="btn btn-warning" id="submitDisputeBtn">Submit Dispute Request</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verified Namespaces Registry -->
+        <section class="registry-section">
+            <div class="container">
+                <div class="registry-header">
+                    <h2>Verified Namespaces Registry</h2>
+                    <div class="registry-actions">
+                        <button class="btn btn-secondary" id="refreshRegistryBtn">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="registry-tabs">
+                    <button class="registry-tab active" data-tier="all">All</button>
+                    <button class="registry-tab" data-tier="L3">L3 Premium</button>
+                    <button class="registry-tab" data-tier="L2">L2 Verified</button>
+                    <button class="registry-tab" data-tier="L1">L1 Basic</button>
+                </div>
+
+                <div class="registry-table-wrapper">
+                    <table class="registry-table">
+                        <thead>
+                            <tr>
+                                <th>Namespace</th>
+                                <th>Genesis ID</th>
+                                <th>Tier</th>
+                                <th>DIST Balance</th>
+                                <th>Penalties</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registryBody">
+                            <tr class="loading-row">
+                                <td colspan="6">Loading verified namespaces...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Disputes Log -->
+        <section class="disputes-section">
+            <div class="container">
+                <h2>Disputes & Penalties Log</h2>
+                <div class="disputes-table-wrapper">
+                    <table class="disputes-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Namespace</th>
+                                <th>Penalty (DIST)</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disputesBody">
+                            <tr class="loading-row">
+                                <td colspan="5">Loading disputes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- On-Chain Assets -->
+        <section class="assets-section">
+            <div class="container">
+                <h2>On-Chain Verification Assets</h2>
+                <p class="section-description">These assets store the verified namespace registries on the Nexus blockchain under the <code>distordia</code> namespace.</p>
+                
+                <div class="assets-grid">
+                    <div class="asset-card" id="l3Assets">
+                        <h4>L3 Verified Assets</h4>
+                        <div class="asset-list">Loading...</div>
+                    </div>
+                    <div class="asset-card" id="l2Assets">
+                        <h4>L2 Verified Assets</h4>
+                        <div class="asset-list">Loading...</div>
+                    </div>
+                    <div class="asset-card" id="l1Assets">
+                        <h4>L1 Verified Assets</h4>
+                        <div class="asset-list">Loading...</div>
+                    </div>
+                    <div class="asset-card" id="disputeAssets">
+                        <h4>Disputes & Penalties</h4>
+                        <div class="asset-list">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="asset-actions">
+                    <button class="btn btn-primary" id="syncAssetsBtn">Sync to Blockchain</button>
+                    <button class="btn btn-secondary" id="exportBtn">Export Registry</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Distordia Labs. Building the future of decentralized verification.</p>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to proceed?</p>
+            <div class="modal-details" id="modalDetails"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn-primary" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="verification.js"></script>
+</body>
+</html>
