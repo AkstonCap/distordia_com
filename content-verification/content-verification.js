@@ -186,22 +186,118 @@ function closeInfoModal() {
     }
 }
 
+// Wallet Connection
+let walletConnected = false;
+let walletAddress = null;
+
+async function connectWallet() {
+    if (typeof window.qWallet === 'undefined') {
+        alert('Q-Wallet extension not found. Please install Q-Wallet.');
+        return;
+    }
+
+    try {
+        const accounts = await window.qWallet.connect();
+        if (accounts && accounts.length > 0) {
+            walletAddress = accounts[0];
+            walletConnected = true;
+            updateWalletUI();
+            console.log('Wallet connected:', walletAddress);
+        }
+    } catch (error) {
+        console.error('Wallet connection failed:', error);
+        alert('Failed to connect wallet. Please try again.');
+    }
+}
+
+async function disconnectWallet() {
+    try {
+        if (typeof window.qWallet !== 'undefined' && window.qWallet.disconnect) {
+            await window.qWallet.disconnect();
+        }
+    } catch (error) {
+        console.error('Error disconnecting:', error);
+    }
+    
+    walletAddress = null;
+    walletConnected = false;
+    updateWalletUI();
+}
+
+function updateWalletUI() {
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const walletInfo = document.getElementById('walletInfo');
+    const addressEl = document.getElementById('walletAddress');
+    
+    if (walletConnected && walletAddress) {
+        if (connectBtn) connectBtn.style.display = 'none';
+        if (walletInfo) walletInfo.style.display = 'flex';
+        if (addressEl) addressEl.textContent = `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}`;
+    } else {
+        if (connectBtn) connectBtn.style.display = 'block';
+        if (walletInfo) walletInfo.style.display = 'none';
+    }
+}
+
+async function checkExistingConnection() {
+    if (typeof window.qWallet !== 'undefined') {
+        try {
+            const accounts = await window.qWallet.getAccounts();
+            if (accounts && accounts.length > 0) {
+                walletAddress = accounts[0];
+                walletConnected = true;
+                updateWalletUI();
+            }
+        } catch (error) {
+            console.log('No existing wallet connection');
+        }
+    }
+}
+
 // Initialize when DOM is ready
 let contentVerification;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         contentVerification = new ContentVerification();
+        
         // Setup info button
         const infoBtn = document.getElementById('infoBtn');
         if (infoBtn) {
             infoBtn.addEventListener('click', openInfoModal);
         }
+        
+        // Setup wallet buttons
+        const connectBtn = document.getElementById('connectWalletBtn');
+        if (connectBtn) {
+            connectBtn.addEventListener('click', connectWallet);
+        }
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', disconnectWallet);
+        }
+        
+        // Check for existing connection
+        checkExistingConnection();
     });
 } else {
     contentVerification = new ContentVerification();
+    
     // Setup info button
     const infoBtn = document.getElementById('infoBtn');
     if (infoBtn) {
         infoBtn.addEventListener('click', openInfoModal);
     }
+    
+    // Setup wallet buttons
+    const connectBtn = document.getElementById('connectWalletBtn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', connectWallet);
+    }
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', disconnectWallet);
+    }
+    
+    // Check for existing connection
+    checkExistingConnection();
 }

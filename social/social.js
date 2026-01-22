@@ -136,15 +136,8 @@ async function connectWallet() {
             return;
         }
 
-        // Request connection from Q-Wallet with fee (1 DIST for 24 hours)
-        const feeConfig = {
-            tokenName: 'DIST',
-            amount: 1,
-            recipientAddress: 'DIST',
-            validitySeconds: 24 * 60 * 60 // 24 hours
-        };
-        
-        const accounts = await window.qWallet.connectWithFee(feeConfig);
+        // Request connection from Q-Wallet (free, no fee)
+        const accounts = await window.qWallet.connect();
         
         if (accounts && accounts.length > 0) {
             isConnected = true;

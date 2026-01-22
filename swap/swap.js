@@ -12,7 +12,7 @@ let nexusWallet = null;
 let fromAmount = 0;
 let toAmount = 0;
 
-// DOM Elements
+// DOM Elements (swap interface buttons)
 const connectWalletBtn = document.getElementById('connect-wallet-btn');
 const swapBtn = document.getElementById('swap-btn');
 const fromAmountInput = document.getElementById('from-amount');
@@ -21,16 +21,46 @@ const maxBtn = document.getElementById('max-btn');
 const swapDirectionBtn = document.getElementById('swap-direction-btn');
 const walletInfo = document.getElementById('wallet-info');
 
+// Navbar wallet elements
+const navConnectBtn = document.getElementById('connectWalletBtn');
+const navWalletInfo = document.getElementById('walletInfo');
+const navWalletAddress = document.getElementById('walletAddress');
+const navDisconnectBtn = document.getElementById('disconnectBtn');
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Distordia Swap initialized');
     setupEventListeners();
+    checkExistingConnection();
 });
+
+// Check for existing Q-Wallet connection
+async function checkExistingConnection() {
+    if (typeof window.qWallet !== 'undefined') {
+        try {
+            const accounts = await window.qWallet.getAccounts();
+            if (accounts && accounts.length > 0) {
+                nexusWallet = accounts[0];
+                updateNavWalletUI(accounts[0]);
+            }
+        } catch (error) {
+            console.log('No existing Q-Wallet connection');
+        }
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {
-    // Connect wallet button
+    // Swap interface connect wallet button
     connectWalletBtn.addEventListener('click', connectWallets);
+    
+    // Navbar wallet buttons
+    if (navConnectBtn) {
+        navConnectBtn.addEventListener('click', connectQWallet);
+    }
+    if (navDisconnectBtn) {
+        navDisconnectBtn.addEventListener('click', disconnectQWallet);
+    }
     
     // Amount input
     fromAmountInput.addEventListener('input', handleAmountInput);
@@ -51,6 +81,55 @@ function setupEventListeners() {
     }
 }
 
+// Connect Q-Wallet (navbar button)
+async function connectQWallet() {
+    if (typeof window.qWallet === 'undefined') {
+        alert('Q-Wallet extension not found. Please install Q-Wallet to connect your Nexus wallet.');
+        return;
+    }
+
+    try {
+        const accounts = await window.qWallet.connect();
+        if (accounts && accounts.length > 0) {
+            nexusWallet = accounts[0];
+            updateNavWalletUI(accounts[0]);
+            console.log('Q-Wallet connected:', accounts[0]);
+        }
+    } catch (error) {
+        console.error('Q-Wallet connection failed:', error);
+        alert('Failed to connect Q-Wallet. Please try again.');
+    }
+}
+
+// Disconnect Q-Wallet
+async function disconnectQWallet() {
+    try {
+        if (typeof window.qWallet !== 'undefined' && window.qWallet.disconnect) {
+            await window.qWallet.disconnect();
+        }
+    } catch (error) {
+        console.error('Error disconnecting Q-Wallet:', error);
+    }
+    
+    nexusWallet = null;
+    
+    // Update navbar UI
+    if (navConnectBtn) navConnectBtn.style.display = 'block';
+    if (navWalletInfo) navWalletInfo.style.display = 'none';
+    
+    // Update swap UI if connected
+    if (walletConnected) {
+        document.getElementById('nexus-address').textContent = '--';
+    }
+}
+
+// Update navbar wallet UI
+function updateNavWalletUI(address) {
+    if (navConnectBtn) navConnectBtn.style.display = 'none';
+    if (navWalletInfo) navWalletInfo.style.display = 'flex';
+    if (navWalletAddress) navWalletAddress.textContent = `${address.slice(0, 8)}...${address.slice(-6)}`;
+}
+
 // Info Modal functions
 function openInfoModal() {
     const modal = document.getElementById('infoModal');
@@ -66,7 +145,7 @@ function closeInfoModal() {
     }
 }
 
-// Connect Wallets
+// Connect Wallets (swap interface button)
 async function connectWallets() {
     try {
         console.log('Connecting wallets...');
@@ -84,9 +163,24 @@ async function connectWallets() {
         solanaWallet = solanaResponse.publicKey.toString();
         console.log('Solana wallet connected:', solanaWallet);
         
-        // For Nexus wallet, we'll prompt for address
-        // In production, this would integrate with Nexus wallet extension
-        nexusWallet = prompt('Enter your Nexus wallet address:');
+        // For Nexus wallet, use Q-Wallet if available, otherwise prompt
+        if (!nexusWallet) {
+            if (typeof window.qWallet !== 'undefined') {
+                try {
+                    const accounts = await window.qWallet.connect();
+                    if (accounts && accounts.length > 0) {
+                        nexusWallet = accounts[0];
+                        updateNavWalletUI(accounts[0]);
+                    }
+                } catch (error) {
+                    console.log('Q-Wallet connection failed, falling back to manual entry');
+                    nexusWallet = prompt('Enter your Nexus wallet address:');
+                }
+            } else {
+                // Fallback to manual address entry
+                nexusWallet = prompt('Enter your Nexus wallet address:\n\n(Install Q-Wallet extension for automatic connection)');
+            }
+        }
         
         if (!nexusWallet) {
             alert('Nexus wallet address is required');

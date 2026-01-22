@@ -40,7 +40,8 @@ class VerificationManager {
 
     bindEvents() {
         // Wallet connection
-        document.getElementById('connectWallet').addEventListener('click', () => this.connectWallet());
+        document.getElementById('connectWalletBtn').addEventListener('click', () => this.connectWallet());
+        document.getElementById('disconnectBtn')?.addEventListener('click', () => this.disconnectWallet());
         
         // Check namespace
         document.getElementById('checkBtn').addEventListener('click', () => this.checkNamespace());
@@ -101,10 +102,14 @@ class VerificationManager {
         this.api.walletAddress = address;
         this.api.connected = true;
         
-        // Update UI
-        const btn = document.getElementById('connectWallet');
-        btn.textContent = `${address.slice(0, 8)}...${address.slice(-6)}`;
-        btn.classList.add('connected');
+        // Update UI - hide connect button, show wallet info
+        const connectBtn = document.getElementById('connectWalletBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddress = document.getElementById('walletAddress');
+        
+        if (connectBtn) connectBtn.style.display = 'none';
+        if (walletInfo) walletInfo.style.display = 'flex';
+        if (walletAddress) walletAddress.textContent = `${address.slice(0, 8)}...${address.slice(-6)}`;
         
         const statusEl = document.getElementById('walletStatus');
         if (statusEl) {
@@ -120,6 +125,39 @@ class VerificationManager {
         }
         
         this.showToast('Wallet connected', 'success');
+    }
+
+    async disconnectWallet() {
+        try {
+            if (typeof window.qWallet !== 'undefined' && window.qWallet.disconnect) {
+                await window.qWallet.disconnect();
+            }
+        } catch (error) {
+            console.error('Error disconnecting:', error);
+        }
+        
+        this.api.walletAddress = null;
+        this.api.connected = false;
+        
+        // Update UI - show connect button, hide wallet info
+        const connectBtn = document.getElementById('connectWalletBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        
+        if (connectBtn) connectBtn.style.display = 'block';
+        if (walletInfo) walletInfo.style.display = 'none';
+        
+        const statusEl = document.getElementById('walletStatus');
+        if (statusEl) {
+            const indicator = statusEl.querySelector('.status-indicator');
+            indicator?.classList.remove('connected');
+            indicator?.classList.add('disconnected');
+            const textEl = statusEl.querySelector('span:last-child');
+            if (textEl) {
+                textEl.textContent = 'Connect wallet to submit requests';
+            }
+        }
+        
+        this.showToast('Wallet disconnected', 'info');
     }
 
     // =========================================================================
