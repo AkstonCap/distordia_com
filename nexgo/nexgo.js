@@ -133,7 +133,7 @@ function getUserLocation() {
                     className: 'taxi-marker',
                     html: '<div class="marker-icon user">📍</div>',
                     iconSize: [36, 36],
-                    iconAnchor: [18, 18]
+                    iconAnchor: [18, 36]  // Bottom-center anchor for pin emoji
                 });
                 userMarker = L.marker([userPosition.lat, userPosition.lng], { icon: userIcon }).addTo(map);
                 userMarker.bindPopup('Your Location');
