@@ -40,7 +40,6 @@ stateDiagram-v2
     note right of Connected
         Q-Wallet handles authentication
         No session timeout
-        Fee: 1 DIST per 24 hours
     end note
     
     note right of ViewingOrderBook
@@ -90,7 +89,6 @@ stateDiagram-v2
     
     note right of CheckingAuth
         Q-Wallet authentication only
-        Fee: 1 DIST per 24 hours
     end note
     
     note right of CreatingAsset
@@ -410,7 +408,8 @@ stateDiagram-v2
 **DEX:**
 - `currentPair` - selected trading pair
 - `marketData` - all pairs and market data
-- `sessionData` - user session and authentication
+- `walletConnected` - wallet connection status
+- `userAddress` - connected wallet address
 
 **Masterdata:**
 - `products` - all product assets
@@ -425,22 +424,28 @@ stateDiagram-v2
 
 **Content Verification:**
 - `currentResult` - verification result data
+- `walletConnected` - wallet connection status (optional, for future features)
+- `walletAddress` - connected wallet address (optional)
 
 **Fantasy Football:**
 - `myAssets` - user's player NFTs
 - `myTeam` - user's team formation
 - `allPlayers` - available players
 - `liveMatches` - ongoing matches
+- `leaderboard` - leaderboard data
 - `walletConnected` - connection state
+- `userAddress` - connected wallet address
+- `userSession` - user session data
+- `userPin` - user PIN for transactions
 
 **Swap:**
 - `walletConnected` - connection status
 - `solanaWallet` - Solana wallet address
 - `nexusWallet` - Nexus wallet address
 - `fromAmount`/`toAmount` - swap amounts
-## 8. Verification System (On-Chain Verification)
+## 7. Verification System (On-Chain Verification)
 
-### 8.1 User Verification Request Flow
+### 7.1 User Verification Request Flow
 
 ```mermaid
 stateDiagram-v2
@@ -505,7 +510,7 @@ stateDiagram-v2
     end note
 ```
 
-### 8.2 Daemon Processing Flow
+### 7.2 Daemon Processing Flow
 
 ```mermaid
 stateDiagram-v2
@@ -604,7 +609,7 @@ stateDiagram-v2
     end note
 ```
 
-### 8.3 Human Reviewer Flow
+### 7.3 Human Reviewer Flow
 
 ```mermaid
 stateDiagram-v2
@@ -676,7 +681,7 @@ stateDiagram-v2
     end note
 ```
 
-### 8.4 Committee Voting Flow (L3)
+### 7.4 Committee Voting Flow (L3)
 
 ```mermaid
 stateDiagram-v2
