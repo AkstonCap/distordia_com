@@ -1,0 +1,131 @@
+{
+  "$id": "https://distordia.com/standards/social.v1.json",
+  "title": "Distordia Social Post Standard",
+  "description": "Schema for social media posts stored as assets on the Nexus blockchain.",
+  "version": "1.0.0",
+  "nexusFormat": "JSON",
+  "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
+  "nexusFields": [
+    { "name": "distordia-type", "type": "string", "value": "distordia-post", "mutable": false, "maxlength": 16 },
+    { "name": "distordia-status", "type": "string", "value": "user-post", "mutable": true, "maxlength": 16 },
+    { "name": "text", "type": "string", "value": "", "mutable": false, "maxlength": 512 },
+    { "name": "cw", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "reply-to", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "quote", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "repost", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "media-type", "type": "string", "value": "none", "mutable": false, "maxlength": 8 },
+    { "name": "media-url", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
+    { "name": "media-hash", "type": "string", "value": "", "mutable": false, "maxlength": 72 },
+    { "name": "link-url", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
+    { "name": "link-title", "type": "string", "value": "", "mutable": false, "maxlength": 128 },
+    { "name": "tags", "type": "string", "value": "", "mutable": false, "maxlength": 128 },
+    { "name": "mentions", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
+    { "name": "lang", "type": "string", "value": "en", "mutable": false, "maxlength": 2 },
+    { "name": "loc", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "poll-q", "type": "string", "value": "", "mutable": false, "maxlength": 128 },
+    { "name": "poll-opts", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
+    { "name": "poll-exp", "type": "string", "value": "", "mutable": false, "maxlength": 10 }
+  ],
+  "fieldDefinitions": {
+    "distordia-type": {
+      "description": "Asset type identifier. Must be 'distordia-post'."
+    },
+    "distordia-status": {
+      "description": "Post status.",
+      "enum": ["official", "user-post", "deleted", "hidden"]
+    },
+    "text": {
+      "description": "Post content. Limited to 512 characters."
+    },
+    "cw": {
+      "description": "Content warning/spoiler tag."
+    },
+    "reply-to": {
+      "description": "Address of post being replied to."
+    },
+    "quote": {
+      "description": "Address of post being quoted."
+    },
+    "repost": {
+      "description": "Address of original post (for reposts)."
+    },
+    "media-type": {
+      "description": "Type of attached media.",
+      "enum": ["none", "image", "video", "audio", "link"]
+    },
+    "media-url": {
+      "description": "URL of attached media."
+    },
+    "media-hash": {
+      "description": "Hash of media for integrity (sha256:...)."
+    },
+    "link-url": {
+      "description": "External link URL if sharing."
+    },
+    "link-title": {
+      "description": "Title/preview for shared link."
+    },
+    "tags": {
+      "description": "Comma-separated hashtags (without # prefix)."
+    },
+    "mentions": {
+      "description": "Comma-separated namespace names mentioned."
+    },
+    "lang": {
+      "description": "ISO 639-1 language code."
+    },
+    "loc": {
+      "description": "Location name or 'lat,lon' coordinates."
+    },
+    "poll-q": {
+      "description": "Poll question text."
+    },
+    "poll-opts": {
+      "description": "Pipe-separated poll options (e.g., 'Yes|No|Maybe')."
+    },
+    "poll-exp": {
+      "description": "Poll expiration date (YYYY-MM-DD)."
+    }
+  },
+  "required": ["distordia-type", "text"],
+  "examples": [
+    {
+      "_comment": "Example asset as returned by Nexus API",
+      "address": "87aDdQCVrs4kf6FvffvgoHDJBLfAhu7bXSNkJResG6W1Fho8Cmx",
+      "owner": "a1c9b698edf211a2c14db4a74888f0cd9d4677c9b1da21d6fbcc53bdebb0d860",
+      "version": 1,
+      "created": 1755775754,
+      "modified": 1755775754,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "distordia-type": "distordia-post",
+      "distordia-status": "user-post",
+      "text": "Just deployed my first smart contract on Nexus!",
+      "tags": "blockchain,nexus,web3",
+      "lang": "en"
+    },
+    {
+      "_comment": "Post with poll",
+      "address": "92bFeRDWst5lg7GwwxhIEKCBMgAiv8cYUROlKTftH7X2Gip9Dny",
+      "owner": "b2d8c799fef322b3d25ec5b85999f1de0e5788da2c2eb32e7cdd64cefc0e1f71",
+      "version": 1,
+      "created": 1756000000,
+      "modified": 1756000000,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "distordia-type": "distordia-post",
+      "distordia-status": "user-post",
+      "text": "What feature should we prioritize next?",
+      "poll-q": "What feature should we prioritize next?",
+      "poll-opts": "More integrations|Better docs|Mobile app|API improvements",
+      "poll-exp": "2026-02-15",
+      "lang": "en"
+    }
+  ],
+  "nexus": {
+    "format": "JSON",
+    "createCommand": "assets/create/asset format=JSON name=post-{timestamp} json='[...]'",
+    "queryEndpoint": "register/list/assets:asset",
+    "queryFilter": "distordia-type = 'distordia-post'"
+  }
+}

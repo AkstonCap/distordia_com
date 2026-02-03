@@ -1,0 +1,154 @@
+{
+  "$id": "https://distordia.com/standards/product.v1.json",
+  "title": "Distordia Product Masterdata Standard",
+  "description": "Schema for product catalog assets registered on the Nexus blockchain. Based on GS1/ISO standards for supply chain traceability.",
+  "version": "1.0.0",
+  "nexusFormat": "JSON",
+  "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
+  "nexusFields": [
+    { "name": "distordia-type", "type": "string", "value": "product", "mutable": false, "maxlength": 16 },
+    { "name": "status", "type": "string", "value": "valid", "mutable": true, "maxlength": 8 },
+    { "name": "art-nr", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "gtin", "type": "string", "value": "", "mutable": false, "maxlength": 14 },
+    { "name": "desc", "type": "string", "value": "", "mutable": true, "maxlength": 256 },
+    { "name": "mfr", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "brand", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "cat", "type": "string", "value": "", "mutable": true, "maxlength": 32 },
+    { "name": "subcat", "type": "string", "value": "", "mutable": true, "maxlength": 32 },
+    { "name": "gpc", "type": "string", "value": "", "mutable": false, "maxlength": 8 },
+    { "name": "hs", "type": "string", "value": "", "mutable": false, "maxlength": 10 },
+    { "name": "origin", "type": "string", "value": "", "mutable": false, "maxlength": 2 },
+    { "name": "uom", "type": "string", "value": "EA", "mutable": false, "maxlength": 4 },
+    { "name": "weight-kg", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "length-mm", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "width-mm", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "height-mm", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "hazard", "type": "uint8", "value": 0, "mutable": false },
+    { "name": "perish", "type": "uint8", "value": 0, "mutable": false },
+    { "name": "shelf-days", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "url", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "img", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "replaces", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "replaced-by", "type": "string", "value": "", "mutable": true, "maxlength": 32 }
+  ],
+  "fieldDefinitions": {
+    "distordia-type": {
+      "description": "Asset type identifier. Must be 'product'."
+    },
+    "status": {
+      "description": "Product lifecycle status.",
+      "enum": ["valid", "disc", "recall", "pend", "draft"]
+    },
+    "art-nr": {
+      "description": "Internal article/SKU number. Unique within namespace."
+    },
+    "gtin": {
+      "description": "Global Trade Item Number (EAN/UPC). 8-14 digits."
+    },
+    "desc": {
+      "description": "Human-readable product description."
+    },
+    "mfr": {
+      "description": "Manufacturer name."
+    },
+    "brand": {
+      "description": "Brand name if different from manufacturer."
+    },
+    "cat": {
+      "description": "Primary product category."
+    },
+    "subcat": {
+      "description": "Secondary product classification."
+    },
+    "gpc": {
+      "description": "GS1 Global Product Classification (8 digits)."
+    },
+    "hs": {
+      "description": "Harmonized System customs code."
+    },
+    "origin": {
+      "description": "ISO 3166-1 alpha-2 country code."
+    },
+    "uom": {
+      "description": "Unit of Measure.",
+      "enum": ["EA", "KG", "LB", "L", "GAL", "M", "FT", "M2", "FT2", "M3", "BOX", "CS", "PLT"]
+    },
+    "weight-kg": {
+      "description": "Net weight in grams (uint32, divide by 1000 for kg)."
+    },
+    "length-mm": {
+      "description": "Length in millimeters."
+    },
+    "width-mm": {
+      "description": "Width in millimeters."
+    },
+    "height-mm": {
+      "description": "Height in millimeters."
+    },
+    "hazard": {
+      "description": "Hazardous material flag (0=no, 1=yes)."
+    },
+    "perish": {
+      "description": "Perishable flag (0=no, 1=yes)."
+    },
+    "shelf-days": {
+      "description": "Shelf life in days."
+    },
+    "url": {
+      "description": "Product information page URL."
+    },
+    "img": {
+      "description": "Primary product image URL."
+    },
+    "replaces": {
+      "description": "Article number this product replaces."
+    },
+    "replaced-by": {
+      "description": "Article number replacing this product."
+    }
+  },
+  "required": ["distordia-type", "art-nr", "desc", "mfr", "cat", "uom"],
+  "examples": [
+    {
+      "_comment": "Example asset as returned by Nexus API",
+      "address": "87aDdQCVrs4kf6FvffvgoHDJBLfAhu7bXSNkJResG6W1Fho8Cmx",
+      "owner": "a1c9b698edf211a2c14db4a74888f0cd9d4677c9b1da21d6fbcc53bdebb0d860",
+      "version": 1,
+      "created": 1755775754,
+      "modified": 1755775754,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "distordia-type": "product",
+      "status": "valid",
+      "art-nr": "WIDGET-2000-BLK",
+      "gtin": "5901234123457",
+      "desc": "Industrial Widget 2000 Series - Black Anodized Aluminum",
+      "mfr": "Acme Industries",
+      "brand": "Acme Pro",
+      "cat": "industrial-components",
+      "subcat": "widgets",
+      "gpc": "10000001",
+      "hs": "848180",
+      "origin": "DE",
+      "uom": "EA",
+      "weight-kg": 250,
+      "length-mm": 105,
+      "width-mm": 52,
+      "height-mm": 31,
+      "hazard": 0,
+      "perish": 0,
+      "url": "https://acme.example.com/products/widget-2000"
+    }
+  ],
+  "nexus": {
+    "format": "JSON",
+    "createCommand": "assets/create/asset format=JSON name=product-{art-nr} json='[...]'",
+    "queryEndpoint": "register/list/assets:asset",
+    "queryFilter": "distordia-type = 'product'"
+  },
+  "notes": [
+    "Uses uint32 for dimensions/weight to avoid floating point (store in smallest unit)",
+    "weight-kg is actually grams, divide by 1000 client-side",
+    "Dimensions in millimeters for precision"
+  ]
+}
