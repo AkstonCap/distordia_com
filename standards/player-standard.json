@@ -1,0 +1,204 @@
+{
+  "$id": "https://distordia.com/standards/player.v1.json",
+  "title": "Distordia Fantasy Football Player Standard",
+  "description": "Schema for fantasy football player NFT assets on the Nexus blockchain.",
+  "version": "1.0.0",
+  "nexusFormat": "JSON",
+  "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
+  "nexusFields": [
+    { "name": "standard", "type": "string", "value": "distordia.player.v1", "mutable": false, "maxlength": 24 },
+    { "name": "player-id", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "player-name", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "ext-id", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "nationality", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "birthdate", "type": "string", "value": "", "mutable": false, "maxlength": 10 },
+    { "name": "team-id", "type": "string", "value": "", "mutable": true, "maxlength": 32 },
+    { "name": "team-name", "type": "string", "value": "", "mutable": true, "maxlength": 64 },
+    { "name": "league", "type": "string", "value": "", "mutable": true, "maxlength": 16 },
+    { "name": "league-name", "type": "string", "value": "", "mutable": true, "maxlength": 32 },
+    { "name": "position", "type": "string", "value": "", "mutable": false, "maxlength": 4 },
+    { "name": "overall", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "pace", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "shooting", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "passing", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "dribbling", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "defending", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "physical", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "rarity", "type": "string", "value": "common", "mutable": false, "maxlength": 12 },
+    { "name": "season", "type": "string", "value": "", "mutable": false, "maxlength": 9 },
+    { "name": "goals", "type": "uint16", "value": 0, "mutable": true },
+    { "name": "assists", "type": "uint16", "value": 0, "mutable": true },
+    { "name": "cleansheets", "type": "uint16", "value": 0, "mutable": true },
+    { "name": "appearances", "type": "uint16", "value": 0, "mutable": true },
+    { "name": "week-pts", "type": "uint16", "value": 0, "mutable": true },
+    { "name": "total-pts", "type": "uint32", "value": 0, "mutable": true },
+    { "name": "img-url", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "edition", "type": "string", "value": "standard", "mutable": false, "maxlength": 12 },
+    { "name": "mint-num", "type": "uint32", "value": 0, "mutable": false },
+    { "name": "max-supply", "type": "uint32", "value": 0, "mutable": false }
+  ],
+  "fieldDefinitions": {
+    "standard": {
+      "description": "Standard version identifier."
+    },
+    "player-id": {
+      "description": "Unique player identifier (lowercase).",
+      "pattern": "^[a-z0-9\\-]+$"
+    },
+    "player-name": {
+      "description": "Full display name of the player."
+    },
+    "ext-id": {
+      "description": "External ID from data provider."
+    },
+    "nationality": {
+      "description": "Player's nationality."
+    },
+    "birthdate": {
+      "description": "Birth date (YYYY-MM-DD)."
+    },
+    "team-id": {
+      "description": "Team identifier (can change on transfer)."
+    },
+    "team-name": {
+      "description": "Full team name."
+    },
+    "league": {
+      "description": "League code.",
+      "enum": ["epl", "laliga", "bundesliga", "seriea", "ligue1", "mls", "eredivisie", "liganos"]
+    },
+    "league-name": {
+      "description": "Full league name."
+    },
+    "position": {
+      "description": "Player position.",
+      "enum": ["GK", "DEF", "MID", "FWD"]
+    },
+    "overall": {
+      "description": "Overall rating (1-99)."
+    },
+    "pace": {
+      "description": "Pace rating (1-99)."
+    },
+    "shooting": {
+      "description": "Shooting rating (1-99)."
+    },
+    "passing": {
+      "description": "Passing rating (1-99)."
+    },
+    "dribbling": {
+      "description": "Dribbling rating (1-99)."
+    },
+    "defending": {
+      "description": "Defending rating (1-99)."
+    },
+    "physical": {
+      "description": "Physical rating (1-99)."
+    },
+    "rarity": {
+      "description": "Card rarity tier.",
+      "enum": ["common", "rare", "epic", "legendary"]
+    },
+    "season": {
+      "description": "Season (e.g., '2024-2025')."
+    },
+    "goals": {
+      "description": "Goals scored this season."
+    },
+    "assists": {
+      "description": "Assists this season."
+    },
+    "cleansheets": {
+      "description": "Clean sheets (GK/DEF)."
+    },
+    "appearances": {
+      "description": "Match appearances."
+    },
+    "week-pts": {
+      "description": "Fantasy points this gameweek."
+    },
+    "total-pts": {
+      "description": "Total fantasy points."
+    },
+    "img-url": {
+      "description": "Player card image URL."
+    },
+    "edition": {
+      "description": "Card edition type.",
+      "enum": ["standard", "in-form", "totw", "special", "icon"]
+    },
+    "mint-num": {
+      "description": "Mint number within edition."
+    },
+    "max-supply": {
+      "description": "Maximum supply of this edition."
+    }
+  },
+  "required": ["standard", "player-id", "player-name", "team-id", "league", "position", "rarity", "season"],
+  "examples": [
+    {
+      "_comment": "Example asset as returned by Nexus API",
+      "address": "87aDdQCVrs4kf6FvffvgoHDJBLfAhu7bXSNkJResG6W1Fho8Cmx",
+      "owner": "a1c9b698edf211a2c14db4a74888f0cd9d4677c9b1da21d6fbcc53bdebb0d860",
+      "version": 1,
+      "created": 1755775754,
+      "modified": 1755775754,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "standard": "distordia.player.v1",
+      "player-id": "haaland",
+      "player-name": "Erling Haaland",
+      "ext-id": "1100",
+      "nationality": "Norway",
+      "birthdate": "2000-07-21",
+      "team-id": "mancity",
+      "team-name": "Manchester City",
+      "league": "epl",
+      "league-name": "Premier League",
+      "position": "FWD",
+      "overall": 91,
+      "pace": 89,
+      "shooting": 94,
+      "passing": 75,
+      "dribbling": 80,
+      "defending": 45,
+      "physical": 88,
+      "rarity": "legendary",
+      "season": "2024-2025",
+      "goals": 27,
+      "assists": 5,
+      "cleansheets": 0,
+      "appearances": 30,
+      "week-pts": 12,
+      "total-pts": 245,
+      "edition": "standard",
+      "mint-num": 1,
+      "max-supply": 100
+    }
+  ],
+  "nexus": {
+    "format": "JSON",
+    "naming": "player.{league}.{team-id}.{player-id}",
+    "namespace": "distordia",
+    "fullName": "distordia:player.{league}.{team-id}.{player-id}",
+    "createCommand": "assets/create/asset format=JSON name=player.epl.mancity.haaland json='[...]'",
+    "queryEndpoint": "register/list/names",
+    "queryFilter": "object.namespace = 'distordia' AND object.name LIKE 'player.%'"
+  },
+  "rarityDistribution": {
+    "common": { "ratingRange": "60-74", "dropRate": "50%" },
+    "rare": { "ratingRange": "75-84", "dropRate": "30%" },
+    "epic": { "ratingRange": "85-89", "dropRate": "15%" },
+    "legendary": { "ratingRange": "90-99", "dropRate": "5%" }
+  },
+  "leagues": {
+    "epl": "Premier League (England)",
+    "laliga": "La Liga (Spain)",
+    "bundesliga": "Bundesliga (Germany)",
+    "seriea": "Serie A (Italy)",
+    "ligue1": "Ligue 1 (France)",
+    "mls": "Major League Soccer (USA)",
+    "eredivisie": "Eredivisie (Netherlands)",
+    "liganos": "Liga Portugal (Portugal)"
+  }
+}

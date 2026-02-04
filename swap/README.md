@@ -1,101 +1,91 @@
 # Distordia Swap - Cross-Chain Stablecoin Bridge
 
-A cross-chain bridge service for swapping USDC on Solana to USDD on Nexus blockchain.
+A bidirectional bridge service for swapping between USDC (Solana) and USDD (Nexus).
+
+> **Backend Service**: Powered by [swapService](https://github.com/AkstonCap/swapService) - see `docs/swapService docs/` for full documentation.
 
 ## Features
 
 - **1:1 Exchange Rate**: USDC to USDD at parity
-- **Low Fees**: 0.5% bridge fee
+- **Low Fees**: 0.1 USDC flat + 0.1% dynamic fee
+- **Bidirectional**: Swap both USDC→USDD and USDD→USDC
 - **Fast Transfers**: 2-5 minute transaction time
 - **Non-Custodial**: Trustless, secure bridge protocol
-- **User-Friendly Interface**: Simple swap interface with real-time calculations
 
 ## How It Works
 
-1. **Connect Wallets**: Connect both Solana (Phantom) and Nexus wallets
-2. **Enter Amount**: Specify how much USDC to swap
-3. **Confirm Transaction**: Review details and approve
-4. **Receive USDD**: Get USDD in Nexus wallet within minutes
+### USDC → USDD (Solana to Nexus)
 
-## Architecture
+1. Send USDC to vault: `Bg1MUQDMjAuXSAFr8izhGCUUhsrta1EjHcTvvgFnJEzZ`
+2. Include memo: `nexus:<YOUR_USDD_ACCOUNT>`
+3. Service validates memo and sends USDD to specified Nexus account
+4. Invalid/missing memo → refund (flat fee applies)
 
-### Current Implementation (Development)
-- Frontend-only interface for testing UX
-- Simulated transactions
-- Placeholder wallet connections
+### USDD → USDC (Nexus to Solana)
 
-### Production Implementation (Planned)
-- Smart contracts on both chains
-- Lock-and-mint mechanism
-- Multi-signature validation
-- Automated market maker (AMM) pool
-- Transaction verification layer
-- Real wallet integrations
+1. **One-time setup**: Create a bridge asset with `receival_account`:
+   ```bash
+   nexus assets/create/asset name=distordiaBridge format=basic \
+       txid_toService="" \
+       receival_account=<YOUR_SOLANA_USDC_ATA> \
+       pin=<PIN>
+   ```
 
-## Bridge Flow
+2. **Send USDD** to treasury and capture txid:
+   ```bash
+   nexus finance/debit/token from=USDD to=<TREASURY_ACCOUNT> amount=10.5 pin=<PIN>
+   ```
 
-```
-Solana Chain                Bridge Protocol              Nexus Chain
------------                 ----------------              -----------
-   USDC    →  Lock Tokens  →   Verify   →  Mint Tokens  →   USDD
-            ←  Release     ←   Confirm   ←  Burn        ←
-```
+3. **Update asset** with txid:
+   ```bash
+   nexus assets/update/asset name=distordiaBridge format=basic \
+       txid_toService=<TXID> pin=<PIN>
+   ```
+
+4. Service finds your asset mapping (by txid + owner), sends USDC to `receival_account`
+5. If no mapping within 1 hour → USDD is refunded
 
 ## Configuration
 
-- **Exchange Rate**: 1 USDC = 1 USDD
-- **Bridge Fee**: 0.5%
-- **Network Fee**: ~0.001 SOL (Solana transaction)
-- **Minimum Swap**: 1 USDC
-- **Maximum Swap**: 10,000 USDC per transaction
+| Parameter | Value |
+|-----------|-------|
+| Exchange Rate | 1 USDC = 1 USDD |
+| Flat Fee (USDC path) | 0.1 USDC |
+| Dynamic Fee | 0.1% (10 bps) |
+| Minimum Amount | 0.100101 (both directions) |
+| Refund Timeout | 1 hour (USDD→USDC path) |
+
+**Note**: Amounts below minimum are treated as fees (100% micro fee policy).
 
 ## Wallet Support
 
-- **Solana**: Phantom Wallet
-- **Nexus**: Nexus Wallet (integration planned)
+### Solana Wallets
+- **Solflare** (recommended) - has built-in memo field in send UI
+- **Phantom** - requires programmatic memo via transaction builder
+
+### Nexus Wallets  
+- **Q-Wallet** browser extension
+- Manual address entry (fallback)
 
 ## Security
 
+- Asset owner must match USDD sender (signature chain verification)
 - Non-custodial bridge design
 - On-chain verification
-- Multi-signature requirements
-- Time-lock mechanisms
-- Emergency pause functionality
-
-## Development Status
-
-🚧 **In Development** - Current version is for testing and demonstration purposes only.
-
-### Completed
-- ✅ User interface design
-- ✅ Swap calculation logic
-- ✅ Transaction flow mockup
-
-### In Progress
-- 🔄 Wallet integration
-- 🔄 Smart contract development
-- 🔄 Bridge protocol implementation
-
-### Planned
-- 📋 Security audits
-- 📋 Testnet deployment
-- 📋 Mainnet launch
+- Automatic refund on failures
 
 ## Files
 
 - `index.html` - Main swap interface
 - `swap.css` - Styling for swap page
 - `swap.js` - Swap logic and wallet integration
-- `README.md` - Documentation
+- `README.md` - This documentation
 
-## Future Enhancements
+## Related Documentation
 
-- Reverse swap (USDD → USDC)
-- Support for additional stablecoins
-- Batch transactions
-- Advanced order types
-- Liquidity pools
-- Fee discounts for volume traders
+- [swapService README](../docs/swapService%20docs/README.md) - Full service documentation
+- [STATE_MACHINES.md](../docs/swapService%20docs/STATE_MACHINES.md) - Processing state flows
+- [ASSET_STANDARD.md](../docs/swapService%20docs/ASSET_STANDARD.md) - Bridge asset specification
 
 ## API Integration
 

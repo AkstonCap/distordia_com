@@ -1,0 +1,158 @@
+{
+  "$id": "https://distordia.com/standards/agent.v1.json",
+  "title": "Distordia Agent Registration Standard",
+  "description": "Schema for AI agent identity registration on the Nexus blockchain. Enables agent-to-agent trust verification and commerce.",
+  "version": "1.0.0",
+  "nexusFormat": "JSON",
+  "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
+  "nexusFields": [
+    { "name": "distordia-type", "type": "string", "value": "agent", "mutable": false, "maxlength": 16 },
+    { "name": "agent-id", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "namespace", "type": "string", "value": "", "mutable": false, "maxlength": 32 },
+    { "name": "agent-type", "type": "string", "value": "autonomous", "mutable": false, "maxlength": 16 },
+    { "name": "status", "type": "string", "value": "active", "mutable": true, "maxlength": 12 },
+    { "name": "caps", "type": "string", "value": "", "mutable": true, "maxlength": 256 },
+    { "name": "protocols", "type": "string", "value": "", "mutable": true, "maxlength": 64 },
+    { "name": "can-transact", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "max-tx-value", "type": "uint64", "value": 0, "mutable": true },
+    { "name": "can-delegate", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "can-sign", "type": "uint8", "value": 0, "mutable": true },
+    { "name": "rate-rpm", "type": "uint32", "value": 0, "mutable": true },
+    { "name": "rate-rpd", "type": "uint32", "value": 0, "mutable": true },
+    { "name": "kill-switch", "type": "uint8", "value": 1, "mutable": true },
+    { "name": "kill-auth", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "endpoint-a2a", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "endpoint-mcp", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "endpoint-health", "type": "string", "value": "", "mutable": true, "maxlength": 128 },
+    { "name": "model", "type": "string", "value": "", "mutable": true, "maxlength": 32 },
+    { "name": "context-window", "type": "uint32", "value": 0, "mutable": true },
+    { "name": "swarm-id", "type": "string", "value": "", "mutable": true, "maxlength": 64 },
+    { "name": "swarm-role", "type": "string", "value": "", "mutable": true, "maxlength": 12 },
+    { "name": "created-ts", "type": "uint64", "value": 0, "mutable": false },
+    { "name": "extended-url", "type": "string", "value": "", "mutable": true, "maxlength": 128 }
+  ],
+  "fieldDefinitions": {
+    "distordia-type": {
+      "description": "Asset type identifier."
+    },
+    "agent-id": {
+      "description": "Unique agent identifier within namespace.",
+      "pattern": "^[a-z][a-z0-9\\-]{2,63}$"
+    },
+    "namespace": {
+      "description": "Parent namespace that registered this agent."
+    },
+    "agent-type": {
+      "description": "Type of agent.",
+      "enum": ["autonomous", "supervised", "tool", "swarm-member", "orchestrator"]
+    },
+    "status": {
+      "description": "Operational status.",
+      "enum": ["active", "suspended", "decom", "pending"]
+    },
+    "caps": {
+      "description": "Comma-separated capability names."
+    },
+    "protocols": {
+      "description": "Comma-separated protocols supported (mcp,a2a,rest)."
+    },
+    "can-transact": {
+      "description": "Can initiate transactions (0=no, 1=yes)."
+    },
+    "max-tx-value": {
+      "description": "Maximum transaction value in DIST base units."
+    },
+    "can-delegate": {
+      "description": "Can delegate to sub-agents (0=no, 1=yes)."
+    },
+    "can-sign": {
+      "description": "Can sign attestations (0=no, 1=yes)."
+    },
+    "rate-rpm": {
+      "description": "Rate limit: requests per minute."
+    },
+    "rate-rpd": {
+      "description": "Rate limit: requests per day."
+    },
+    "kill-switch": {
+      "description": "Kill switch enabled (0=no, 1=yes)."
+    },
+    "kill-auth": {
+      "description": "Comma-separated namespaces authorized for kill switch."
+    },
+    "endpoint-a2a": {
+      "description": "A2A protocol endpoint URL."
+    },
+    "endpoint-mcp": {
+      "description": "MCP endpoint URL."
+    },
+    "endpoint-health": {
+      "description": "Health check endpoint URL."
+    },
+    "model": {
+      "description": "Base AI model (e.g., 'gpt-4', 'claude-3')."
+    },
+    "context-window": {
+      "description": "Context window size in tokens."
+    },
+    "swarm-id": {
+      "description": "Swarm this agent belongs to (if any)."
+    },
+    "swarm-role": {
+      "description": "Role within swarm.",
+      "enum": ["leader", "worker", "specialist", "backup", ""]
+    },
+    "created-ts": {
+      "description": "Registration Unix timestamp."
+    },
+    "extended-url": {
+      "description": "URL to extended capability/pricing JSON (off-chain)."
+    }
+  },
+  "required": ["distordia-type", "agent-id", "namespace", "agent-type", "caps"],
+  "examples": [
+    {
+      "_comment": "Example asset as returned by Nexus API",
+      "address": "87aDdQCVrs4kf6FvffvgoHDJBLfAhu7bXSNkJResG6W1Fho8Cmx",
+      "owner": "a1c9b698edf211a2c14db4a74888f0cd9d4677c9b1da21d6fbcc53bdebb0d860",
+      "version": 1,
+      "created": 1755775754,
+      "modified": 1755775754,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "distordia-type": "agent",
+      "agent-id": "logistics-coordinator-01",
+      "namespace": "acme-corp",
+      "agent-type": "autonomous",
+      "status": "active",
+      "caps": "shipment-tracking,route-optimization,dispatch",
+      "protocols": "a2a,rest",
+      "can-transact": 1,
+      "max-tx-value": 1000,
+      "can-delegate": 0,
+      "can-sign": 0,
+      "rate-rpm": 100,
+      "rate-rpd": 10000,
+      "kill-switch": 1,
+      "kill-auth": "acme-corp",
+      "endpoint-a2a": "https://agents.acme-corp.example/logistics-01/a2a",
+      "endpoint-health": "https://agents.acme-corp.example/logistics-01/health",
+      "model": "gpt-4",
+      "context-window": 128000,
+      "created-ts": 1750000000,
+      "extended-url": "https://acme-corp.example/agents/logistics-01/capabilities.json"
+    }
+  ],
+  "nexus": {
+    "format": "JSON",
+    "createCommand": "assets/create/asset format=JSON name=agent-{agent-id} json='[...]'",
+    "queryEndpoint": "register/list/assets:asset",
+    "queryFilter": "distordia-type = 'agent'"
+  },
+  "notes": [
+    "Uses uint8 for boolean flags (0/1)",
+    "Uses uint64 for timestamps and large values",
+    "Rate limits as separate numeric fields for efficient queries",
+    "extended-url for complex off-chain data (pricing, detailed capabilities)"
+  ]
+}

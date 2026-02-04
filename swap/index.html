@@ -50,7 +50,9 @@
                 <li><a href="../index.html#contact">Contact</a></li>
             </ul>
             <div class="auth-controls">
-                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <button id="connectWalletBtn" class="connect-wallet-btn nexus-wallet-btn">
+                    <span class="wallet-icon">🔷</span> Connect Nexus
+                </button>
                 <div id="walletInfo" class="wallet-info" style="display: none;">
                     <span id="walletAddress" class="wallet-address"></span>
                     <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
@@ -149,15 +151,22 @@
                         </div>
                         <div class="detail-row">
                             <span>Bridge Fee</span>
-                            <span id="bridge-fee">0.5%</span>
+                            <span id="bridge-fee">0.10 USDC + 0.1%</span>
                         </div>
                         <div class="detail-row">
                             <span>Network Fee</span>
                             <span id="network-fee">~0.001 SOL</span>
                         </div>
                         <div class="detail-row">
+                            <span>Minimum Amount</span>
+                            <span id="min-amount">0.100101</span>
+                        </div>
+                        <div class="detail-row">
                             <span>Estimated Time</span>
                             <span id="estimated-time">~2-5 minutes</span>
+                        </div>
+                        <div class="detail-row warning" id="min-amount-warning" style="display: none;">
+                            <span>⚠️ Below minimum</span>
                         </div>
                         <div class="detail-row total">
                             <span>You will receive</span>
@@ -167,8 +176,8 @@
 
                     <!-- Wallet Connection / Swap Button -->
                     <div class="swap-actions">
-                        <button class="connect-wallet-btn" id="connect-wallet-btn">
-                            Connect Wallet
+                        <button class="connect-wallet-btn solana-wallet-btn" id="connect-wallet-btn">
+                            <span class="wallet-icon">☀️</span> Connect Solana Wallet
                         </button>
                         <button class="swap-btn" id="swap-btn" style="display: none;" disabled>
                             Enter an amount
@@ -262,9 +271,9 @@
                         <h3>💱 Exchange Details</h3>
                         <ul>
                             <li><strong>Rate</strong>: 1:1 exchange ratio (1 USDC = 1 USDD)</li>
-                            <li><strong>Fee</strong>: 0.5% bridge fee</li>
+                            <li><strong>Fee</strong>: 0.1 USDC + 0.1% (USDC→USDD path)</li>
+                            <li><strong>Minimum</strong>: 0.100101 (both directions)</li>
                             <li><strong>Speed</strong>: Typically completes within minutes</li>
-                            <li><strong>Minimum</strong>: No minimum amount</li>
                         </ul>
                     </section>
                     <section class="info-section">
@@ -276,18 +285,29 @@
                         </ul>
                     </section>
                     <section class="info-section">
-                        <h3>🚀 How to Swap</h3>
+                        <h3>🚀 USDC → USDD (Solana to Nexus)</h3>
                         <ol>
-                            <li><strong>Connect Wallets</strong>: Connect both Phantom (Solana) and enter your Nexus address</li>
-                            <li><strong>Enter Amount</strong>: Specify how much USDC to swap</li>
-                            <li><strong>Confirm</strong>: Review the details and approve the transaction</li>
-                            <li><strong>Receive</strong>: USDD arrives in your Nexus wallet</li>
+                            <li><strong>Connect Wallets</strong>: Choose Phantom or Solflare (Solflare has native memo UI)</li>
+                            <li><strong>Enter Amount</strong>: Specify how much USDC to swap (min: 0.100101)</li>
+                            <li><strong>Confirm</strong>: USDC is sent to vault with memo: <code>nexus:&lt;your_address&gt;</code></li>
+                            <li><strong>Receive</strong>: Service validates memo and sends USDD to your Nexus account</li>
+                        </ol>
+                    </section>
+                    <section class="info-section">
+                        <h3>🚀 USDD → USDC (Nexus to Solana)</h3>
+                        <ol>
+                            <li><strong>Create Bridge Asset</strong>: One-time setup with your Solana <code>receival_account</code></li>
+                            <li><strong>Send USDD</strong>: Debit USDD to treasury (min: 0.100101). Save the <code>txid</code>!</li>
+                            <li><strong>Update Asset</strong>: Set <code>txid_toService</code> to your debit transaction ID</li>
+                            <li><strong>Receive</strong>: Service finds your asset mapping and sends USDC</li>
                         </ol>
                     </section>
                     <section class="info-section">
                         <h3>⚠️ Important Notes</h3>
                         <ul>
-                            <li>Double-check your Nexus receiving address before confirming</li>
+                            <li>Amounts below 0.100101 are treated as fees (100% micro fee policy)</li>
+                            <li>USDD→USDC: If no asset mapping within 1 hour, USDD is refunded</li>
+                            <li>Your Solana wallet must already have a USDC ATA (most wallets auto-create)</li>
                             <li>Keep some SOL for Solana transaction fees</li>
                             <li>Transactions are irreversible once confirmed</li>
                         </ul>

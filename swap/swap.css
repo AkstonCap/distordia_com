@@ -288,6 +288,49 @@
     margin-top: 1.5rem;
 }
 
+/* Solana wallet connect button (in swap card) */
+.solana-wallet-btn {
+    width: 100%;
+    padding: 1.25rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, var(--solana-purple), #14F195);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.solana-wallet-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(153, 69, 255, 0.4);
+}
+
+.solana-wallet-btn .wallet-icon {
+    font-size: 1.3rem;
+}
+
+/* Nexus wallet connect button (in navbar) */
+.nexus-wallet-btn {
+    background: linear-gradient(135deg, var(--nexus-orange), #FF8557) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.nexus-wallet-btn:hover {
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+}
+
+.nexus-wallet-btn .wallet-icon {
+    font-size: 1rem;
+}
+
 .swap-btn {
     width: 100%;
     padding: 1.25rem;
@@ -789,4 +832,62 @@
         flex-direction: column;
         align-items: center;
     }
+}
+
+/* Wallet Selector Modal */
+.wallet-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.wallet-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.wallet-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 53, 0.1);
+    transform: translateX(5px);
+}
+
+.wallet-option img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
+
+.wallet-option .memo-badge {
+    margin-left: auto;
+    background: var(--success-color);
+    color: #000;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.wallet-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+#walletSelectorModal .modal-content {
+    max-width: 400px;
 }
