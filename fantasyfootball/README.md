@@ -1,21 +1,34 @@
 # Distordia Fantasy Football
 
-A blockchain-powered fantasy football platform that connects Nexus.io NFT assets with real-world football player performance.
+A blockchain-powered fantasy football platform that connects Nexus NFT assets with real-world football player performance. Features pack shop, weekly leagues, and P2P marketplace - all fully on-chain.
 
 ## 🎮 Overview
 
 Distordia Fantasy Football is an innovative platform where players own NFT assets on the Nexus blockchain, each representing a real football player. These assets earn points based on the actual performance of the players in real-life matches, creating a unique bridge between blockchain technology and traditional sports.
 
+**Revenue Model**: Distordia earns NXS through pack sales, marketplace fees (5%), and league entry fees (15%).
+
 ## ✨ Features
 
-### 🏆 Team Management
-- **11-Player Formation**: Build your squad with GK, DEF, MID, and FWD positions
-- **Visual Pitch Display**: Interactive football field showing your team formation
-- **Drag-and-Drop Interface**: Easy player selection and team building
-- **Auto-Fill Feature**: Automatically populate your team with highest-scoring assets
+### 🎁 Pack Shop (Primary Revenue)
+- **Bronze Pack (5 NXS)**: 3 Common + 20% chance Rare
+- **Silver Pack (15 NXS)**: 2 Common + 2 Rare + 15% Epic
+- **Gold Pack (50 NXS)**: 1 Rare + 2 Epic + 10% Legendary
+- **Limited Edition (100 NXS)**: Event-specific cards
+
+### 🏆 Weekly Leagues
+- **Entry Fee**: 10 NXS (85% to prize pool, 15% to Distordia)
+- **Prize Distribution**: 1st: 50%, 2nd: 30%, 3rd: 20%
+- **Team Selection**: Choose 11 players in 4-4-2 formation
+- **Captain**: Selected player earns 2x points
+
+### 🏪 Marketplace
+- **5% Fee**: On all P2P trades
+- **Order Book**: Uses Nexus Market API
+- **Instant Settlement**: On-chain transfers
 
 ### 💎 NFT Asset Integration
-- **Blockchain Assets**: Each player NFT is stored on Nexus.io blockchain
+- **Blockchain Assets**: Each player NFT is stored on Nexus blockchain
 - **Real Ownership**: Assets are verifiable on-chain tokens
 - **Tradeable**: Buy, sell, and trade player NFTs on the marketplace
 - **Rarity Levels**: Common, Rare, Epic, and Legendary player cards
@@ -26,17 +39,14 @@ Distordia Fantasy Football is an innovative platform where players own NFT asset
 - **Weekly Competitions**: Compete for prizes in weekly leaderboards
 - **Historical Stats**: Track player performance over time
 
-### 📊 Leaderboard System
-- **Weekly Rankings**: See how your team stacks up against others
-- **Monthly Competition**: Long-term strategy rewards
-- **All-Time Leaders**: Hall of fame for best managers
-- **Prize Pools**: Win NXS tokens and exclusive NFT rewards
+## 🔄 State Machines
 
-### 🏪 Marketplace
-- **Buy Player NFTs**: Purchase new players to strengthen your squad
-- **Filter & Search**: Find players by league, position, or performance
-- **Price Discovery**: Market-driven pricing for all assets
-- **Instant Transactions**: Seamless Nexus blockchain integration
+See [STATE_MACHINES.md](STATE_MACHINES.md) for detailed flow diagrams:
+
+1. **Pack Purchase Flow**: IDLE → SELECT_PACK → CHECK_WALLET → CONFIRM_PRICE → SIGN_TX → AWAIT_ORACLE → REVEAL → COMPLETE
+2. **Marketplace Flow**: BROWSE → VIEW_LISTING → EXECUTE_ORDER → SUCCESS
+3. **League Entry Flow**: SELECT_LEAGUE → CHECK_ROSTER → SELECT_TEAM → SET_CAPTAIN → PAY_ENTRY → ENTERED
+4. **Stats Oracle Flow**: Automated daemon that updates player stats after matches
 
 ## 🎯 Scoring System
 
@@ -63,41 +73,66 @@ Distordia Fantasy Football is an innovative platform where players own NFT asset
 - **30-59 Minutes**: +2 points
 - **Man of the Match**: +6 points
 
+## 💰 Revenue Breakdown
+
+| Stream | Rate | Description |
+|--------|------|-------------|
+| Pack Sales | 100% | All pack revenue goes to Distordia |
+| Market Fees | 5% | Fee on every P2P sale |
+| League Entry | 15% | Platform fee on league entries |
+
+**Example Monthly Revenue (100 active users)**:
+- Pack Sales: ~2,000+ NXS
+- Market Fees: ~500+ NXS
+- League Entries: ~300+ NXS
+
 ## 🔧 Technical Implementation
 
 ### Blockchain Integration
 
-The platform integrates with the Nexus.io blockchain using the official API endpoints as documented in the [Nexus API Documentation](https://nexus.io/docs).
+The platform integrates with the Nexus blockchain using the official API endpoints.
 
 ```javascript
-// Nexus API base URL (no /v2 - not part of actual API)
-const NEXUS_API_BASE = 'https://api.nexus.io:8080';
+// Nexus API base URL
+const NEXUS_API_BASE = 'https://api.distordia.com';
 
-// Nexus API Endpoints
+// Key Endpoints
 const NEXUS_ENDPOINTS = {
-    // Assets API - for NFT player cards
-    listAssets: `${NEXUS_API_BASE}/assets/list/asset`,
+    // Register API - for listing public player assets
+    listNames: `${NEXUS_API_BASE}/register/list/names`,
+    listAssets: `${NEXUS_API_BASE}/register/list/assets`,
+    
+    // Assets API - for asset details
     getAsset: `${NEXUS_API_BASE}/assets/get/asset`,
-    listAny: `${NEXUS_API_BASE}/assets/list/any`,
     
-    // Profiles API - for user profiles  
-    getProfile: `${NEXUS_API_BASE}/profiles/get/master`,
+    // Market API - for trading
+    createOrder: `${NEXUS_API_BASE}/market/create/order`,
+    executeOrder: `${NEXUS_API_BASE}/market/execute/order`,
     
-    // System API - for network info
-    systemInfo: `${NEXUS_API_BASE}/system/get/info`
+    // Finance API - for payments
+    debitAccount: `${NEXUS_API_BASE}/finance/debit/account`
 };
 ```
 
-#### Assets API
+### Player Card Asset (JSON Format)
 
-The **Assets API** provides commands for creating and managing NFTs on the Nexus blockchain:
-
-- **`assets/list/asset`** - Lists all assets owned by the logged-in user
-  - Requires: `session` (user login session)
-  - Returns: Array of asset objects with metadata
-  
-- **`assets/get/asset`** - Retrieves details of a specific asset
-  - Parameters: `name` or `address` of the asset
+```json
+{
+  "standard": "distordia.player.v1",
+  "playerId": "haaland",
+  "playerName": "Erling Haaland",
+  "team": "mancity",
+  "league": "epl",
+  "position": "FWD",
+  "rarity": "legendary",
+  "overall": 91,
+  "season": "2025-2026",
+  "weekPoints": 32,
+  "totalPoints": 458,
+  "goals": 24,
+  "assists": 8
+}
+```
   - Returns: Asset object with all fields and values
 
 - **`assets/create/asset`** - Creates a new NFT asset (for minting player cards)
@@ -276,13 +311,14 @@ External football data API integration for real-world match data:
 - **Team Lineups**: Starting XI and formations
 - **Match Results**: Historical performance data
 
-### Demo Mode
+### On-Chain Only
 
-The platform includes demo data for development and when APIs are unavailable:
-- Pre-generated player NFTs with realistic stats
-- Simulated match data and live scores
-- Sample leaderboard rankings
-- This allows the platform to function for demonstration purposes
+This platform operates **fully on-chain**:
+- All player assets are stored on the Nexus blockchain
+- Match data and stats come from on-chain assets updated by the Distordia oracle
+- Leaderboard entries are blockchain assets
+- Market orders use the native Nexus Market API
+- No fallback demo data - if data isn't on-chain, it won't display
 
 ## 💡 Future Enhancements
 

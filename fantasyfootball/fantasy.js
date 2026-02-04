@@ -1,9 +1,75 @@
 // Fantasy Football - Nexus Blockchain Integration
 // Connects on-chain NFT assets with real-world football player performance
+// Includes: Pack Shop, Weekly Leagues, Marketplace
+
+// ============================================
+// STATE MACHINE DEFINITIONS
+// ============================================
+
+const PackPurchaseState = {
+    IDLE: 'idle',
+    SELECT_PACK: 'select_pack',
+    CHECK_WALLET: 'check_wallet',
+    CONFIRM_PRICE: 'confirm_price',
+    SIGN_TX: 'sign_tx',
+    SUBMIT_TX: 'submit_tx',
+    AWAIT_ORACLE: 'await_oracle',
+    REVEAL: 'reveal',
+    COMPLETE: 'complete',
+    FAILED: 'failed'
+};
+
+const LeagueState = {
+    UPCOMING: 'upcoming',
+    OPEN: 'open',
+    LOCKED: 'locked',
+    LIVE: 'live',
+    FINALIZED: 'finalized',
+    COMPLETED: 'completed'
+};
+
+const MarketplaceState = {
+    BROWSE: 'browse',
+    VIEW_LISTING: 'view_listing',
+    EXECUTE_ORDER: 'execute_order',
+    SUCCESS: 'success',
+    FAILED: 'failed'
+};
+
+// Current state trackers
+let packPurchaseState = PackPurchaseState.IDLE;
+let currentPackType = null;
 
 // API Configuration
 const NEXUS_API_BASE = 'https://api.distordia.com';
 const FOOTBALL_API_BASE = 'https://api-football-v1.p.rapidapi.com/v3';
+
+// Distordia Treasury Address (receives pack sales and fees)
+const DISTORDIA_TREASURY = 'distordia';
+
+// Pack Pricing (in NXS)
+const PACK_PRICES = {
+    bronze: 5,
+    silver: 15,
+    gold: 50,
+    limited: 100
+};
+
+// Pack Contents Probabilities
+const PACK_CONTENTS = {
+    bronze: { cards: 4, common: 0.80, rare: 0.20, epic: 0, legendary: 0 },
+    silver: { cards: 5, common: 0.40, rare: 0.40, epic: 0.15, legendary: 0.05 },
+    gold: { cards: 4, common: 0, rare: 0.25, epic: 0.50, legendary: 0.25 },
+    limited: { cards: 3, common: 0, rare: 0, epic: 0.60, legendary: 0.40 }
+};
+
+// League Entry Fee & Split
+const LEAGUE_ENTRY_FEE = 10; // NXS
+const PRIZE_POOL_SHARE = 0.85; // 85% to prize pool
+const PLATFORM_FEE_SHARE = 0.15; // 15% to Distordia
+
+// Marketplace Fee
+const MARKETPLACE_FEE = 0.05; // 5%
 
 // Asset naming standard
 const ASSET_NAMESPACE = 'distordia';
@@ -258,29 +324,24 @@ function setupEventListeners() {
 
 // Load My Assets from Nexus Blockchain
 async function loadMyAssets() {
+    const assetsList = document.getElementById('my-assets-list');
+    if (assetsList) {
+        assetsList.innerHTML = '<div class="loading-spinner">Loading assets from blockchain...</div>';
+    }
+    
     try {
         // Fetch all player assets from the distordia namespace
         const players = await fetchPlayerAssets();
         
-        if (players.length > 0) {
-            console.log(`Loaded ${players.length} player assets from Nexus blockchain`);
-            myAssets = players;
-            renderMyAssets(players);
-        } else {
-            // Fallback to demo data if no players found
-            console.log('No player assets found, using demo data');
-            const demoAssets = generateDemoAssets();
-            myAssets = demoAssets;
-            renderMyAssets(demoAssets);
-        }
+        console.log(`Loaded ${players.length} player assets from Nexus blockchain`);
+        myAssets = players;
+        renderMyAssets(players);
         
     } catch (error) {
-        console.error('Error loading assets:', error);
-        
-        // Fallback to demo data
-        const demoAssets = generateDemoAssets();
-        myAssets = demoAssets;
-        renderMyAssets(demoAssets);
+        console.error('Error loading assets from blockchain:', error);
+        myAssets = [];
+        renderMyAssets([]);
+        showError('my-assets-list', 'Failed to load assets from blockchain. Please try again.');
     }
 }
 
@@ -416,37 +477,7 @@ function calculatePlayerValue(metadata) {
     return Math.round(baseValue);
 }
 
-// Generate Demo Assets (NFTs representing football players)
-function generateDemoAssets() {
-    const positions = ['GK', 'DEF', 'MID', 'FWD'];
-    const players = [
-        { name: 'Kevin De Bruyne', team: 'Man City', position: 'MID', points: 95 },
-        { name: 'Erling Haaland', team: 'Man City', position: 'FWD', points: 110 },
-        { name: 'Mohamed Salah', team: 'Liverpool', position: 'FWD', points: 98 },
-        { name: 'Virgil van Dijk', team: 'Liverpool', position: 'DEF', points: 85 },
-        { name: 'Bukayo Saka', team: 'Arsenal', position: 'MID', points: 88 },
-        { name: 'Harry Kane', team: 'Bayern', position: 'FWD', points: 105 },
-        { name: 'Alisson Becker', team: 'Liverpool', position: 'GK', points: 82 },
-        { name: 'Trent Alexander-Arnold', team: 'Liverpool', position: 'DEF', points: 79 },
-        { name: 'Bruno Fernandes', team: 'Man Utd', position: 'MID', points: 86 },
-        { name: 'Ederson', team: 'Man City', position: 'GK', points: 78 },
-        { name: 'William Saliba', team: 'Arsenal', position: 'DEF', points: 75 },
-        { name: 'Declan Rice', team: 'Arsenal', position: 'MID', points: 81 },
-    ];
-
-    return players.map((player, index) => ({
-        id: `asset-${index}`,
-        tokenId: `NXS-NFT-${1000 + index}`,
-        playerName: player.name,
-        team: player.team,
-        position: player.position,
-        points: player.points,
-        weekPoints: Math.floor(Math.random() * 15),
-        value: Math.floor(Math.random() * 50) + 10,
-        inTeam: false,
-        rarity: ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)]
-    }));
-}
+// No demo assets - all data comes from blockchain
 
 // Render My Assets
 function renderMyAssets(assets) {
@@ -633,44 +664,62 @@ function updateTeamScore() {
     document.getElementById('team-total-points').textContent = totalPoints;
 }
 
-// Load Live Matches
+// Load Live Matches from on-chain match assets
 async function loadLiveMatches() {
+    const matchesGrid = document.getElementById('live-matches-grid');
+    if (matchesGrid) {
+        matchesGrid.innerHTML = '<div class="loading-spinner">Loading matches from blockchain...</div>';
+    }
+    
     try {
-        // Demo live matches
-        const demoMatches = [
-            { 
-                id: 1, 
-                homeTeam: 'Man City', 
-                awayTeam: 'Liverpool', 
-                homeScore: 2, 
-                awayScore: 1, 
-                status: 'live', 
-                minute: 67 
-            },
-            { 
-                id: 2, 
-                homeTeam: 'Arsenal', 
-                awayTeam: 'Chelsea', 
-                homeScore: 1, 
-                awayScore: 1, 
-                status: 'live', 
-                minute: 52 
-            },
-            { 
-                id: 3, 
-                homeTeam: 'Man Utd', 
-                awayTeam: 'Tottenham', 
-                homeScore: 0, 
-                awayScore: 0, 
-                status: 'scheduled', 
-                time: '15:00' 
-            },
-        ];
+        // Fetch match assets from blockchain
+        const response = await fetch(NEXUS_ENDPOINTS.listAssets, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE 'match.%'`,
+                limit: 50
+            })
+        });
         
-        liveMatches = demoMatches;
-        renderLiveMatches(demoMatches);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.result && Array.isArray(data.result)) {
+            liveMatches = data.result.map(parseMatchAsset).filter(m => m !== null);
+        } else {
+            liveMatches = [];
+        }
+        
+        renderLiveMatches(liveMatches);
+        
     } catch (error) {
-        console.error('Error loading matches:', error);
+        console.error('Error loading matches from blockchain:', error);
+        liveMatches = [];
+        renderLiveMatches([]);
+    }
+}
+
+// Parse match asset from blockchain
+function parseMatchAsset(asset) {
+    try {
+        const metadata = typeof asset.data === 'string' ? JSON.parse(asset.data) : (asset.data || {});
+        return {
+            id: asset.address,
+            homeTeam: metadata.homeTeam || 'TBD',
+            awayTeam: metadata.awayTeam || 'TBD',
+            homeScore: metadata.homeScore || 0,
+            awayScore: metadata.awayScore || 0,
+            status: metadata.status || 'scheduled',
+            minute: metadata.minute,
+            time: metadata.kickoff
+        };
+    } catch (e) {
+        console.warn('Failed to parse match asset:', asset);
+        return null;
     }
 }
 
@@ -679,9 +728,19 @@ function renderLiveMatches(matches) {
     const matchesGrid = document.getElementById('live-matches-grid');
     if (!matchesGrid) return;
 
+    if (matches.length === 0) {
+        matchesGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <p>No match data found on blockchain.</p>
+                <p>Match assets are created by the stats oracle.</p>
+            </div>
+        `;
+        return;
+    }
+
     matchesGrid.innerHTML = matches.map(match => `
         <div class="match-card">
-            <div class="match-status ${match.status}">${match.status === 'live' ? `⚽ LIVE - ${match.minute}'` : `📅 ${match.time}`}</div>
+            <div class="match-status ${match.status}">${match.status === 'live' ? `⚽ LIVE - ${match.minute}'` : `📅 ${match.time || 'TBD'}`}</div>
             <div class="match-teams">
                 <div class="team">
                     <div class="team-logo">${match.homeTeam.substring(0, 3).toUpperCase()}</div>
@@ -698,35 +757,80 @@ function renderLiveMatches(matches) {
     `).join('');
 }
 
-// Load Leaderboard
+// Load Leaderboard from on-chain league entries
 async function loadLeaderboard(period = 'week') {
+    const leaderboardList = document.getElementById('leaderboard-list');
+    if (leaderboardList) {
+        leaderboardList.innerHTML = '<div class="loading-spinner">Loading leaderboard from blockchain...</div>';
+    }
+    
     try {
-        // Demo leaderboard
-        const demoLeaderboard = generateDemoLeaderboard(period);
-        leaderboard = demoLeaderboard;
-        renderLeaderboard(demoLeaderboard);
+        // Fetch league entry assets from blockchain
+        const response = await fetch(NEXUS_ENDPOINTS.listAssets, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE 'entry.league.%'`,
+                limit: 100,
+                order: 'desc'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.result && Array.isArray(data.result)) {
+            leaderboard = data.result
+                .map(parseLeaderboardEntry)
+                .filter(e => e !== null)
+                .sort((a, b) => b.points - a.points)
+                .map((entry, index) => ({ ...entry, rank: index + 1 }));
+        } else {
+            leaderboard = [];
+        }
+        
+        renderLeaderboard(leaderboard);
+        
     } catch (error) {
-        console.error('Error loading leaderboard:', error);
+        console.error('Error loading leaderboard from blockchain:', error);
+        leaderboard = [];
+        renderLeaderboard([]);
     }
 }
 
-// Generate demo leaderboard
-function generateDemoLeaderboard(period) {
-    const names = ['CryptoKing', 'FootballFan88', 'NexusTrader', 'GoalMaster', 'BlockchainBoss', 'NFTCollector', 'PlayerOne', 'TeamCaptain', 'ScoreLegend', 'ChampionX'];
-    
-    return names.map((name, index) => ({
-        rank: index + 1,
-        username: name,
-        points: 150 - (index * 10),
-        players: 11,
-        value: (50 - index * 3) + ' NXS'
-    }));
+// Parse leaderboard entry from blockchain asset
+function parseLeaderboardEntry(asset) {
+    try {
+        const metadata = typeof asset.data === 'string' ? JSON.parse(asset.data) : (asset.data || {});
+        return {
+            username: asset.owner || 'Anonymous',
+            points: metadata.totalPoints || 0,
+            players: 11,
+            value: (metadata.teamValue || 0) + ' NXS'
+        };
+    } catch (e) {
+        console.warn('Failed to parse leaderboard entry:', asset);
+        return null;
+    }
 }
 
 // Render Leaderboard
 function renderLeaderboard(entries) {
     const leaderboardList = document.getElementById('leaderboard-list');
     if (!leaderboardList) return;
+
+    if (entries.length === 0) {
+        leaderboardList.innerHTML = `
+            <div class="empty-state">
+                <p>No league entries found on blockchain.</p>
+                <p>Be the first to enter a league!</p>
+            </div>
+        `;
+        return;
+    }
 
     leaderboardList.innerHTML = entries.map(entry => `
         <div class="leaderboard-entry ${entry.rank <= 3 ? 'top-3' : ''}">
@@ -748,7 +852,16 @@ function renderTopAssets() {
     const topAssetsList = document.getElementById('top-assets-list');
     if (!topAssetsList) return;
 
-    const topAssets = myAssets.slice(0, 5).sort((a, b) => b.weekPoints - a.weekPoints);
+    if (myAssets.length === 0) {
+        topAssetsList.innerHTML = `
+            <div class="empty-state">
+                <p>No assets to display.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const topAssets = myAssets.slice(0, 5).sort((a, b) => (b.weekPoints || 0) - (a.weekPoints || 0));
     
     topAssetsList.innerHTML = topAssets.map((asset, index) => `
         <div class="top-asset-item">
@@ -762,41 +875,61 @@ function renderTopAssets() {
                 </div>
             </div>
             <div class="asset-stats">
-                <div class="asset-points">${asset.weekPoints}</div>
+                <div class="asset-points">${asset.weekPoints || 0}</div>
             </div>
         </div>
     `).join('');
 }
 
-// Load Marketplace
+// Load Marketplace from on-chain market orders
 async function loadMarketplace() {
-    try {
-        const demoPlayers = generateMarketplacePlayers();
-        allPlayers = demoPlayers;
-        renderMarketplace(demoPlayers);
-    } catch (error) {
-        console.error('Error loading marketplace:', error);
+    const marketplaceGrid = document.getElementById('marketplace-grid');
+    if (marketplaceGrid) {
+        marketplaceGrid.innerHTML = '<div class="loading-spinner">Loading marketplace from blockchain...</div>';
     }
-}
-
-// Generate marketplace players
-function generateMarketplacePlayers() {
-    const players = [
-        { name: 'Kylian Mbappé', team: 'Real Madrid', position: 'FWD', points: 112, price: 45 },
-        { name: 'Jude Bellingham', team: 'Real Madrid', position: 'MID', points: 92, price: 38 },
-        { name: 'Lautaro Martínez', team: 'Inter', position: 'FWD', points: 88, price: 35 },
-        { name: 'Rodri', team: 'Man City', position: 'MID', points: 87, price: 34 },
-        { name: 'Rúben Dias', team: 'Man City', position: 'DEF', points: 79, price: 28 },
-        { name: 'Thibaut Courtois', team: 'Real Madrid', position: 'GK', points: 84, price: 30 },
-    ];
-
-    return players.map((player, index) => ({
-        id: `market-${index}`,
-        ...player,
-        goals: Math.floor(Math.random() * 20),
-        assists: Math.floor(Math.random() * 15),
-        league: ['Premier League', 'La Liga', 'Serie A', 'Bundesliga'][Math.floor(Math.random() * 4)]
-    }));
+    
+    try {
+        // Fetch market orders for player assets
+        const marketOrders = await fetchPlayerMarketOrders();
+        
+        // For each order, fetch the player asset details
+        const playersWithOrders = [];
+        
+        for (const order of marketOrders) {
+            try {
+                const playerResponse = await fetch(NEXUS_ENDPOINTS.getAsset, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: order.assetAddress })
+                });
+                
+                if (playerResponse.ok) {
+                    const playerData = await playerResponse.json();
+                    if (playerData.result) {
+                        const player = parsePlayerAsset(playerData.result);
+                        if (player) {
+                            playersWithOrders.push({
+                                ...player,
+                                orderId: order.orderId,
+                                price: order.price,
+                                seller: order.seller
+                            });
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to fetch player for order:', order, e);
+            }
+        }
+        
+        allPlayers = playersWithOrders;
+        renderMarketplace(playersWithOrders);
+        
+    } catch (error) {
+        console.error('Error loading marketplace from blockchain:', error);
+        allPlayers = [];
+        renderMarketplace([]);
+    }
 }
 
 // Render Marketplace
@@ -804,26 +937,36 @@ function renderMarketplace(players) {
     const marketplaceGrid = document.getElementById('marketplace-grid');
     if (!marketplaceGrid) return;
 
+    if (players.length === 0) {
+        marketplaceGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <p>No player cards listed on the marketplace.</p>
+                <p>Check back later or list your own cards for sale!</p>
+            </div>
+        `;
+        return;
+    }
+
     marketplaceGrid.innerHTML = players.map(player => `
         <div class="marketplace-card">
             <div class="marketplace-card-header">
-                <div class="marketplace-card-avatar">${getPlayerInitials(player.name)}</div>
+                <div class="marketplace-card-avatar">${getPlayerInitials(player.playerName || player.name)}</div>
             </div>
             <div class="marketplace-card-body">
-                <div class="marketplace-player-name">${player.name}</div>
+                <div class="marketplace-player-name">${player.playerName || player.name}</div>
                 <div class="marketplace-player-team">${player.team} • ${player.position}</div>
                 <div class="marketplace-stats">
                     <div class="marketplace-stat">
                         <div class="marketplace-stat-label">Points</div>
-                        <div class="marketplace-stat-value">${player.points}</div>
+                        <div class="marketplace-stat-value">${player.points || 0}</div>
                     </div>
                     <div class="marketplace-stat">
                         <div class="marketplace-stat-label">Goals</div>
-                        <div class="marketplace-stat-value">${player.goals}</div>
+                        <div class="marketplace-stat-value">${player.goals || 0}</div>
                     </div>
                     <div class="marketplace-stat">
                         <div class="marketplace-stat-label">Assists</div>
-                        <div class="marketplace-stat-value">${player.assists}</div>
+                        <div class="marketplace-stat-value">${player.assists || 0}</div>
                     </div>
                 </div>
                 <div class="marketplace-price">
@@ -831,7 +974,7 @@ function renderMarketplace(players) {
                     <span class="price-value">${player.price} NXS</span>
                 </div>
                 <div class="marketplace-card-footer">
-                    <button class="btn-buy" onclick="buyAsset('${player.id}')">Buy NFT</button>
+                    <button class="btn-buy" onclick="buyAsset('${player.id}', '${player.orderId}')">Buy NFT</button>
                     <button class="btn-details" onclick="viewAssetDetails('${player.id}')">ℹ️</button>
                 </div>
             </div>
@@ -839,17 +982,42 @@ function renderMarketplace(players) {
     `).join('');
 }
 
-// Buy asset
-function buyAsset(playerId) {
+// Buy asset from marketplace
+async function buyAsset(playerId, orderId) {
     if (!walletConnected) {
         alert('Please connect your Q-Wallet to buy players');
         return;
     }
     
-    alert('Purchase functionality will use your connected Q-Wallet.\n\nTo complete purchase:\n1. Wallet will request transaction approval\n2. Enter your PIN to confirm\n3. Player NFT will be transferred to your account');
+    const player = allPlayers.find(p => p.id === playerId);
+    if (!player) {
+        alert('Player not found');
+        return;
+    }
     
-    // TODO: Implement actual market order execution with wallet
-    // See buyPlayerFromMarket() function for implementation
+    const confirmed = confirm(
+        `Buy ${player.playerName || player.name} for ${player.price} NXS?\n\n` +
+        `Marketplace fee (5%): ${(player.price * MARKETPLACE_FEE).toFixed(2)} NXS\n` +
+        `Total: ${player.price} NXS`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        // Execute market order via Q-Wallet
+        const result = await buyPlayerFromMarket(orderId || player.orderId);
+        
+        if (result.success) {
+            alert(`Successfully purchased ${player.playerName || player.name}!\n\nTransaction: ${result.txid}`);
+            // Reload marketplace and user assets
+            await Promise.all([loadMarketplace(), loadMyAssets()]);
+        } else {
+            alert(`Purchase failed: ${result.message}`);
+        }
+    } catch (error) {
+        console.error('Error buying asset:', error);
+        alert('Failed to complete purchase. Please try again.');
+    }
 }
 
 // View asset details
@@ -1055,12 +1223,49 @@ async function fetchTradeHistory() {
     }
 }
 
-// Update Stats
+// Update Stats from blockchain
 async function updateStats() {
-    document.getElementById('active-players').textContent = '1,247';
-    document.getElementById('total-assets').textContent = '15,432';
-    document.getElementById('live-matches').textContent = liveMatches.filter(m => m.status === 'live').length;
-    document.getElementById('prize-pool').textContent = '5,000 NXS';
+    try {
+        // Count player assets on-chain
+        const playerResponse = await fetch(NEXUS_ENDPOINTS.listNames, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE '${ASSET_PREFIX}.%'`,
+                limit: 1
+            })
+        });
+        
+        // Count league entries for prize pool calculation
+        const leagueResponse = await fetch(NEXUS_ENDPOINTS.listAssets, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE 'entry.league.%'`,
+                limit: 1
+            })
+        });
+        
+        // Get total counts from headers or result length
+        const playerData = await playerResponse.json();
+        const leagueData = await leagueResponse.json();
+        
+        const totalAssets = playerData.result?.length || 0;
+        const totalEntries = leagueData.result?.length || 0;
+        const prizePool = totalEntries * LEAGUE_ENTRY_FEE * PRIZE_POOL_SHARE;
+        
+        document.getElementById('active-players').textContent = leaderboard.length || '-';
+        document.getElementById('total-assets').textContent = totalAssets || '-';
+        document.getElementById('live-matches').textContent = liveMatches.filter(m => m.status === 'live').length || '0';
+        document.getElementById('prize-pool').textContent = prizePool > 0 ? `${prizePool.toLocaleString()} NXS` : '-';
+        
+    } catch (error) {
+        console.error('Error updating stats from blockchain:', error);
+        document.getElementById('active-players').textContent = '-';
+        document.getElementById('total-assets').textContent = '-';
+        document.getElementById('live-matches').textContent = '-';
+        document.getElementById('prize-pool').textContent = '-';
+    }
 }
 
 // Filter Functions
@@ -1141,6 +1346,431 @@ function startLiveUpdates() {
     }, 30000);
 }
 
+// ============================================
+// PACK SHOP - STATE MACHINE IMPLEMENTATION
+// ============================================
+
+// Buy pack - Entry point
+async function buyPack(packType) {
+    console.log(`[PACK] State: ${packPurchaseState} -> SELECT_PACK`);
+    packPurchaseState = PackPurchaseState.SELECT_PACK;
+    currentPackType = packType;
+    
+    // Check wallet connection
+    packPurchaseState = PackPurchaseState.CHECK_WALLET;
+    console.log(`[PACK] State: CHECK_WALLET`);
+    
+    if (!walletConnected) {
+        alert('Please connect your Q-Wallet first to buy packs.');
+        packPurchaseState = PackPurchaseState.IDLE;
+        return;
+    }
+    
+    // Confirm price
+    packPurchaseState = PackPurchaseState.CONFIRM_PRICE;
+    console.log(`[PACK] State: CONFIRM_PRICE`);
+    
+    const price = PACK_PRICES[packType];
+    const packNames = {
+        bronze: 'Bronze Pack',
+        silver: 'Silver Pack',
+        gold: 'Gold Pack',
+        limited: 'Limited Edition Pack'
+    };
+    
+    const confirmed = confirm(
+        `Buy ${packNames[packType]} for ${price} NXS?\n\n` +
+        `You will receive ${PACK_CONTENTS[packType].cards} player cards.\n\n` +
+        `Probabilities:\n` +
+        `• Common: ${PACK_CONTENTS[packType].common * 100}%\n` +
+        `• Rare: ${PACK_CONTENTS[packType].rare * 100}%\n` +
+        `• Epic: ${PACK_CONTENTS[packType].epic * 100}%\n` +
+        `• Legendary: ${PACK_CONTENTS[packType].legendary * 100}%`
+    );
+    
+    if (!confirmed) {
+        console.log(`[PACK] User cancelled`);
+        packPurchaseState = PackPurchaseState.IDLE;
+        return;
+    }
+    
+    // Sign and submit transaction
+    packPurchaseState = PackPurchaseState.SIGN_TX;
+    console.log(`[PACK] State: SIGN_TX`);
+    
+    try {
+        // Request transaction through Q-Wallet
+        // This sends NXS to Distordia treasury with pack type in memo
+        const result = await window.qWallet.sendTransaction({
+            api: 'finance/debit/account',
+            params: {
+                name_from: 'default',
+                name_to: DISTORDIA_TREASURY,
+                amount: price,
+                reference: `pack:${packType}:${Date.now()}`
+            }
+        });
+        
+        packPurchaseState = PackPurchaseState.SUBMIT_TX;
+        console.log(`[PACK] State: SUBMIT_TX, txid: ${result.txid}`);
+        
+        // Show waiting state
+        showPackOpeningModal(packType, 'waiting');
+        
+        // Wait for Distordia daemon to mint cards on blockchain
+        packPurchaseState = PackPurchaseState.AWAIT_ORACLE;
+        console.log(`[PACK] State: AWAIT_ORACLE - Waiting for blockchain confirmation...`);
+        
+        // Wait for cards to appear on blockchain (minted by Distordia daemon)
+        const cards = await awaitPackCardsFromBlockchain(result.txid, packType);
+        
+        packPurchaseState = PackPurchaseState.REVEAL;
+        console.log(`[PACK] State: REVEAL`);
+        
+        // Show reveal animation
+        showPackReveal(cards);
+        
+        packPurchaseState = PackPurchaseState.COMPLETE;
+        console.log(`[PACK] State: COMPLETE`);
+        
+        // Reload user's assets from blockchain
+        await loadMyAssets();
+        
+    } catch (error) {
+        console.error('[PACK] Transaction failed:', error);
+        packPurchaseState = PackPurchaseState.FAILED;
+        
+        if (error.message?.includes('denied')) {
+            alert('Transaction cancelled.');
+        } else {
+            alert('Failed to purchase pack: ' + (error.message || 'Unknown error'));
+        }
+        
+        closePackModal();
+        packPurchaseState = PackPurchaseState.IDLE;
+    }
+}
+
+// Pack cards are minted on-chain by Distordia daemon after payment
+// This function is called by the daemon, not the frontend
+// Frontend only displays cards after they are transferred on-chain
+async function awaitPackCardsFromBlockchain(txid, packType) {
+    const contents = PACK_CONTENTS[packType];
+    const maxAttempts = 30; // Wait up to 30 seconds
+    
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+            // Query for newly minted cards linked to this transaction
+            const response = await fetch(NEXUS_ENDPOINTS.listAssets, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    where: `object.namespace = '${ASSET_NAMESPACE}' AND object.name LIKE 'pack.${txid.substring(0, 8)}.%'`,
+                    limit: contents.cards
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.result && data.result.length >= contents.cards) {
+                    return data.result.map(parsePlayerAsset).filter(c => c !== null);
+                }
+            }
+        } catch (e) {
+            console.warn('Waiting for pack cards...', e);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    throw new Error('Pack cards not found on blockchain. Please contact support.');
+}
+
+// Show pack opening modal
+function showPackOpeningModal(packType, state) {
+    // Create modal if doesn't exist
+    let modal = document.getElementById('packModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'packModal';
+        modal.className = 'pack-modal';
+        modal.innerHTML = `
+            <div class="pack-modal-content">
+                <div class="pack-opening-animation" id="packAnimation">🎁</div>
+                <h2 id="packModalTitle">Opening Pack...</h2>
+                <p id="packModalText">Please wait while your cards are being minted...</p>
+                <div class="revealed-cards" id="revealedCards"></div>
+                <button class="btn btn-primary" id="closePackBtn" style="display: none;" onclick="closePackModal()">
+                    Collect Cards
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Reset state
+    document.getElementById('revealedCards').innerHTML = '';
+    document.getElementById('closePackBtn').style.display = 'none';
+    document.getElementById('packAnimation').textContent = '🎁';
+    document.getElementById('packModalTitle').textContent = 'Opening Pack...';
+    document.getElementById('packModalText').textContent = 'Please wait while your cards are being minted...';
+    
+    modal.classList.add('show');
+}
+
+// Show pack reveal animation
+function showPackReveal(cards) {
+    document.getElementById('packAnimation').textContent = '✨';
+    document.getElementById('packModalTitle').textContent = 'Cards Revealed!';
+    document.getElementById('packModalText').textContent = `You received ${cards.length} cards:`;
+    
+    const container = document.getElementById('revealedCards');
+    container.innerHTML = '';
+    
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            const cardEl = document.createElement('div');
+            cardEl.className = `revealed-card ${card.rarity}`;
+            cardEl.innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                    ${card.position === 'GK' ? '🧤' : card.position === 'DEF' ? '🛡️' : card.position === 'MID' ? '⚡' : '⚽'}
+                </div>
+                <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-primary);">
+                    ${card.playerName}
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-secondary);">
+                    ${card.team}
+                </div>
+                <div style="font-size: 0.7rem; color: ${getRarityColor(card.rarity)}; text-transform: uppercase; margin-top: 0.3rem;">
+                    ${card.rarity}
+                </div>
+            `;
+            container.appendChild(cardEl);
+            
+            // Show close button after last card
+            if (index === cards.length - 1) {
+                setTimeout(() => {
+                    document.getElementById('closePackBtn').style.display = 'block';
+                }, 500);
+            }
+        }, index * 400);
+    });
+}
+
+// Get rarity color
+function getRarityColor(rarity) {
+    const colors = {
+        common: '#aaa',
+        rare: '#3498db',
+        epic: '#9b59b6',
+        legendary: '#ffd700'
+    };
+    return colors[rarity] || '#aaa';
+}
+
+// Close pack modal
+function closePackModal() {
+    const modal = document.getElementById('packModal');
+    if (modal) modal.classList.remove('show');
+    packPurchaseState = PackPurchaseState.IDLE;
+}
+
+// ============================================
+// WEEKLY LEAGUES - STATE MACHINE IMPLEMENTATION
+// ============================================
+
+let currentLeagueEntry = null;
+
+// Enter league
+async function enterLeague(leagueId) {
+    console.log(`[LEAGUE] Entering league: ${leagueId}`);
+    
+    // Check wallet
+    if (!walletConnected) {
+        alert('Please connect your Q-Wallet to enter leagues.');
+        return;
+    }
+    
+    // Check if user has enough players
+    if (myAssets.length < 11) {
+        alert(`You need at least 11 player cards to enter a league.\n\nYou have: ${myAssets.length} cards\n\nVisit the Pack Shop to get more cards!`);
+        return;
+    }
+    
+    // Show team selection modal
+    showLeagueEntryModal(leagueId);
+}
+
+// Show league entry modal
+function showLeagueEntryModal(leagueId) {
+    let modal = document.getElementById('leagueModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'leagueModal';
+        modal.className = 'league-modal';
+        document.body.appendChild(modal);
+    }
+    
+    // Filter assets by position
+    const gks = myAssets.filter(a => a.position === 'GK');
+    const defs = myAssets.filter(a => a.position === 'DEF');
+    const mids = myAssets.filter(a => a.position === 'MID');
+    const fwds = myAssets.filter(a => a.position === 'FWD');
+    
+    modal.innerHTML = `
+        <div class="league-modal-content">
+            <h2>🏆 Enter League: ${leagueId}</h2>
+            <p>Entry Fee: <strong>${LEAGUE_ENTRY_FEE} NXS</strong></p>
+            <p>Prize Pool receives 85% • Platform receives 15%</p>
+            
+            <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
+            
+            <h3>Select Your Team (4-4-2 Formation)</h3>
+            
+            <div class="team-selection">
+                <div class="position-group">
+                    <label>Goalkeeper (1):</label>
+                    <select id="gk-select" class="team-select">
+                        ${gks.map(p => `<option value="${p.id}">${p.playerName} (${p.points} pts)</option>`).join('')}
+                    </select>
+                </div>
+                
+                <div class="position-group">
+                    <label>Defenders (4):</label>
+                    ${[1,2,3,4].map(i => `
+                        <select id="def-select-${i}" class="team-select">
+                            ${defs.map(p => `<option value="${p.id}">${p.playerName} (${p.points} pts)</option>`).join('')}
+                        </select>
+                    `).join('')}
+                </div>
+                
+                <div class="position-group">
+                    <label>Midfielders (4):</label>
+                    ${[1,2,3,4].map(i => `
+                        <select id="mid-select-${i}" class="team-select">
+                            ${mids.map(p => `<option value="${p.id}">${p.playerName} (${p.points} pts)</option>`).join('')}
+                        </select>
+                    `).join('')}
+                </div>
+                
+                <div class="position-group">
+                    <label>Forwards (2):</label>
+                    ${[1,2].map(i => `
+                        <select id="fwd-select-${i}" class="team-select">
+                            ${fwds.map(p => `<option value="${p.id}">${p.playerName} (${p.points} pts)</option>`).join('')}
+                        </select>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="captain-section" style="margin-top: 1.5rem;">
+                <h4>Select Captain (2x Points):</h4>
+                <select id="captain-select" class="team-select" style="width: 100%;">
+                    ${myAssets.map(p => `<option value="${p.id}">${p.playerName} - ${p.position}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-secondary" onclick="closeLeagueModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLeagueEntry('${leagueId}')">
+                    Pay ${LEAGUE_ENTRY_FEE} NXS & Enter
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('show');
+}
+
+// Confirm league entry
+async function confirmLeagueEntry(leagueId) {
+    console.log(`[LEAGUE] Confirming entry for: ${leagueId}`);
+    
+    // Gather selected team
+    const team = {
+        GK: document.getElementById('gk-select')?.value,
+        DEF: [1,2,3,4].map(i => document.getElementById(`def-select-${i}`)?.value),
+        MID: [1,2,3,4].map(i => document.getElementById(`mid-select-${i}`)?.value),
+        FWD: [1,2].map(i => document.getElementById(`fwd-select-${i}`)?.value),
+        captain: document.getElementById('captain-select')?.value
+    };
+    
+    console.log('[LEAGUE] Team:', team);
+    
+    try {
+        // Submit entry fee via Q-Wallet
+        const result = await window.qWallet.sendTransaction({
+            api: 'finance/debit/account',
+            params: {
+                name_from: 'default',
+                name_to: DISTORDIA_TREASURY,
+                amount: LEAGUE_ENTRY_FEE,
+                reference: `league:${leagueId}:${JSON.stringify(team)}`
+            }
+        });
+        
+        console.log('[LEAGUE] Entry submitted:', result);
+        
+        closeLeagueModal();
+        
+        alert(`Successfully entered ${leagueId}!\n\nYour team has been registered.\nGood luck! 🏆`);
+        
+        // Update UI
+        const entriesEl = document.getElementById('league-entries');
+        if (entriesEl) {
+            entriesEl.textContent = parseInt(entriesEl.textContent) + 1;
+        }
+        
+        const poolEl = document.getElementById('league-prize-pool');
+        if (poolEl) {
+            const currentPool = parseFloat(poolEl.textContent.replace(/[^0-9.]/g, ''));
+            poolEl.textContent = `${(currentPool + LEAGUE_ENTRY_FEE * PRIZE_POOL_SHARE).toLocaleString()} NXS`;
+        }
+        
+    } catch (error) {
+        console.error('[LEAGUE] Entry failed:', error);
+        
+        if (error.message?.includes('denied')) {
+            alert('Entry cancelled.');
+        } else {
+            alert('Failed to enter league: ' + (error.message || 'Unknown error'));
+        }
+    }
+}
+
+// Close league modal
+function closeLeagueModal() {
+    const modal = document.getElementById('leagueModal');
+    if (modal) modal.classList.remove('show');
+}
+
+// View league results
+function viewLeagueResults(leagueId) {
+    alert(`Viewing results for ${leagueId}\n\n(In production: this would show full standings, points breakdown, and prize distribution)`);
+}
+
+// ============================================
+// MARKETPLACE WITH FEES
+// ============================================
+
+// List player for sale with fee calculation
+async function listPlayerForSaleWithFee(localName, price) {
+    const fee = price * MARKETPLACE_FEE;
+    const sellerReceives = price - fee;
+    
+    const confirmed = confirm(
+        `List player for sale?\n\n` +
+        `Price: ${price} NXS\n` +
+        `Marketplace Fee (5%): ${fee.toFixed(2)} NXS\n` +
+        `You receive: ${sellerReceives.toFixed(2)} NXS`
+    );
+    
+    if (!confirmed) return;
+    
+    return listPlayerForSale(localName, price);
+}
+
 // Console message
 console.log('%c⚽ Distordia Fantasy Football', 'color: #FF6B35; font-size: 24px; font-weight: bold;');
 console.log('%cNexus Blockchain Integration Active', 'color: #FF8C42; font-size: 14px;');
+console.log('%cState Machines: Pack Purchase | League Entry | Marketplace', 'color: #888; font-size: 12px;');

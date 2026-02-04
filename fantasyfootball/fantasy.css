@@ -908,3 +908,663 @@
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
+
+/* ===================================
+   PACK SHOP SECTION
+   =================================== */
+
+.shop-section {
+    padding: 4rem 0;
+    background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(255, 107, 53, 0.03) 50%, var(--bg-dark) 100%);
+}
+
+.section-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.pack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.pack-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.pack-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.pack-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pack-card:hover .pack-glow {
+    opacity: 1;
+}
+
+/* Pack Rarity Themes */
+.pack-card.bronze {
+    border-color: #cd7f32;
+}
+.pack-card.bronze .pack-glow {
+    background: linear-gradient(90deg, #cd7f32, #b8860b);
+}
+.pack-card.bronze .pack-icon {
+    text-shadow: 0 0 30px rgba(205, 127, 50, 0.5);
+}
+
+.pack-card.silver {
+    border-color: #c0c0c0;
+}
+.pack-card.silver .pack-glow {
+    background: linear-gradient(90deg, #c0c0c0, #e8e8e8);
+}
+.pack-card.silver .pack-icon {
+    text-shadow: 0 0 30px rgba(192, 192, 192, 0.5);
+}
+
+.pack-card.gold {
+    border-color: #ffd700;
+}
+.pack-card.gold .pack-glow {
+    background: linear-gradient(90deg, #ffd700, #ffec8b);
+}
+.pack-card.gold .pack-icon {
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.pack-card.limited {
+    border-color: #9b59b6;
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(155, 89, 182, 0.1) 100%);
+}
+.pack-card.limited .pack-glow {
+    background: linear-gradient(90deg, #9b59b6, #8e44ad, #e74c3c);
+}
+.pack-card.limited .pack-icon {
+    text-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.pack-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.pack-card h3 {
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.pack-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.pack-item {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.pack-item.common {
+    background: rgba(150, 150, 150, 0.2);
+    color: #aaa;
+}
+
+.pack-item.rare {
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+}
+
+.pack-item.epic {
+    background: rgba(155, 89, 182, 0.2);
+    color: #9b59b6;
+}
+
+.pack-item.legendary {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+}
+
+.pack-item.special {
+    background: linear-gradient(90deg, rgba(155, 89, 182, 0.2), rgba(231, 76, 60, 0.2));
+    color: #e74c3c;
+}
+
+.pack-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.3rem;
+    margin-bottom: 1.5rem;
+}
+
+.price-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.price-currency {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.btn-pack {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+}
+
+.btn-pack:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+}
+
+.gold-btn {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #1a1a1a;
+}
+
+.limited-btn {
+    background: linear-gradient(135deg, #9b59b6, #e74c3c);
+}
+
+.pack-timer {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(231, 76, 60, 0.2);
+    border-radius: 8px;
+    color: #e74c3c;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.revenue-info {
+    text-align: center;
+    margin-top: 2rem;
+    padding: 1rem;
+    background: rgba(255, 107, 53, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+/* ===================================
+   LEAGUES SECTION
+   =================================== */
+
+.leagues-section {
+    padding: 4rem 0;
+    background: var(--bg-dark);
+}
+
+.leagues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.league-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.league-card.featured {
+    border-color: var(--primary-color);
+    grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+    .league-card.featured {
+        grid-column: span 1;
+    }
+}
+
+.league-card.completed {
+    opacity: 0.8;
+}
+
+.league-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.league-status.live {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.league-status.upcoming {
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+}
+
+.league-status.completed {
+    background: rgba(150, 150, 150, 0.2);
+    color: #999;
+}
+
+.league-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-right: 80px;
+}
+
+.league-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.league-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.league-stat .label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.league-stat .value {
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.prize-breakdown {
+    background: rgba(255, 107, 53, 0.05);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.prize-breakdown h4 {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+}
+
+.prize-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.fee-info {
+    max-width: 400px;
+    margin: 3rem auto 0;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.fee-info h4 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.fee-breakdown {
+    display: flex;
+    justify-content: space-around;
+}
+
+.fee-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.fee-item span:first-child {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.fee-percent {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Hero Nav Buttons */
+.hero-nav {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: var(--bg-dark);
+}
+
+/* Pack Opening Modal */
+.pack-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.pack-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.pack-modal-content {
+    background: var(--bg-card);
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+}
+
+.pack-opening-animation {
+    font-size: 6rem;
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    25% { transform: translateX(-5px) rotate(-5deg); }
+    75% { transform: translateX(5px) rotate(5deg); }
+}
+
+.revealed-cards {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.revealed-card {
+    width: 120px;
+    padding: 1rem;
+    background: var(--bg-dark);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    animation: cardReveal 0.5s ease forwards;
+    opacity: 0;
+    transform: scale(0.5) rotateY(90deg);
+}
+
+@keyframes cardReveal {
+    to {
+        opacity: 1;
+        transform: scale(1) rotateY(0);
+    }
+}
+
+.revealed-card.rare { border-color: #3498db; }
+.revealed-card.epic { border-color: #9b59b6; }
+.revealed-card.legendary { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+
+/* League Entry Modal */
+.league-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.league-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.league-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 800px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.captain-select {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.captain-option {
+    padding: 0.5rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.captain-option:hover,
+.captain-option.selected {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.captain-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: var(--bg-dark);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+/* Team Selection in League Modal */
+.team-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.position-group {
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.position-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.team-select {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.team-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.captain-section {
+    background: rgba(255, 107, 53, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--primary-color);
+}
+
+.captain-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.modal-actions {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+/* Rarity Badge in Assets */
+.rarity-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.rarity-badge.common { background: rgba(150,150,150,0.2); color: #aaa; }
+.rarity-badge.rare { background: rgba(52,152,219,0.2); color: #3498db; }
+.rarity-badge.epic { background: rgba(155,89,182,0.2); color: #9b59b6; }
+.rarity-badge.legendary { background: rgba(255,215,0,0.2); color: #ffd700; }
+
+/* State indicator for debugging */
+.state-indicator {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    background: var(--bg-card);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    z-index: 9999;
+}
+
+/* Mobile adjustments for shop/leagues */
+@media (max-width: 768px) {
+    .pack-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .pack-card {
+        padding: 1.5rem;
+    }
+    
+    .pack-icon {
+        font-size: 3rem;
+    }
+    
+    .leagues-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .league-modal-content {
+        padding: 1.5rem;
+    }
+    
+    .hero-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .hero-nav .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+}

@@ -1,15 +1,22 @@
 // Swap Service JavaScript
 
-// Configuration (from swapService docs)
-const EXCHANGE_RATE = 1.0; // 1:1 ratio
-const FLAT_FEE_USDC = 0.1; // 0.1 USDC flat fee for USDC->USDD
-const DYNAMIC_FEE_BPS = 10; // 0.1% (10 basis points)
-const MIN_SWAP_AMOUNT = 0.100101; // Minimum swap amount both directions
+// Nexus API configuration
+const NEXUS_API_BASE = 'https://api.distordia.com';
+
+// Default configuration (overridden by selected provider)
+let EXCHANGE_RATE = 1.0; // 1:1 ratio
+let FLAT_FEE_USDC = 0.1; // 0.1 USDC flat fee for USDC->USDD
+let DYNAMIC_FEE_BPS = 10; // 0.1% (10 basis points)
+let MIN_SWAP_AMOUNT = 0.100101; // Minimum swap amount both directions
 const NETWORK_FEE_SOL = 0.001; // Estimated Solana network fee
 
-// Service addresses (from docs)
-const USDC_VAULT_ADDRESS = 'Bg1MUQDMjAuXSAFr8izhGCUUhsrta1EjHcTvvgFnJEzZ';
-const USDD_TREASURY_ACCOUNT = '<TREASURY_ACCOUNT>'; // Replace with actual treasury
+// Current bridge provider (set dynamically)
+let currentProvider = null;
+let availableProviders = [];
+
+// Provider configuration (loaded from heartbeat asset)
+let USDC_VAULT_ADDRESS = '';
+let USDD_TREASURY_ACCOUNT = '';
 
 // State
 let walletConnected = false;
@@ -44,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Distordia Swap initialized');
     setupEventListeners();
     checkExistingConnection();
+    loadBridgeProviders(); // Load available bridge providers
 });
 
 // Check for existing Q-Wallet connection
@@ -60,6 +68,177 @@ async function checkExistingConnection() {
         }
     }
 }
+
+// ========================================
+// BRIDGE PROVIDER DISCOVERY & SELECTION
+// ========================================
+
+// Load available bridge providers by querying for heartbeat assets
+async function loadBridgeProviders() {
+    console.log('Loading bridge providers...');
+    
+    try {
+        // Query Nexus for assets with distordiaType=nexusBridgeHeartbeat
+        const response = await fetch(`${NEXUS_API_BASE}/register/list/assets:asset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                where: 'results.distordiaType=nexusBridgeHeartbeat'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const assets = data.result || [];
+        
+        console.log(`Found ${assets.length} bridge provider(s)`);
+        
+        // Parse and validate providers
+        availableProviders = assets.map(asset => ({
+            name: asset.provider || asset.name || 'Unknown Provider',
+            address: asset.address,
+            version: asset.version || '?',
+            lastPoll: asset.last_poll_timestamp || 0,
+            supportedChains: (asset.supported_chains || 'solana').split(','),
+            supportedTokens: (asset.supported_tokens || 'USDD:USDC').split(','),
+            nexusTreasury: asset.nexus_treasury_address || '',
+            nexusTreasuryToken: asset.nexus_treasury_token || 'USDD',
+            solanaVault: asset.solana_vault_address || '',
+            solanaVaultToken: asset.solana_vault_token || 'USDC',
+            solanaVaultMint: asset.solana_vault_mint || USDC_MINT,
+            isOnline: isProviderOnline(asset.last_poll_timestamp)
+        })).filter(p => p.solanaVault && p.nexusTreasury); // Only include configured providers
+        
+        // Update provider dropdown
+        updateProviderDropdown();
+        
+        // Auto-select first online provider
+        const onlineProvider = availableProviders.find(p => p.isOnline);
+        if (onlineProvider) {
+            selectProvider(onlineProvider.address);
+        } else if (availableProviders.length > 0) {
+            selectProvider(availableProviders[0].address);
+        }
+        
+    } catch (error) {
+        console.error('Failed to load bridge providers:', error);
+        // Show manual fallback
+        availableProviders = [];
+        updateProviderDropdown();
+    }
+}
+
+// Check if provider is online (last poll within 60 seconds)
+function isProviderOnline(lastPollTimestamp) {
+    if (!lastPollTimestamp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    const age = now - lastPollTimestamp;
+    return age <= 60; // Consider online if polled within last 60 seconds
+}
+
+// Update the provider dropdown UI
+function updateProviderDropdown() {
+    const dropdown = document.getElementById('provider-select');
+    if (!dropdown) return;
+    
+    dropdown.innerHTML = '';
+    
+    if (availableProviders.length === 0) {
+        dropdown.innerHTML = '<option value="">No providers found</option>';
+        dropdown.disabled = true;
+        return;
+    }
+    
+    dropdown.disabled = false;
+    
+    availableProviders.forEach(provider => {
+        const option = document.createElement('option');
+        option.value = provider.address;
+        const status = provider.isOnline ? '🟢' : '🔴';
+        option.textContent = `${status} ${provider.name} (v${provider.version})`;
+        dropdown.appendChild(option);
+    });
+    
+    // Add change listener
+    dropdown.onchange = (e) => selectProvider(e.target.value);
+}
+
+// Select a bridge provider
+function selectProvider(address) {
+    const provider = availableProviders.find(p => p.address === address);
+    if (!provider) {
+        console.error('Provider not found:', address);
+        return;
+    }
+    
+    currentProvider = provider;
+    USDC_VAULT_ADDRESS = provider.solanaVault;
+    USDD_TREASURY_ACCOUNT = provider.nexusTreasury;
+    
+    console.log('Selected provider:', provider.name);
+    console.log('  Solana vault:', USDC_VAULT_ADDRESS);
+    console.log('  Nexus treasury:', USDD_TREASURY_ACCOUNT);
+    
+    // Update UI with provider info
+    updateProviderInfo();
+    
+    // Update dropdown selection
+    const dropdown = document.getElementById('provider-select');
+    if (dropdown) dropdown.value = address;
+}
+
+// Update provider info display
+function updateProviderInfo() {
+    const infoEl = document.getElementById('provider-info');
+    if (!infoEl || !currentProvider) return;
+    
+    const status = currentProvider.isOnline 
+        ? '<span class="status-online">Online</span>' 
+        : '<span class="status-offline">Offline</span>';
+    
+    const lastPoll = currentProvider.lastPoll 
+        ? new Date(currentProvider.lastPoll * 1000).toLocaleTimeString()
+        : 'Never';
+    
+    infoEl.innerHTML = `
+        <div class="provider-status">
+            <strong>${currentProvider.name}</strong> ${status}
+        </div>
+        <div class="provider-details">
+            <span>Chains: ${currentProvider.supportedChains.join(', ')}</span>
+            <span>Last seen: ${lastPoll}</span>
+        </div>
+    `;
+}
+
+// Refresh provider status
+async function refreshProviderStatus() {
+    if (!currentProvider) return;
+    
+    try {
+        const response = await fetch(`${NEXUS_API_BASE}/register/get/assets:asset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: currentProvider.address })
+        });
+        
+        const data = await response.json();
+        if (data.result) {
+            currentProvider.lastPoll = data.result.last_poll_timestamp || 0;
+            currentProvider.isOnline = isProviderOnline(currentProvider.lastPoll);
+            updateProviderInfo();
+        }
+    } catch (error) {
+        console.error('Failed to refresh provider status:', error);
+    }
+}
+
+// ========================================
+// EVENT LISTENERS
+// ========================================
 
 // Event Listeners
 function setupEventListeners() {
@@ -313,7 +492,27 @@ async function connectSolanaWallet(walletId) {
         
     } catch (error) {
         console.error(`${wallet.name} connection failed:`, error);
-        alert(`Failed to connect ${wallet.name}. Please try again.`);
+        
+        // Provide helpful error message for common issues
+        let errorMsg = `Failed to connect ${wallet.name}.\n\n`;
+        
+        if (error.message?.includes('disconnected port') || error.message?.includes('service worker')) {
+            errorMsg += 'The wallet extension needs to be refreshed.\n\n';
+            errorMsg += 'Try these steps:\n';
+            errorMsg += '1. Go to browser extensions settings\n';
+            errorMsg += '2. Find ' + wallet.name + ' and click Reload/Refresh\n';
+            errorMsg += '3. Make sure the wallet is unlocked\n';
+            errorMsg += '4. Refresh this page and try again';
+        } else if (error.message?.includes('User rejected')) {
+            errorMsg += 'Connection was rejected. Please approve the connection request in your wallet.';
+        } else {
+            errorMsg += 'Please make sure your wallet is:\n';
+            errorMsg += '• Unlocked and logged in\n';
+            errorMsg += '• Extension is enabled for this site\n\n';
+            errorMsg += 'Error: ' + (error.message || 'Unknown error');
+        }
+        
+        alert(errorMsg);
     }
 }
 

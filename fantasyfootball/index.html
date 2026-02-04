@@ -70,7 +70,7 @@
             <div class="hero-content">
                 <h1>⚽ Fantasy Football</h1>
                 <p class="hero-subtitle">Own Nexus Assets, Earn from Real Football</p>
-                <p class="hero-description">Your on-chain NFT assets score points based on real-world football player performance</p>
+                <p class="hero-description">Buy player packs, build your team, compete in weekly leagues, and trade on the marketplace. All fully on-chain.</p>
                 <div class="stats-bar">
                     <div class="stat-item">
                         <span class="stat-label">Active Players</span>
@@ -87,6 +87,202 @@
                     <div class="stat-item">
                         <span class="stat-label">Weekly Prize Pool</span>
                         <span class="stat-value" id="prize-pool">-</span>
+                    </div>
+                </div>
+                <div class="hero-nav">
+                    <a href="#shop" class="btn btn-primary">🎁 Buy Packs</a>
+                    <a href="#leagues" class="btn btn-secondary">🏆 Enter League</a>
+                    <a href="#marketplace" class="btn btn-outline">🏪 Marketplace</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pack Shop Section -->
+    <section id="shop" class="shop-section">
+        <div class="container">
+            <h2 class="section-title">🎁 Pack Shop</h2>
+            <p class="section-subtitle">Buy player card packs with NXS. Each pack contains random players based on rarity probabilities.</p>
+            
+            <div class="pack-grid">
+                <!-- Bronze Pack -->
+                <div class="pack-card bronze" data-pack="bronze">
+                    <div class="pack-glow"></div>
+                    <div class="pack-icon">🥉</div>
+                    <h3>Bronze Pack</h3>
+                    <div class="pack-contents">
+                        <span class="pack-item common">3× Common</span>
+                        <span class="pack-item rare">20% Rare</span>
+                    </div>
+                    <div class="pack-price">
+                        <span class="price-value">5</span>
+                        <span class="price-currency">NXS</span>
+                    </div>
+                    <button class="btn btn-pack" onclick="buyPack('bronze')">Buy Pack</button>
+                </div>
+
+                <!-- Silver Pack -->
+                <div class="pack-card silver" data-pack="silver">
+                    <div class="pack-glow"></div>
+                    <div class="pack-icon">🥈</div>
+                    <h3>Silver Pack</h3>
+                    <div class="pack-contents">
+                        <span class="pack-item common">2× Common</span>
+                        <span class="pack-item rare">2× Rare</span>
+                        <span class="pack-item epic">15% Epic</span>
+                    </div>
+                    <div class="pack-price">
+                        <span class="price-value">15</span>
+                        <span class="price-currency">NXS</span>
+                    </div>
+                    <button class="btn btn-pack" onclick="buyPack('silver')">Buy Pack</button>
+                </div>
+
+                <!-- Gold Pack -->
+                <div class="pack-card gold" data-pack="gold">
+                    <div class="pack-glow"></div>
+                    <div class="pack-icon">🥇</div>
+                    <h3>Gold Pack</h3>
+                    <div class="pack-contents">
+                        <span class="pack-item rare">1× Rare</span>
+                        <span class="pack-item epic">2× Epic</span>
+                        <span class="pack-item legendary">10% Legendary</span>
+                    </div>
+                    <div class="pack-price">
+                        <span class="price-value">50</span>
+                        <span class="price-currency">NXS</span>
+                    </div>
+                    <button class="btn btn-pack gold-btn" onclick="buyPack('gold')">Buy Pack</button>
+                </div>
+
+                <!-- Limited Pack -->
+                <div class="pack-card limited" data-pack="limited">
+                    <div class="pack-glow"></div>
+                    <div class="pack-icon">⭐</div>
+                    <h3>Limited Edition</h3>
+                    <div class="pack-contents">
+                        <span class="pack-item epic">2× Epic</span>
+                        <span class="pack-item legendary">1× Legendary</span>
+                        <span class="pack-item special">Event Exclusive</span>
+                    </div>
+                    <div class="pack-price">
+                        <span class="price-value">100</span>
+                        <span class="price-currency">NXS</span>
+                    </div>
+                    <button class="btn btn-pack limited-btn" onclick="buyPack('limited')">Buy Pack</button>
+                    <div class="pack-timer">
+                        <span id="limited-pack-timer">Ends in 2d 14h</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Info -->
+            <div class="revenue-info">
+                <p>💰 All pack sales fund the weekly prize pool and platform development</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leagues Section -->
+    <section id="leagues" class="leagues-section">
+        <div class="container">
+            <h2 class="section-title">🏆 Weekly Leagues</h2>
+            <p class="section-subtitle">Enter leagues, compete with your team, and win NXS prizes!</p>
+
+            <div class="leagues-grid">
+                <!-- Current Week League -->
+                <div class="league-card featured">
+                    <div class="league-status live">OPEN</div>
+                    <h3>Premier League Week 23</h3>
+                    <div class="league-details">
+                        <div class="league-stat">
+                            <span class="label">Entry Fee</span>
+                            <span class="value">10 NXS</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Prize Pool</span>
+                            <span class="value" id="league-prize-pool">2,450 NXS</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Entries</span>
+                            <span class="value" id="league-entries">287</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Deadline</span>
+                            <span class="value">Sat 12:00</span>
+                        </div>
+                    </div>
+                    <div class="prize-breakdown">
+                        <h4>Prize Distribution</h4>
+                        <div class="prize-row"><span>🥇 1st Place</span><span>50%</span></div>
+                        <div class="prize-row"><span>🥈 2nd Place</span><span>30%</span></div>
+                        <div class="prize-row"><span>🥉 3rd Place</span><span>20%</span></div>
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="enterLeague('week23')">Enter League</button>
+                </div>
+
+                <!-- Upcoming Leagues -->
+                <div class="league-card">
+                    <div class="league-status upcoming">UPCOMING</div>
+                    <h3>La Liga Week 21</h3>
+                    <div class="league-details">
+                        <div class="league-stat">
+                            <span class="label">Entry Fee</span>
+                            <span class="value">10 NXS</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Opens</span>
+                            <span class="value">Friday</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" disabled>Opens Soon</button>
+                </div>
+
+                <div class="league-card">
+                    <div class="league-status upcoming">UPCOMING</div>
+                    <h3>Bundesliga Week 19</h3>
+                    <div class="league-details">
+                        <div class="league-stat">
+                            <span class="label">Entry Fee</span>
+                            <span class="value">10 NXS</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Opens</span>
+                            <span class="value">Friday</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" disabled>Opens Soon</button>
+                </div>
+
+                <!-- Previous Results -->
+                <div class="league-card completed">
+                    <div class="league-status completed">COMPLETED</div>
+                    <h3>Premier League Week 22</h3>
+                    <div class="league-details">
+                        <div class="league-stat">
+                            <span class="label">Winner</span>
+                            <span class="value">user:alex</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="label">Prize Won</span>
+                            <span class="value">1,050 NXS</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" onclick="viewLeagueResults('week22')">View Results</button>
+                </div>
+            </div>
+
+            <!-- Fee Transparency -->
+            <div class="fee-info">
+                <h4>Fee Structure</h4>
+                <div class="fee-breakdown">
+                    <div class="fee-item">
+                        <span>Prize Pool</span>
+                        <span class="fee-percent">85%</span>
+                    </div>
+                    <div class="fee-item">
+                        <span>Platform Fee</span>
+                        <span class="fee-percent">15%</span>
                     </div>
                 </div>
             </div>
@@ -224,9 +420,10 @@
     </section>
 
     <!-- Asset Marketplace -->
-    <section class="marketplace-section">
+    <section id="marketplace" class="marketplace-section">
         <div class="container">
             <h2 class="section-title">🏪 Asset Marketplace</h2>
+            <p class="section-subtitle">Trade player cards with other users. 5% marketplace fee on all sales.</p>
             <div class="marketplace-filters">
                 <div class="filter-group">
                     <label>League:</label>
@@ -345,11 +542,13 @@
                     <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
                     <span class="footer-logo-text">DISTORDIA</span>
                 </div>
-                <p>&copy; 2025 Distordia Crypto Lab. All rights reserved.</p>
-                <p class="disclaimer">Fantasy Football scores based on real-world data. NFT assets stored on Nexus.io blockchain.</p>
+                <p>&copy; 2026 Distordia Labs. All rights reserved.</p>
+                <p class="disclaimer">Fantasy Football scores based on real-world data. NFT assets stored on Nexus blockchain.</p>
             </div>
         </div>
     </footer>
+
+    <!-- Modals are created dynamically by JavaScript -->
 
     <script src="../script.js"></script>
     <script src="fantasy.js"></script>

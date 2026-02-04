@@ -90,6 +90,20 @@
                         </div>
                     </div>
 
+                    <!-- Bridge Provider Selector -->
+                    <div class="provider-selector">
+                        <label for="provider-select">Bridge Provider:</label>
+                        <div class="provider-select-wrapper">
+                            <select id="provider-select" class="provider-select">
+                                <option value="">Loading providers...</option>
+                            </select>
+                            <button class="refresh-btn" onclick="loadBridgeProviders()" title="Refresh providers">🔄</button>
+                        </div>
+                        <div id="provider-info" class="provider-info">
+                            <!-- Provider status will be shown here -->
+                        </div>
+                    </div>
+
                     <!-- From Section -->
                     <div class="swap-input-group">
                         <div class="swap-input-header">
