@@ -1,0 +1,186 @@
+{
+  "$id": "https://distordia.com/standards/nft.v1.json",
+  "title": "Distordia NFT Marketplace Standard",
+  "description": "Schema for NFT assets to be tokenized and traded on the Distordia on-chain marketplace. Assets use Nexus basic format with open image URLs — no off-site storage required.",
+  "version": "1.0.0",
+  "nexusFormat": "basic",
+  "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
+  "nexusFields": [
+    { "name": "distordia-type", "type": "string", "value": "nft", "mutable": false, "maxlength": 16 },
+    { "name": "status", "type": "string", "value": "active", "mutable": true, "maxlength": 12 },
+    { "name": "nft-name", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "description", "type": "string", "value": "", "mutable": true, "maxlength": 256 },
+    { "name": "image", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
+    { "name": "category", "type": "string", "value": "art", "mutable": true, "maxlength": 24 },
+    { "name": "collection", "type": "string", "value": "", "mutable": true, "maxlength": 64 },
+    { "name": "creator", "type": "string", "value": "", "mutable": false, "maxlength": 64 },
+    { "name": "external_url", "type": "string", "value": "", "mutable": true, "maxlength": 128 }
+  ],
+  "fieldDefinitions": {
+    "distordia-type": {
+      "description": "Asset type identifier. Must be 'nft'.",
+      "enum": ["nft"]
+    },
+    "status": {
+      "description": "Lifecycle status of the NFT.",
+      "enum": ["active", "burned", "frozen"]
+    },
+    "nft-name": {
+      "description": "Display name of the NFT. Immutable once created.",
+      "pattern": "^.{1,64}$"
+    },
+    "description": {
+      "description": "Human-readable description of the artwork/collectible."
+    },
+    "image": {
+      "description": "Direct URL to the NFT image. Must be a publicly accessible URL (e.g. HTTPS). No IPFS or on-site storage — the image lives at this open URL.",
+      "format": "uri"
+    },
+    "category": {
+      "description": "Primary category for marketplace filtering.",
+      "enum": ["art", "photography", "music", "collectible", "gaming", "utility", "domain", "meme", "other"]
+    },
+    "collection": {
+      "description": "Collection name to group related NFTs (e.g. 'CryptoKitties', 'Distordia Originals')."
+    },
+    "creator": {
+      "description": "Creator name, alias, or namespace. Establishes provenance."
+    },
+    "external_url": {
+      "description": "External link for additional context (artist portfolio, project page, etc.).",
+      "format": "uri"
+    }
+  },
+  "required": ["distordia-type", "nft-name", "image"],
+  "naming": {
+    "pattern": "nft-{slug}-{timestamp}",
+    "example": "nft-cosmic-dragon-1738857600000",
+    "description": "Asset register name. Slug derived from nft-name (lowercase, alphanumeric + hyphens, max 32 chars). Timestamp ensures uniqueness."
+  },
+  "tokenization": {
+    "description": "NFTs must be tokenized before they can be traded on the Nexus on-chain marketplace. Tokenization creates a fungible token linked to the asset, enabling fractional or full ownership trading.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Create Token",
+        "endpoint": "finance/create/token",
+        "params": {
+          "name": "Token name (e.g. nft-cosmic-dragon-token)",
+          "supply": "Total token supply (1 for unique NFT, >1 for fractional)",
+          "decimals": "Decimal precision (0 for whole tokens)"
+        },
+        "cost": "~1 NXS"
+      },
+      {
+        "step": 2,
+        "action": "Tokenize Asset",
+        "endpoint": "assets/tokenize/asset",
+        "params": {
+          "address": "Asset's blockchain address",
+          "token": "Token name from step 1"
+        },
+        "cost": "~1 NXS"
+      }
+    ],
+    "notes": [
+      "Token supply of 1 with 0 decimals = unique NFT (1:1 ownership)",
+      "Token supply >1 = fractional ownership (e.g. 100 tokens = 100 shares)",
+      "Once tokenized, ownership transfers happen via token trading, not asset transfer",
+      "Tokenization is irreversible — the asset remains linked to the token permanently"
+    ]
+  },
+  "trading": {
+    "description": "Tokenized NFTs are traded on the Nexus on-chain P2P marketplace using TOKEN/NXS pairs.",
+    "marketPair": "{TOKEN_TICKER}/NXS",
+    "operations": [
+      {
+        "action": "List for Sale (Ask)",
+        "endpoint": "market/create/ask",
+        "params": {
+          "market": "TOKEN/NXS",
+          "price": "Price per token in NXS",
+          "amount": "Number of tokens to sell",
+          "from": "Token account name",
+          "to": "NXS receiving account (default)"
+        }
+      },
+      {
+        "action": "Place Buy Order (Bid)",
+        "endpoint": "market/create/bid",
+        "params": {
+          "market": "TOKEN/NXS",
+          "price": "Price per token in NXS",
+          "amount": "Number of tokens to buy",
+          "from": "NXS account name (default)",
+          "to": "Token receiving account"
+        }
+      },
+      {
+        "action": "Execute Order",
+        "endpoint": "market/execute/order",
+        "params": {
+          "txid": "Transaction ID of the order to fill",
+          "from": "Paying account",
+          "to": "Receiving account"
+        }
+      },
+      {
+        "action": "Cancel Order",
+        "endpoint": "market/cancel/order",
+        "params": {
+          "txid": "Transaction ID of the order to cancel"
+        }
+      }
+    ]
+  },
+  "examples": [
+    {
+      "_comment": "Example NFT asset as returned by Nexus API",
+      "address": "9kBdQCVrs4kf6FvffvgoHDJBLfAhu7bXSNkJResG6W1Fho8Cmx",
+      "owner": "b2d9c798edf311a2c14db4a74888f0cd9d4677c9b1da21d6fbcc53bdebb0d860",
+      "version": 1,
+      "created": 1738857600,
+      "modified": 1738857600,
+      "type": "OBJECT",
+      "form": "ASSET",
+      "name": "nft-cosmic-dragon-1738857600000",
+      "distordia-type": "nft",
+      "status": "active",
+      "nft-name": "Cosmic Dragon #42",
+      "description": "A celestial dragon soaring through the Nexus nebula. Part of the Distordia Originals genesis collection.",
+      "image": "https://images.example.com/nft/cosmic-dragon-42.png",
+      "category": "art",
+      "collection": "Distordia Originals",
+      "creator": "ArtistAlpha",
+      "external_url": "https://artistalpha.com/cosmic-dragon"
+    },
+    {
+      "_comment": "Minimal NFT (only required fields)",
+      "distordia-type": "nft",
+      "status": "active",
+      "nft-name": "Rare Gem",
+      "description": "",
+      "image": "https://images.example.com/nft/rare-gem.png",
+      "category": "collectible",
+      "collection": "",
+      "creator": "",
+      "external_url": ""
+    }
+  ],
+  "nexus": {
+    "format": "basic",
+    "createCommand": "assets/create/asset format=basic name=nft-{slug}-{timestamp} distordia-type=nft status=active nft-name='{name}' description='{desc}' image='{url}' category='{cat}' collection='{col}' creator='{creator}' external_url='{ext}'",
+    "queryEndpoint": "register/list/assets:asset",
+    "queryFilter": "results.distordia-type=nft",
+    "queryFilterByCategory": "results.distordia-type=nft AND results.category={category}",
+    "queryFilterByCollection": "results.distordia-type=nft AND results.collection={collection}"
+  },
+  "notes": [
+    "Uses basic format (not JSON) so individual fields are queryable via Nexus register API",
+    "Image must be a publicly accessible HTTPS URL — no IPFS, no on-site storage",
+    "1KB total asset limit — keep descriptions concise (~256 chars max)",
+    "Asset creation costs ~2 NXS; tokenization costs ~2 NXS; listing is free",
+    "nft-name is immutable; description, category, collection, and external_url can be updated",
+    "Fractional ownership: set token supply > 1 during tokenization to enable shared ownership"
+  ]
+}

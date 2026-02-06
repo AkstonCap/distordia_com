@@ -132,7 +132,7 @@
                                 <td><code>distordia-type</code></td>
                                 <td>string</td>
                                 <td>Asset type identifier</td>
-                                <td><code>product</code>, <code>distordia-post</code>, <code>content</code>, etc.</td>
+                                <td><code>product</code>, <code>nft</code>, <code>distordia-post</code>, <code>content</code>, etc.</td>
                             </tr>
                             <tr>
                                 <td><code>distordia-status</code></td>
@@ -816,6 +816,243 @@
             </div>
             END Fantasy Football Standard -->
 
+            <!-- NFT Marketplace Standard -->
+            <div class="standard-card" id="nft">
+                <div class="standard-header">
+                    <div class="standard-icon">🖼️</div>
+                    <div>
+                        <h2>NFT Marketplace</h2>
+                        <span class="standard-badge">distordia-type: nft</span>
+                    </div>
+                </div>
+                <p class="standard-description">
+                    On-chain NFT assets that point to open image URLs. Assets are tokenized (1 or more tokens) 
+                    and traded peer-to-peer on the Nexus marketplace. No off-site storage — all metadata lives on-chain, 
+                    images are referenced via public URLs.
+                </p>
+
+                <div class="use-case">
+                    <strong>Use Case:</strong> A creator mints an NFT asset with an image URL, tokenizes it to enable 
+                    trading, and lists it for sale on the on-chain marketplace. Buyers purchase ownership tokens with NXS. 
+                    Fractional ownership is supported via multiple tokens per asset.
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Schema</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Required</th>
+                                <th>Type</th>
+                                <th>Mutable</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>distordia-type</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>✗</td>
+                                <td>Always <code>"nft"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>status</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✓</td>
+                                <td><code>active</code>, <code>burned</code>, <code>frozen</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>nft-name</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>✗</td>
+                                <td>Display name of the NFT (max 64 chars)</td>
+                            </tr>
+                            <tr>
+                                <td><code>description</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✓</td>
+                                <td>Human-readable description (max 256 chars)</td>
+                            </tr>
+                            <tr>
+                                <td><code>image</code></td>
+                                <td>✓</td>
+                                <td>string</td>
+                                <td>✗</td>
+                                <td>Direct HTTPS URL to the NFT image (max 256 chars)</td>
+                            </tr>
+                            <tr>
+                                <td><code>category</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✓</td>
+                                <td><code>art</code>, <code>photography</code>, <code>music</code>, <code>collectible</code>, <code>gaming</code>, <code>utility</code>, <code>domain</code>, <code>meme</code>, <code>other</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>collection</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✓</td>
+                                <td>Collection name to group related NFTs (max 64 chars)</td>
+                            </tr>
+                            <tr>
+                                <td><code>creator</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✗</td>
+                                <td>Creator name, alias, or namespace (max 64 chars)</td>
+                            </tr>
+                            <tr>
+                                <td><code>external_url</code></td>
+                                <td></td>
+                                <td>string</td>
+                                <td>✓</td>
+                                <td>External link for additional context (max 128 chars)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Tokenization (Required for Trading)</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><code>finance/create/token</code></td>
+                                <td>Create a fungible token (supply=1 for unique, &gt;1 for fractional ownership)</td>
+                                <td>~1 NXS</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><code>assets/tokenize/asset</code></td>
+                                <td>Link the token to the NFT asset (irreversible)</td>
+                                <td>~1 NXS</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="api-note" style="margin-top: 0.5rem;">
+                        <strong>Note:</strong> Supply of 1 + 0 decimals = unique NFT. Supply &gt;1 = fractional ownership (e.g. 100 tokens = 100 shares).
+                        Tokenization is irreversible — the asset remains linked to its token permanently.
+                    </div>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Trading (TOKEN/NXS Market Pair)</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>List for Sale</td>
+                                <td><code>market/create/ask</code></td>
+                                <td>Sell NFT tokens at a set NXS price</td>
+                            </tr>
+                            <tr>
+                                <td>Place Buy Order</td>
+                                <td><code>market/create/bid</code></td>
+                                <td>Offer to buy tokens at a set NXS price</td>
+                            </tr>
+                            <tr>
+                                <td>Execute Order</td>
+                                <td><code>market/execute/order</code></td>
+                                <td>Fill an existing ask or bid order</td>
+                            </tr>
+                            <tr>
+                                <td>Cancel Order</td>
+                                <td><code>market/cancel/order</code></td>
+                                <td>Cancel an unfilled order</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="schema-block">
+                    <div class="schema-header">
+                        <span>Asset Naming Convention</span>
+                    </div>
+                    <table class="schema-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Format</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Asset Name</td>
+                                <td><code>nft-{slug}-{timestamp}</code></td>
+                                <td><code>nft-cosmic-dragon-1738857600000</code></td>
+                            </tr>
+                            <tr>
+                                <td>Token Name</td>
+                                <td><code>nft-{slug}-token</code></td>
+                                <td><code>nft-cosmic-dragon-token</code></td>
+                            </tr>
+                            <tr>
+                                <td>Market Pair</td>
+                                <td><code>{TOKEN_TICKER}/NXS</code></td>
+                                <td><code>nft-cosmic-dragon-token/NXS</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Example NFT Asset</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia-type": "nft",
+    "status": "active",
+    "nft-name": "Cosmic Dragon #42",
+    "description": "A celestial dragon soaring through the Nexus nebula",
+    "image": "https://images.example.com/nft/cosmic-dragon-42.png",
+    "category": "art",
+    "collection": "Distordia Originals",
+    "creator": "ArtistAlpha",
+    "external_url": "https://artistalpha.com/cosmic-dragon"
+}</code></pre>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Minimal NFT (Required Fields Only)</span>
+                        <button class="copy-btn" onclick="copyExample(this)">Copy</button>
+                    </div>
+                    <pre><code>{
+    "distordia-type": "nft",
+    "nft-name": "Rare Gem",
+    "image": "https://images.example.com/nft/rare-gem.png"
+}</code></pre>
+                </div>
+            </div>
+
             <!-- NexGo Taxi Standard -->
             <div class="standard-card" id="nexgo">
                 <div class="standard-header">
@@ -1038,6 +1275,25 @@ nexgo-taxi-XY789ZZ</code></pre>
     "sort": "modified",
     "order": "desc"
 }</code></pre>
+                </div>
+
+                <div class="example-block">
+                    <div class="example-header">
+                        <span>Query NFT Marketplace</span>
+                    </div>
+                    <pre><code>POST https://api.distordia.com/register/list/assets:asset
+{
+    "where": "results.distordia-type=nft AND results.status=active",
+    "limit": 100,
+    "sort": "modified",
+    "order": "desc"
+}
+
+// Filter by category
+"where": "results.distordia-type=nft AND results.category=art"
+
+// Filter by collection
+"where": "results.distordia-type=nft AND results.collection=Distordia Originals"</code></pre>
                 </div>
 
                 <div class="example-block">
