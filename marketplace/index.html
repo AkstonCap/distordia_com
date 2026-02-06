@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Distordia NFT Marketplace - Mint, tokenize and trade NFT assets on the Nexus blockchain">
+    <title>NFT Marketplace | Distordia</title>
+    <link rel="icon" type="image/png" href="../images/logo-utentekst.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="marketplace.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none;">
+                    <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="logo-img">
+                    <span class="logo-text">DISTORDIA</span>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#">dApps ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="../dex/index.html" class="dropdown-item">DEX</a>
+                        <a href="../masterdata/index.html" class="dropdown-item">Master Data</a>
+                        <a href="../q-wallet/index.html" class="dropdown-item">Q-Wallet Plugin</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-header">Projects</span>
+                        <a href="../swap/index.html" class="dropdown-item">Stablecoin Bridge</a>
+                        <a href="../content-verification/index.html" class="dropdown-item">Content Verification</a>
+                        <a href="../social/index.html" class="dropdown-item">Social</a>
+                        <a href="../q-mobile/index.html" class="dropdown-item">Q-Mobile</a>
+                        <a href="../verification/index.html" class="dropdown-item">Verification</a>
+                        <a href="../nexgo/index.html" class="dropdown-item">NexGo</a>
+                        <a href="index.html" class="dropdown-item active">NFT Marketplace</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">Modules ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="https://github.com/AkstonCap/NexGo" target="_blank" class="dropdown-item">NexGo Module</a>
+                        <a href="https://github.com/AkstonCap/DEX" target="_blank" class="dropdown-item">DEX Module</a>
+                        <a href="https://github.com/AkstonCap/verificationModule" target="_blank" class="dropdown-item">Verification Module</a>
+                    </div>
+                </li>
+                <li><a href="../standards/index.html">Standards</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+            <div class="auth-controls">
+                <button id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                <div id="walletInfo" class="wallet-info" style="display: none;">
+                    <span id="walletAddress" class="wallet-address"></span>
+                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+                </div>
+            </div>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Marketplace Section -->
+    <section class="marketplace-section">
+        <div class="container">
+            <!-- Value Banner -->
+            <div class="value-banner">
+                <h2>🖼️ NFT Marketplace</h2>
+                <p class="value-description">
+                    Mint, tokenize and trade NFT assets on the Nexus blockchain. Each NFT is a unique on-chain asset
+                    pointing to an open image URL. Tokenize your asset to enable fractional ownership and on-chain trading via the Nexus Market API.
+                </p>
+                <div class="benefits">
+                    <div class="benefit-item"><span class="benefit-icon">✦</span> On-Chain Assets</div>
+                    <div class="benefit-item"><span class="benefit-icon">✦</span> Tokenized Ownership</div>
+                    <div class="benefit-item"><span class="benefit-icon">✦</span> P2P Market Trading</div>
+                    <div class="benefit-item"><span class="benefit-icon">✦</span> Fractional NFTs</div>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="marketplace-header">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search NFTs by name, creator, collection..." />
+                    <button id="searchBtn" class="btn-primary">Search</button>
+                </div>
+                <div class="header-actions">
+                    <button id="mintNftBtn" class="btn-primary btn-mint" disabled title="Connect wallet to mint">
+                        🎨 Mint NFT
+                    </button>
+                    <button id="myNftsBtn" class="btn-secondary" disabled title="Connect wallet to view">
+                        📦 My NFTs
+                    </button>
+                    <button id="infoBtn" class="btn-secondary btn-info">ℹ️ How It Works</button>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="art">Art</option>
+                    <option value="photography">Photography</option>
+                    <option value="music">Music</option>
+                    <option value="video">Video</option>
+                    <option value="collectible">Collectible</option>
+                    <option value="gaming">Gaming</option>
+                    <option value="utility">Utility</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="listed">Listed for Sale</option>
+                    <option value="unlisted">Not Listed</option>
+                    <option value="tokenized">Tokenized</option>
+                </select>
+                <select id="sortFilter">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                </select>
+                <button id="clearFiltersBtn" class="btn-text">Clear Filters</button>
+            </div>
+
+            <!-- NFT Grid -->
+            <div id="nftGrid" class="nft-grid">
+                <!-- NFT cards rendered dynamically -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading NFTs from Nexus blockchain...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🖼️</div>
+                <h3>No NFTs Found</h3>
+                <p>Be the first to mint an NFT on the marketplace! Connect your Q-Wallet and click "Mint NFT" to get started.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MODALS ===== -->
+
+    <!-- Mint NFT Modal -->
+    <div id="mintModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title">🎨 Mint New NFT</h2>
+            <div class="blockchain-info">
+                <p><strong>On-Chain Cost:</strong> 1 NXS to create the asset + 1 NXS for the name register.</p>
+                <p>The NFT image must be hosted at a publicly accessible URL. No files are stored on this site.</p>
+            </div>
+            <form id="mintForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nftName">NFT Name *</label>
+                        <input type="text" id="nftName" required maxlength="64" placeholder="My Amazing NFT">
+                    </div>
+                    <div class="form-group">
+                        <label for="nftCollection">Collection</label>
+                        <input type="text" id="nftCollection" maxlength="64" placeholder="e.g. Distordia Genesis">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="nftImageUrl">Image URL *</label>
+                        <input type="url" id="nftImageUrl" required placeholder="https://example.com/image.png">
+                        <span class="form-hint">Must be a publicly accessible image URL (PNG, JPG, GIF, SVG, WebP)</span>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="nftDescription">Description *</label>
+                        <textarea id="nftDescription" required maxlength="256" rows="3" placeholder="Describe your NFT..."></textarea>
+                        <span class="form-hint"><span id="descCharCount">0</span>/256 characters</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="nftCategory">Category *</label>
+                        <select id="nftCategory" required>
+                            <option value="">Select category</option>
+                            <option value="art">Art</option>
+                            <option value="photography">Photography</option>
+                            <option value="music">Music</option>
+                            <option value="video">Video</option>
+                            <option value="collectible">Collectible</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="utility">Utility</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nftCreator">Creator Name</label>
+                        <input type="text" id="nftCreator" maxlength="64" placeholder="Artist / Creator name">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="nftExternalUrl">External Link</label>
+                        <input type="url" id="nftExternalUrl" placeholder="https://yoursite.com/nft-details">
+                        <span class="form-hint">Optional link to more information about this NFT</span>
+                    </div>
+                </div>
+
+                <!-- Image Preview -->
+                <div id="imagePreview" class="image-preview" style="display: none;">
+                    <h4>Preview</h4>
+                    <img id="previewImg" src="" alt="NFT Preview">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-primary">🚀 Mint NFT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NFT Detail Modal -->
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <button class="modal-close">&times;</button>
+            <div id="detailContent" class="nft-detail">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tokenize Modal -->
+    <div id="tokenizeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title">🪙 Tokenize NFT</h2>
+            <div class="blockchain-info">
+                <p><strong>Why tokenize?</strong> Tokenizing your NFT creates a fungible token linked to this asset.
+                   This enables fractional ownership and on-chain trading via the Nexus Market API.</p>
+                <p><strong>Cost:</strong> 1 NXS to create the token + 1 NXS for the token name + tokenize fee.</p>
+            </div>
+            <form id="tokenizeForm">
+                <input type="hidden" id="tokenizeAssetAddress" value="">
+                <div class="form-group">
+                    <label for="tokenName">Token Name *</label>
+                    <input type="text" id="tokenName" required maxlength="32" placeholder="e.g. MYNFT">
+                    <span class="form-hint">Global ticker symbol for this token (alphanumeric, uppercase recommended)</span>
+                </div>
+                <div class="form-group">
+                    <label for="tokenSupply">Token Supply *</label>
+                    <input type="number" id="tokenSupply" required min="1" max="1000000000" value="1" placeholder="1">
+                    <span class="form-hint">Total supply of tokens (1 = unique/non-fractional, more = fractional ownership)</span>
+                </div>
+                <div class="form-group">
+                    <label for="tokenDecimals">Decimals</label>
+                    <input type="number" id="tokenDecimals" min="0" max="8" value="0" placeholder="0">
+                    <span class="form-hint">Number of decimal places (0 for whole tokens, up to 8)</span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-primary">🪙 Create Token &amp; Tokenize</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- List for Sale Modal -->
+    <div id="listModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title">📢 List for Sale</h2>
+            <div class="blockchain-info">
+                <p>Create an ask order on the Nexus on-chain market. The NFT token will be listed for sale against NXS.</p>
+                <p><strong>Requirement:</strong> NFT must be tokenized before it can be listed. You need a token account with the NFT tokens.</p>
+            </div>
+            <form id="listForm">
+                <input type="hidden" id="listTokenAddress" value="">
+                <input type="hidden" id="listTokenTicker" value="">
+                <div class="form-group">
+                    <label for="listPrice">Price per Token (NXS) *</label>
+                    <input type="number" id="listPrice" required min="0.000001" step="0.000001" placeholder="10.00">
+                    <span class="form-hint">Price in NXS per token unit</span>
+                </div>
+                <div class="form-group">
+                    <label for="listAmount">Amount of Tokens to Sell *</label>
+                    <input type="number" id="listAmount" required min="1" step="1" value="1" placeholder="1">
+                    <span class="form-hint">Number of tokens to put up for sale</span>
+                </div>
+                <div class="form-group">
+                    <label for="listFromAccount">From Account (token account name) *</label>
+                    <input type="text" id="listFromAccount" required placeholder="my-nft-account">
+                    <span class="form-hint">Your token account holding these tokens</span>
+                </div>
+                <div class="form-group">
+                    <label for="listToAccount">Receive NXS To Account</label>
+                    <input type="text" id="listToAccount" value="default" placeholder="default">
+                    <span class="form-hint">Your NXS account to receive payment</span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-primary">📢 Create Ask Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Buy Modal -->
+    <div id="buyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title">🛒 Buy NFT</h2>
+            <div id="buyDetails" class="buy-details">
+                <!-- Populated dynamically -->
+            </div>
+            <form id="buyForm">
+                <input type="hidden" id="buyTxid" value="">
+                <div class="form-group">
+                    <label for="buyFromAccount">Pay From (NXS account) *</label>
+                    <input type="text" id="buyFromAccount" required value="default" placeholder="default">
+                    <span class="form-hint">Your NXS account to pay from</span>
+                </div>
+                <div class="form-group">
+                    <label for="buyToAccount">Receive Tokens To *</label>
+                    <input type="text" id="buyToAccount" required placeholder="my-nft-account">
+                    <span class="form-hint">Your token account to receive the NFT tokens</span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-primary">🛒 Execute Purchase</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title">ℹ️ How It Works</h2>
+            <div class="info-content">
+                <div class="info-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>🎨 Mint an NFT</h3>
+                        <p>Create a new asset on the Nexus blockchain. Your NFT stores metadata (name, description, category) on-chain and points to an open image URL. The image must be publicly hosted — no files are stored on this site.</p>
+                        <p class="step-cost">Cost: ~2 NXS (1 for asset + 1 for name)</p>
+                    </div>
+                </div>
+                <div class="info-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>🪙 Tokenize the Asset</h3>
+                        <p>Before your NFT can be traded on-chain, it must be tokenized. This creates a fungible token linked to the asset. A supply of <strong>1 token</strong> means a unique NFT; a higher supply enables <strong>fractional ownership</strong>.</p>
+                        <p class="step-cost">Cost: ~2 NXS (1 for token + 1 for token name)</p>
+                    </div>
+                </div>
+                <div class="info-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>📢 List for Sale</h3>
+                        <p>Create an <strong>ask order</strong> on the Nexus Market. Set your price in NXS per token. Your tokens are escrowed by the on-chain market contract until someone fills the order or you cancel it.</p>
+                        <p class="step-cost">Uses Market API: <code>market/create/ask</code></p>
+                    </div>
+                </div>
+                <div class="info-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>🛒 Buy an NFT</h3>
+                        <p>Browse listed NFTs and execute an existing ask order. You pay NXS and receive the NFT tokens. Holding all tokens of a tokenized asset gives you full ownership.</p>
+                        <p class="step-cost">Uses Market API: <code>market/execute/order</code></p>
+                    </div>
+                </div>
+                <div class="info-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>📊 Trade &amp; Transfer</h3>
+                        <p>Re-sell tokens on the market, transfer the entire asset to another user, or hold for partial ownership. Use <code>assets/list/partial</code> to check your fractional holdings.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary modal-cancel">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Scripts (order matters) -->
+    <script src="api.js"></script>
+    <script src="auth.js"></script>
+    <script src="marketplace.js"></script>
+</body>
+</html>
