@@ -6,7 +6,7 @@
   "nexusFormat": "JSON",
   "maxSize": "1KB (system fields use ~180 bytes, ~820 bytes available for data)",
   "nexusFields": [
-    { "name": "distordia", "type": "string", "value": "content", "mutable": false, "maxlength": 16 },
+    { "name": "distordia-type", "type": "string", "value": "content", "mutable": false, "maxlength": 16 },
     { "name": "status", "type": "string", "value": "official", "mutable": true, "maxlength": 16 },
     { "name": "url", "type": "string", "value": "", "mutable": false, "maxlength": 256 },
     { "name": "title", "type": "string", "value": "", "mutable": false, "maxlength": 128 },
@@ -21,7 +21,7 @@
     { "name": "supersedes", "type": "string", "value": "", "mutable": false, "maxlength": 64 }
   ],
   "fieldDefinitions": {
-    "distordia": {
+    "distordia-type": {
       "description": "Asset type identifier. Must be 'content'.",
       "enum": ["content"]
     },
@@ -67,7 +67,7 @@
       "description": "Address of previous version (for updates/corrections)."
     }
   },
-  "required": ["distordia", "url", "title"],
+  "required": ["distordia-type", "url", "title"],
   "examples": [
     {
       "_comment": "Example asset as returned by Nexus API",
@@ -78,7 +78,7 @@
       "modified": 1755775754,
       "type": "OBJECT",
       "form": "ASSET",
-      "distordia": "content",
+      "distordia-type": "content",
       "status": "official",
       "url": "https://example.com/news/article-12345",
       "title": "Breaking: Major Discovery in Climate Research",
@@ -94,8 +94,8 @@
   ],
   "nexus": {
     "format": "JSON",
-    "createCommand": "assets/create/asset format=JSON name=content-{hash-prefix} json='[{\"name\":\"distordia\",\"type\":\"string\",\"value\":\"content\",\"mutable\":false},{\"name\":\"url\",\"type\":\"string\",\"value\":\"...\",\"mutable\":false,\"maxlength\":256},...]'",
+    "createCommand": "assets/create/asset format=JSON name=content-{hash-prefix} json='[{\"name\":\"distordia-type\",\"type\":\"string\",\"value\":\"content\",\"mutable\":false},{\"name\":\"url\",\"type\":\"string\",\"value\":\"...\",\"mutable\":false,\"maxlength\":256},...]'",
     "queryEndpoint": "register/list/assets:asset",
-    "queryFilter": "distordia = 'content' AND url = '{url}'"
+    "queryFilter": "distordia-type = 'content' AND url = '{url}'"
   }
 }
