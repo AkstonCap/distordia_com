@@ -304,6 +304,110 @@ async function loadOrderBook(pair) {
     }
 }
 
+// Fetch user's open orders (requires wallet connection)
+async function fetchUserOrders() {
+    if (!walletConnected || typeof window.qWallet === 'undefined') {
+        console.log('[API] Skipping user orders - wallet not connected');
+        return [];
+    }
+
+    try {
+        console.log('[API] Fetching user orders...');
+        const allOrders = [];
+
+        for (const marketPair of DEFAULT_MARKET_PAIRS) {
+            try {
+                const response = await fetch(API_ENDPOINTS.userOrders, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        market: marketPair,
+                        limit: 50
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const bids = (data.result?.bids || []).map(o => ({ ...o, market: marketPair, side: 'bid' }));
+                    const asks = (data.result?.asks || []).map(o => ({ ...o, market: marketPair, side: 'ask' }));
+                    allOrders.push(...bids, ...asks);
+                }
+            } catch (err) {
+                console.warn(`[API] Failed to fetch user orders for ${marketPair}:`, err.message);
+            }
+        }
+
+        console.log(`[API] Found ${allOrders.length} user orders`);
+        return allOrders;
+    } catch (error) {
+        console.error('[API] Error fetching user orders:', error);
+        return [];
+    }
+}
+
+// Fetch user's trade history (executed orders)
+async function fetchUserExecuted() {
+    if (!walletConnected || typeof window.qWallet === 'undefined') {
+        console.log('[API] Skipping user history - wallet not connected');
+        return [];
+    }
+
+    try {
+        console.log('[API] Fetching user trade history...');
+        const allExecuted = [];
+
+        for (const marketPair of DEFAULT_MARKET_PAIRS) {
+            try {
+                const response = await fetch(API_ENDPOINTS.userExecuted, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        market: marketPair,
+                        limit: 20
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const bids = (data.result?.bids || []).map(o => ({ ...o, market: marketPair, side: 'bid' }));
+                    const asks = (data.result?.asks || []).map(o => ({ ...o, market: marketPair, side: 'ask' }));
+                    allExecuted.push(...bids, ...asks);
+                }
+            } catch (err) {
+                console.warn(`[API] Failed to fetch user history for ${marketPair}:`, err.message);
+            }
+        }
+
+        // Sort by timestamp descending
+        allExecuted.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        console.log(`[API] Found ${allExecuted.length} executed trades`);
+        return allExecuted;
+    } catch (error) {
+        console.error('[API] Error fetching user history:', error);
+        return [];
+    }
+}
+
+// Cancel an open order
+async function cancelOrder(txid) {
+    if (!walletConnected || typeof window.qWallet === 'undefined') {
+        throw new Error('Wallet not connected');
+    }
+
+    console.log('[API] Canceling order:', txid);
+
+    const result = await window.qWallet.executeBatchCalls([{
+        endpoint: 'market/cancel/order',
+        params: { txid: txid }
+    }]);
+
+    if (result.successfulCalls === 1) {
+        return true;
+    } else {
+        throw new Error('Failed to cancel order');
+    }
+}
+
 // Fetch recent trades
 async function fetchRecentTrades(marketPair = null) {
     try {

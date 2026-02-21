@@ -69,6 +69,32 @@
         </div>
     </nav>
 
+    <!-- DEX Header with Market Stats -->
+    <section class="dex-header">
+        <div class="container">
+            <h1>Distordia DEX</h1>
+            <p class="dex-subtitle">On-chain P2P marketplace powered by Nexus blockchain</p>
+            <div class="market-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Active Markets</div>
+                    <div class="stat-value" id="stat-active-markets">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">24h Volume</div>
+                    <div class="stat-value" id="stat-24h-volume">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Block Height</div>
+                    <div class="stat-value" id="stat-block-height">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Network</div>
+                    <div class="stat-value" id="stat-network-status">Connecting...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Trading Interface -->
     <section class="trading-section">
         <div class="container-fluid">
@@ -387,6 +413,78 @@
         </div>
     </section>
 
+    <!-- User Portfolio & Orders (visible when connected) -->
+    <section class="user-dashboard" id="user-dashboard" style="display: none;">
+        <div class="container">
+            <!-- Portfolio Balances -->
+            <div class="dashboard-section">
+                <div class="panel-header">
+                    <h3>Portfolio</h3>
+                    <button class="refresh-btn" id="refresh-portfolio-btn" title="Refresh balances">&#x21bb;</button>
+                </div>
+                <div class="portfolio-grid" id="portfolio-grid">
+                    <div class="portfolio-empty">Connect your wallet to view balances</div>
+                </div>
+            </div>
+
+            <!-- User's Open Orders -->
+            <div class="dashboard-section">
+                <div class="panel-header">
+                    <h3>My Open Orders</h3>
+                    <button class="refresh-btn" id="refresh-orders-btn" title="Refresh orders">&#x21bb;</button>
+                </div>
+                <div class="my-orders-container">
+                    <table class="my-orders-table">
+                        <thead>
+                            <tr>
+                                <th>Pair</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Total</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="my-orders-list">
+                            <tr>
+                                <td colspan="7" class="loading-cell">No open orders</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User's Trade History -->
+            <div class="dashboard-section">
+                <div class="panel-header">
+                    <h3>My Trade History</h3>
+                    <button class="refresh-btn" id="refresh-history-btn" title="Refresh history">&#x21bb;</button>
+                </div>
+                <div class="my-history-container">
+                    <table class="my-orders-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Pair</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="my-history-list">
+                            <tr>
+                                <td colspan="7" class="loading-cell">No trade history</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Market Overview -->
     <section class="market-overview">
         <div class="container">
@@ -422,8 +520,8 @@
                     <img src="../images/logo-utentekst.png" alt="Distordia Logo" class="footer-logo-img">
                     <span class="footer-logo-text">DISTORDIA</span>
                 </div>
-                <p>&copy; 2025 Distordia Labs. All rights reserved.</p>
-                <p class="disclaimer">This DEX interface displays real-time market data from Nexus.io blockchain. No data is stored on this website or any centralized servers.</p>
+                <p>&copy; 2026 Distordia Labs. All rights reserved.</p>
+                <p class="disclaimer">This DEX interface connects to the Nexus blockchain peer-to-peer market. All orders are placed and settled on-chain. No funds are custodied by this website. Use at your own risk.</p>
             </div>
         </div>
     </footer>
@@ -540,16 +638,16 @@
 
     <script src="../script.js"></script>
     <!-- Load DEX modules in dependency order -->
-    <script src="api-config.js?v=5"></script>
-    <script src="market-pairs.js?v=5"></script>
-    <script src="utils.js?v=5"></script>
-    <script src="state.js?v=5"></script>
-    <script src="auth.js?v=5"></script>
-    <script src="api.js?v=5"></script>
-    <script src="renderers.js?v=5"></script>
-    <script src="event-handlers.js?v=5"></script>
-    <script src="chart.js?v=5"></script>
-    <script src="trade.js?v=5"></script>
-    <script src="dex.js?v=5"></script>
+    <script src="api-config.js?v=6"></script>
+    <script src="market-pairs.js?v=6"></script>
+    <script src="utils.js?v=6"></script>
+    <script src="state.js?v=6"></script>
+    <script src="auth.js?v=6"></script>
+    <script src="api.js?v=6"></script>
+    <script src="renderers.js?v=6"></script>
+    <script src="event-handlers.js?v=6"></script>
+    <script src="chart.js?v=6"></script>
+    <script src="trade.js?v=6"></script>
+    <script src="dex.js?v=6"></script>
 </body>
 </html>
