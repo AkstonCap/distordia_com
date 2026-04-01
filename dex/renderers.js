@@ -155,14 +155,123 @@ function renderMarketOverview(pairs) {
     `;
 }
 
+// Render portfolio balances
+function renderPortfolio(accounts) {
+    const grid = document.getElementById('portfolio-grid');
+    if (!grid) return;
+
+    if (!accounts || accounts.length === 0) {
+        grid.innerHTML = '<div class="portfolio-empty">No accounts found</div>';
+        return;
+    }
+
+    grid.innerHTML = accounts.map(acc => {
+        const token = acc.ticker || acc.token_name || 'NXS';
+        const balance = parseFloat(acc.balance || 0);
+        const name = acc.name || 'unnamed';
+        return `
+            <div class="portfolio-card">
+                <div class="portfolio-token-name">${token}</div>
+                <div class="portfolio-balance">${balance.toFixed(4)}</div>
+                <div class="portfolio-account">${name}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render user's open orders
+function renderMyOrders(orders) {
+    const tbody = document.getElementById('my-orders-list');
+    if (!tbody) return;
+
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No open orders</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = orders.map(order => {
+        const market = order.market || 'Unknown';
+        const side = order.side || 'bid';
+        const price = calculatePriceFromOrder(order, market);
+        const contractAmount = parseFloat(order.contract?.amount || 0);
+        const contractTicker = order.contract?.ticker || '';
+        const amount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+        const total = price * amount;
+        const timestamp = order.timestamp ? new Date(order.timestamp * 1000).toLocaleString() : '-';
+        const txid = order.txid || '';
+
+        return `
+            <tr>
+                <td>${market}</td>
+                <td><span class="order-type-badge ${side}">${side.toUpperCase()}</span></td>
+                <td>${formatPrice(price)}</td>
+                <td>${amount.toFixed(4)}</td>
+                <td>${total.toFixed(4)}</td>
+                <td>${timestamp}</td>
+                <td>
+                    <button class="cancel-order-btn" onclick="handleCancelOrder('${txid}')" ${txid ? '' : 'disabled'}>
+                        Cancel
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Render user's trade history
+function renderMyHistory(orders) {
+    const tbody = document.getElementById('my-history-list');
+    if (!tbody) return;
+
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No trade history</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = orders.slice(0, 20).map(order => {
+        const market = order.market || 'Unknown';
+        const side = order.side || 'bid';
+        const price = calculatePriceFromOrder(order, market);
+        const contractAmount = parseFloat(order.contract?.amount || 0);
+        const contractTicker = order.contract?.ticker || '';
+        const amount = contractTicker === 'NXS' ? contractAmount / 1e6 : contractAmount;
+        const total = price * amount;
+        const timestamp = order.timestamp ? new Date(order.timestamp * 1000).toLocaleString() : '-';
+
+        return `
+            <tr>
+                <td>${timestamp}</td>
+                <td>${market}</td>
+                <td><span class="order-type-badge ${side}">${side.toUpperCase()}</span></td>
+                <td>${formatPrice(price)}</td>
+                <td>${amount.toFixed(4)}</td>
+                <td>${total.toFixed(4)}</td>
+                <td><span class="status-badge executed">Executed</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
 // Note: loadChart function is now in chart.js module
 
 // Update Network Stats display
 function updateNetworkStats(data) {
-    // Block Height
+    // Block Height - footer status
     const blockHeightEl = document.getElementById('status-block-height');
     if (blockHeightEl && data.blocks) {
         blockHeightEl.textContent = data.blocks.toLocaleString();
+    }
+
+    // DEX header stats
+    const statBlockHeight = document.getElementById('stat-block-height');
+    if (statBlockHeight && data.blocks) {
+        statBlockHeight.textContent = data.blocks.toLocaleString();
+    }
+
+    const statNetwork = document.getElementById('stat-network-status');
+    if (statNetwork) {
+        statNetwork.textContent = 'Online';
+        statNetwork.style.color = '#10B981';
     }
 
     // Network Hash Rate
@@ -184,20 +293,33 @@ function updateAPIStatus(status, message = '') {
     const statusDot = document.getElementById('api-status-dot');
     const statusText = document.getElementById('api-status-text');
     const lastUpdate = document.getElementById('last-update');
-    
+    const statNetwork = document.getElementById('stat-network-status');
+
     if (statusDot) {
         statusDot.className = 'status-dot';
         if (status === 'connected') {
             statusDot.classList.add('connected');
             statusText.textContent = message || 'Connected to Nexus.io';
+            if (statNetwork) {
+                statNetwork.textContent = 'Online';
+                statNetwork.style.color = '#10B981';
+            }
         } else if (status === 'error') {
             statusDot.classList.add('error');
             statusText.textContent = 'Connection Error';
+            if (statNetwork) {
+                statNetwork.textContent = 'Offline';
+                statNetwork.style.color = '#EF4444';
+            }
         } else {
             statusText.textContent = 'Connecting...';
+            if (statNetwork) {
+                statNetwork.textContent = 'Connecting...';
+                statNetwork.style.color = '';
+            }
         }
     }
-    
+
     if (lastUpdate) {
         lastUpdate.textContent = new Date().toLocaleTimeString();
     }

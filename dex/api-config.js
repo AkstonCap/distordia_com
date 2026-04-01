@@ -19,8 +19,10 @@ const API_ENDPOINTS = {
     listExecuted: `${NEXUS_API_BASE}/market/list/executed`,
     listExecutedFiltered: `${NEXUS_API_BASE}/market/list/executed/timestamp,contract.amount,contract.ticker,order.amount,order.ticker`,
     userOrders: `${NEXUS_API_BASE}/market/user/order`,
+    userExecuted: `${NEXUS_API_BASE}/market/user/executed`,
     executeOrder: `${NEXUS_API_BASE}/market/execute/order`,
-    
+    cancelOrder: `${NEXUS_API_BASE}/market/cancel/order`,
+
     // Finance API - token transfers
     debitToken: `${NEXUS_API_BASE}/finance/debit/token`,
     debitAccount: `${NEXUS_API_BASE}/finance/debit/account`

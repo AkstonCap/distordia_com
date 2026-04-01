@@ -18,39 +18,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize wallet connection
 async function initializeWallet() {
-    // Setup disconnect button (works for both Q-Wallet and native login)
+    // Setup disconnect button
     const disconnectBtn = document.getElementById('disconnectBtn');
-    console.log('[Wallet] Setting up disconnect button, found:', disconnectBtn);
     if (disconnectBtn) {
         disconnectBtn.addEventListener('click', () => {
-            console.log('[Wallet] Disconnect button clicked!');
             disconnectWallet();
         });
-        console.log('[Wallet] Disconnect listener attached');
-    } else {
-        console.warn('[Wallet] Disconnect button not found in DOM');
     }
-    
-    // Setup connect button event listener first
+
+    // Setup connect button event listener
     const connectBtn = document.getElementById('connectWalletBtn');
     if (connectBtn) {
-        console.log('[Wallet] Connect button found, attaching click handler');
         connectBtn.addEventListener('click', async () => {
-            console.log('[Wallet] Connect button clicked');
             await connectWallet();
         });
     }
-    
+
+    // Setup dashboard refresh buttons
+    setupDashboardListeners();
+
     // Wait for Q-Wallet to be injected (with timeout)
-    const maxWaitTime = 3000; // 3 seconds
-    const checkInterval = 100; // check every 100ms
+    const maxWaitTime = 3000;
+    const checkInterval = 100;
     let waited = 0;
-    
+
     while (typeof window.qWallet === 'undefined' && waited < maxWaitTime) {
         await new Promise(resolve => setTimeout(resolve, checkInterval));
         waited += checkInterval;
     }
-    
+
     // Check if Q-Wallet is installed
     if (typeof window.qWallet === 'undefined') {
         console.warn('Q-Wallet not detected after waiting');
@@ -60,18 +56,73 @@ async function initializeWallet() {
 
     console.log('Q-Wallet detected!');
 
-    // Check if already connected from previous session
+    // Use isLoggedIn() for pre-check if available
+    try {
+        if (typeof window.qWallet.isLoggedIn === 'function') {
+            const loggedIn = await window.qWallet.isLoggedIn();
+            console.log('[Wallet] isLoggedIn:', loggedIn);
+            if (!loggedIn) {
+                console.log('[Wallet] User not logged in to Q-Wallet');
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('[Wallet] isLoggedIn check not available');
+    }
+
+    // Use isWalletConnected() for quick reconnection
+    try {
+        if (typeof window.qWallet.isWalletConnected === 'function') {
+            const connected = await window.qWallet.isWalletConnected();
+            if (connected) {
+                const accounts = await window.qWallet.getAccounts();
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0];
+                    walletConnected = true;
+                    updateWalletUI();
+                    onWalletConnected();
+                    return;
+                }
+            }
+        }
+    } catch (e) {
+        console.log('[Wallet] isWalletConnected check not available');
+    }
+
+    // Fallback: check getAccounts directly
     try {
         const accounts = await window.qWallet.getAccounts();
         if (accounts && accounts.length > 0) {
-            console.log('Already connected to wallet:', accounts[0]);
             userAddress = accounts[0];
             walletConnected = true;
             updateWalletUI();
+            onWalletConnected();
             return;
         }
     } catch (error) {
         console.log('Not connected to wallet yet:', error.message);
+    }
+
+    // Listen for account change events
+    try {
+        if (typeof window.qWallet.on === 'function') {
+            window.qWallet.on('accountsChanged', (accounts) => {
+                console.log('[Wallet] accountsChanged event:', accounts);
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0];
+                    walletConnected = true;
+                    updateWalletUI();
+                    onWalletConnected();
+                } else {
+                    userAddress = null;
+                    walletConnected = false;
+                    updateWalletUI();
+                    onWalletDisconnected();
+                }
+            });
+        }
+    } catch (e) {
+        console.log('[Wallet] Event listener not available');
     }
 }
 
@@ -96,6 +147,7 @@ async function connectWallet() {
             walletConnected = true;
             console.log('[Wallet] Connected to wallet:', userAddress);
             updateWalletUI();
+            onWalletConnected();
         } else {
             console.warn('[Wallet] No accounts returned');
             alert('No accounts found. Please make sure Q-Wallet is unlocked.');
@@ -116,28 +168,19 @@ async function connectWallet() {
 // Disconnect wallet
 async function disconnectWallet() {
     console.log('[Wallet] Disconnecting wallet...');
-    
+
     try {
-        // Call Q-Wallet disconnect method
         if (typeof window.qWallet !== 'undefined') {
             await window.qWallet.disconnect();
-            console.log('[Wallet] Q-Wallet disconnected via API');
         }
-        
-        // Clear local state
-        userAddress = null;
-        walletConnected = false;
-        
-        // Update UI
-        updateWalletUI();
-        console.log('[Wallet] Wallet disconnected successfully');
     } catch (error) {
         console.error('[Wallet] Error disconnecting from Q-Wallet:', error);
-        // Still clear local state even if API call fails
-        userAddress = null;
-        walletConnected = false;
-        updateWalletUI();
     }
+
+    userAddress = null;
+    walletConnected = false;
+    updateWalletUI();
+    onWalletDisconnected();
 }
 
 // Update wallet UI
@@ -226,16 +269,17 @@ async function initializeDEX() {
     await Promise.all([
         fetchNetworkStats(),
         fetchMarketPairs()
-        // fetchRecentTrades will be called when a pair is selected
     ]);
-    
+
     // Initialize trade functionality
     initializeTrade();
+
+    // Update header stats from market data
+    updateHeaderStats();
 }
 
 // Show loading indicators
 function showLoadingState() {
-    // Show loading indicators
     const pairsList = document.getElementById('pairs-list');
     if (pairsList) {
         pairsList.innerHTML = '<div class="loading">Loading market pairs...</div>';
@@ -251,7 +295,200 @@ function startDataUpdates() {
             loadOrderBook(currentPair);
             fetchRecentTrades(currentPair.pair);
         }
+        // Refresh user dashboard if connected
+        if (walletConnected) {
+            refreshUserDashboard();
+        }
+        updateHeaderStats();
     }, 50000);
+}
+
+// ====================
+// DASHBOARD & PORTFOLIO
+// ====================
+
+// Called when wallet connects
+function onWalletConnected() {
+    console.log('[Dashboard] Wallet connected, loading dashboard');
+    showUserDashboard();
+    refreshUserDashboard();
+}
+
+// Called when wallet disconnects
+function onWalletDisconnected() {
+    console.log('[Dashboard] Wallet disconnected, hiding dashboard');
+    hideUserDashboard();
+}
+
+// Show user dashboard section
+function showUserDashboard() {
+    const dashboard = document.getElementById('user-dashboard');
+    if (dashboard) {
+        dashboard.style.display = 'block';
+    }
+}
+
+// Hide user dashboard section
+function hideUserDashboard() {
+    const dashboard = document.getElementById('user-dashboard');
+    if (dashboard) {
+        dashboard.style.display = 'none';
+    }
+}
+
+// Refresh all user dashboard data
+async function refreshUserDashboard() {
+    if (!walletConnected) return;
+
+    await Promise.all([
+        loadPortfolio(),
+        loadMyOrders(),
+        loadMyHistory()
+    ]);
+}
+
+// Load portfolio balances using getAllBalances or listAccounts
+async function loadPortfolio() {
+    if (!walletConnected || typeof window.qWallet === 'undefined') return;
+
+    try {
+        let accounts;
+
+        // Prefer getAllBalances() if available for comprehensive view
+        if (typeof window.qWallet.getAllBalances === 'function') {
+            accounts = await window.qWallet.getAllBalances();
+        } else if (typeof window.qWallet.listAccounts === 'function') {
+            accounts = await window.qWallet.listAccounts();
+        } else {
+            // Fallback to basic balance
+            const balance = await window.qWallet.getBalance('default');
+            accounts = [{ name: 'default', ticker: 'NXS', balance: balance }];
+        }
+
+        renderPortfolio(accounts);
+    } catch (error) {
+        console.error('[Portfolio] Error loading portfolio:', error);
+        const grid = document.getElementById('portfolio-grid');
+        if (grid) {
+            grid.innerHTML = '<div class="portfolio-empty">Failed to load balances</div>';
+        }
+    }
+}
+
+// Load user's open orders
+async function loadMyOrders() {
+    if (!walletConnected) return;
+
+    try {
+        const orders = await fetchUserOrders();
+        renderMyOrders(orders);
+    } catch (error) {
+        console.error('[MyOrders] Error:', error);
+    }
+}
+
+// Load user's trade history
+async function loadMyHistory() {
+    if (!walletConnected) return;
+
+    try {
+        const history = await fetchUserExecuted();
+        renderMyHistory(history);
+    } catch (error) {
+        console.error('[MyHistory] Error:', error);
+    }
+}
+
+// Handle cancel order button click
+async function handleCancelOrder(txid) {
+    if (!txid) {
+        showNotification('No order ID available', 'error');
+        return;
+    }
+
+    // Find and disable the button
+    const buttons = document.querySelectorAll('.cancel-order-btn');
+    let targetBtn = null;
+    buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(txid)) {
+            targetBtn = btn;
+        }
+    });
+
+    if (targetBtn) {
+        targetBtn.disabled = true;
+        targetBtn.textContent = 'Canceling...';
+    }
+
+    try {
+        await cancelOrder(txid);
+        showNotification('Order canceled successfully', 'success');
+
+        // Refresh orders and order book
+        await loadMyOrders();
+        if (currentPair) {
+            loadOrderBook(currentPair);
+        }
+    } catch (error) {
+        console.error('[Cancel] Error:', error);
+        showNotification('Failed to cancel order: ' + error.message, 'error');
+        if (targetBtn) {
+            targetBtn.disabled = false;
+            targetBtn.textContent = 'Cancel';
+        }
+    }
+}
+
+// Setup dashboard refresh button listeners
+function setupDashboardListeners() {
+    const refreshPortfolioBtn = document.getElementById('refresh-portfolio-btn');
+    const refreshOrdersBtn = document.getElementById('refresh-orders-btn');
+    const refreshHistoryBtn = document.getElementById('refresh-history-btn');
+
+    if (refreshPortfolioBtn) {
+        refreshPortfolioBtn.addEventListener('click', async () => {
+            refreshPortfolioBtn.classList.add('spinning');
+            await loadPortfolio();
+            setTimeout(() => refreshPortfolioBtn.classList.remove('spinning'), 800);
+        });
+    }
+
+    if (refreshOrdersBtn) {
+        refreshOrdersBtn.addEventListener('click', async () => {
+            refreshOrdersBtn.classList.add('spinning');
+            await loadMyOrders();
+            setTimeout(() => refreshOrdersBtn.classList.remove('spinning'), 800);
+        });
+    }
+
+    if (refreshHistoryBtn) {
+        refreshHistoryBtn.addEventListener('click', async () => {
+            refreshHistoryBtn.classList.add('spinning');
+            await loadMyHistory();
+            setTimeout(() => refreshHistoryBtn.classList.remove('spinning'), 800);
+        });
+    }
+}
+
+// Update header market stats
+function updateHeaderStats() {
+    // Active markets count
+    const activeMarketsEl = document.getElementById('stat-active-markets');
+    if (activeMarketsEl && marketData.pairs) {
+        const activeCount = marketData.pairs.filter(p => p.price > 0).length;
+        activeMarketsEl.textContent = `${activeCount} / ${marketData.pairs.length}`;
+    }
+
+    // 24h volume (sum across all pairs)
+    const volumeEl = document.getElementById('stat-24h-volume');
+    if (volumeEl && marketData.pairs) {
+        const totalVolume = marketData.pairs.reduce((sum, p) => sum + (p.volume24h || 0), 0);
+        if (totalVolume > 0) {
+            volumeEl.textContent = formatNumber(totalVolume);
+        } else {
+            volumeEl.textContent = '-';
+        }
+    }
 }
 
 // Cleanup on page unload
